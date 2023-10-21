@@ -4,7 +4,7 @@
   "description": "Veracrypt for obsidian",
   "author": "Valerian Borisovich",
   "minAppVersion": "0.11.0",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "authorUrl": "https://valerian-borisovich.github.io/",
   "repoUrl": "https://valerian-borisovich.github.io/obsidian-veracrypt/",
   "isDesktopOnly": false
