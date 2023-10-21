@@ -1,7 +1,7 @@
 {
   "name": "obsidian-veracrypt",
   "description": "Veracrypt for obsidian",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "main": "index.js",
   "keywords": [],
   "license": "MIT",
@@ -15,11 +15,10 @@
     "format": "prettier src/ --write",
     "lint:fix": "eslint --ext .ts,.js,.json src/ --fix",
     "lint-staged": "lint-staged",
-    "default": "npm run dev",
     "build:prod": "obsidian-plugin build --with-stylesheet src/styles.css src/main.ts",
-    "build:dev": "obsidian-plugin dev --with-stylesheet src/styles.css src/main.ts --vault-path ./vera",
+    "build:dev": "obsidian-plugin dev --with-stylesheet src/styles.css src/main.ts --vault-path /pub/==vaults==/vera",
     "test": "echo test pass...",
-    "start": "npm-run-all get-theme build:sass --parallel watch:*",
+    "start": "npm run dev",
     "dev": "npm run bump && npm run build:dev"
   },
   "author": {
@@ -74,8 +73,9 @@
     "eslint-plugin-simple-import-sort": "^10.0.0",
     "eslint-plugin-unused-imports": "^3.0.0",
     "npm-run-all": "^4.1.5",
+    "obsidian": "obsidianmd/obsidian-api",
+    "obsidian-dataview": "^0.4.21",
     "obsidian-plugin-cli": "latest",
-    "obsidian-dataview": "latest",
     "obsidian-undocumented": "latest",
     "prettier": "latest",
     "standard-version": "latest",
