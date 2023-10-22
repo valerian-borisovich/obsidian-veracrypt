@@ -50,10 +50,13 @@
     "fs-jetpack": "latest",
     "glob": "^10.2.1",
     "gray-matter": "^4.0.3",
-    "obsidian": "latest"
+    "obsidian": "latest",
+    "uuid": "^9.0.1",
+    "uuid4": "^2.0.3"
   },
   "devDependencies": {
     "@types/node": "^20.8.4",
+    "@types/uuid": "^9.0.6",
     "@typescript-eslint/eslint-plugin": "^6.5.0",
     "@typescript-eslint/parser": "^6.5.0",
     "ansi-colors": "^4.1.3",

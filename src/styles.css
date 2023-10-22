@@ -1,0 +1,31 @@
+/*
+* Veracrypt for obsidian plugin
+*
+* styles.css
+*
+*/
+
+/*
+    Volume settings
+*/
+
+.volume-settings {
+  font-weight: bold;
+}
+
+/*
+    Volume
+*/
+
+.volume {
+  font-weight: bold;
+}
+
+
+/*
+   hide .vera
+*/
+div[data-path$='*.vera'], div[data-path$='*.vera'] + div.nav-folder-children , div[data-path$='/*.vera'] + div.nav-folder-children
+{
+  display: none;
+}
