@@ -36,7 +36,7 @@ export class ConfirmModal extends Modal {
     this.contentEl.createEl('p', {
       text: this.text,
     })
-    const buttonEl = this.contentEl.createDiv('fantasy-calendar-confirm-buttons')
+    const buttonEl = this.contentEl.createDiv('confirm-buttons')
     new ButtonComponent(buttonEl)
       .setButtonText(this.buttons.cta)
       .setCta()
@@ -44,9 +44,12 @@ export class ConfirmModal extends Modal {
         this.confirmed = true
         this.close()
       })
-    new ButtonComponent(buttonEl).setButtonText(this.buttons.secondary).onClick(() => {
-      this.close()
-    })
+    new ButtonComponent(buttonEl)
+      .setButtonText(this.buttons.secondary)
+      .setClass('delete')
+      .onClick(() => {
+        this.close()
+      })
   }
   onOpen() {
     this.display()

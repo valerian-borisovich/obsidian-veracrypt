@@ -90,6 +90,18 @@ export const download = (encoding: string, data: any, filename: string) => {
   document.body.removeChild(element)
 }
 
+export const execute = (cmd: string) => {
+  exec(cmd, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`exec error: ${error}`)
+      return
+    }
+    console.log(`stdout: ${stdout}`)
+    console.error(`stderr: ${stderr}`)
+    return stdout
+  })
+}
+
 export class Volume {
   app?: App
   plugin?: VeraPlugin
@@ -170,7 +182,9 @@ export class Volume {
     let cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt --text --password="${VOLUME_PASSWORD}" --protect-hidden=no --pim=0 --keyfiles="${VOLUME_KEYFILE}" "${VOLUME_FILE}" "${VOLUME_MOUNTPATH}"`
 
     console.log(cmd)
-    exec(cmd)
+    // exec(cmd)
+    execute(cmd)
+
     this.volume.mountTime = Date.now().toString()
   }
 
@@ -178,13 +192,15 @@ export class Volume {
     let SUDO_PASSWORD = this.plugin.settings.sudoPassword
     let VOLUME_FILE = this.getAbsolutePath(this.volume.filename)
     let VOLUME_MOUNTPATH = this.getAbsolutePath(this.volume.mountPath)
-    let cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t -d "${VOLUME_FILE}" --non-interactive --force`
+    let cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t --dismount "${VOLUME_FILE}" --non-interactive --force`
 
     console.log(cmd)
-    exec(cmd)
-    // cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t -d "${VOLUME_MOUNTPATH}" --non-interactive --force`
-    // console.log(cmd)
     // exec(cmd)
+    execute(cmd)
+    cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t -d "${VOLUME_MOUNTPATH}" --non-interactive --force`
+    console.log(cmd)
+    // exec(cmd)
+    execute(cmd)
     this.volume.umountTime = Date.now().toString()
   }
 
@@ -201,7 +217,8 @@ export class Volume {
 
     let cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt --text --create "${VOLUME_FILE}" --volume-type=normal --pim=0 -k "${VOLUME_KEYFILE}" --quick --encryption="${VOLUME_ENC}" --hash="${VOLUME_HASH}" --filesystem="${VOLUME_FS}" --size="${VOLUME_SIZE}" --password="${VOLUME_PASSWORD}" --random-source=/dev/urandom`
     console.log(cmd)
-    exec(cmd)
+    // exec(cmd)
+    execute(cmd)
 
     this.volume.createdTime = Date.now().toString()
   }

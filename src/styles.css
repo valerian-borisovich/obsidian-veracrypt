@@ -8,210 +8,210 @@
 
 /* ---------- MODALS REGEX ---------- */
 .veracrypt.modals .setting-item.entry {
-  border: 0 !important;
-  padding: 5px !important;
+    border: 0 !important;
+    padding: 5px !important;
 }
 
 hr.veracrypt-hr {
-  margin: 1px !important;
-  padding-bottom: 1px;
+    margin: 1px !important;
+    padding-bottom: 1px;
 }
 
 .veracrypt.modals .setting-item.entry input {
-  width: 100%;
+    width: 100%;
 }
 
 .veracrypt.modals .setting-item.entry .setting-item-info {
-  display: none;
+    display: none;
 }
 
 
 /* --------- GENERAL SETTINGS --------- */
 
 .veracrypt textarea {
-  width: 250px;
-  height: 100px;
+    width: 250px;
+    height: 100px;
 }
 
 .veracrypt .mid-height {
-  height: 50%;
+    height: 50%;
 }
 
 .veracrypt .bake ul {
-  margin-top: 0;
+    margin-top: 0;
 }
 
 /* --------- SETTINGS TABS BAR --------- */
 .veracrypt .settings-tab-bar {
-  display: flex;
-  flex-direction: row;
-  gap: 4px;
-  overflow: hidden;
-  padding: 0;
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+    overflow: hidden;
+    padding: 0;
 }
 
 .veracrypt .settings-tab {
-  padding: 10px;
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 5px;
+    padding: 10px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 5px;
 }
 
 .veracrypt .settings-tab:hover {
-  background-color: var(--background-modifier-hover);
+    background-color: var(--background-modifier-hover);
 }
 
 @media screen and (max-width: 900px) {
 
-  .veracrypt .settings-tab-bar,
-  .setting-item.veracrypt-export-import > .setting-item-control {
-    flex-direction: column;
-    width: 100%;
-  }
+    .veracrypt .settings-tab-bar,
+    .setting-item.veracrypt-export-import > .setting-item-control {
+        flex-direction: column;
+        width: 100%;
+    }
 
-  .setting-item.veracrypt-export-import > .setting-item-control button {
-    width: 100%;
-  }
+    .setting-item.veracrypt-export-import > .setting-item-control button {
+        width: 100%;
+    }
 
-  a.veracrypt-copy + button {
-    height: 10%;
-  }
+    a.veracrypt-copy + button {
+        height: 10%;
+    }
 
-  .veracrypt .connect-button {
-    margin: 0 !important;
-  }
+    .veracrypt .connect-button {
+        margin: 0 !important;
+    }
 }
 
 @media screen and (max-width: 1200px) {
-  .veracrypt .settings-tab-bar {
-    flex-wrap: wrap;
-  }
+    .veracrypt .settings-tab-bar {
+        flex-wrap: wrap;
+    }
 
-  .veracrypt .settings-tab {
-    border-bottom: 1px solid var(--background-modifier-border);
-  }
+    .veracrypt .settings-tab {
+        border-bottom: 1px solid var(--background-modifier-border);
+    }
 
-  .veracrypt .settings-tab-bar {
-    border-bottom: 0;
-  }
+    .veracrypt .settings-tab-bar {
+        border-bottom: 0;
+    }
 
-  .veracrypt.manage-repo button.connect {
-    margin: 0 !important;
-  }
+    .veracrypt.manage button.connect {
+        margin: 0 !important;
+    }
 }
 
-.veracrypt.manage-repo button.connect {
-  margin: 0 50%;
+.veracrypt.manage button.connect {
+    margin: 0 50%;
 }
 
 .veracrypt .settings-tab-active {
-  background-color: var(--color-accent);
-  color: var(--text-on-accent);
-  border: 0;
-  border-bottom-right-radius: 0;
-  border-bottom-left-radius: 0;
+    background-color: var(--color-accent);
+    color: var(--text-on-accent);
+    border: 0;
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 0;
 }
 
 .veracrypt .settings-tab-name {
-  font-weight: bold;
-  text-align: center;
+    font-weight: bold;
+    text-align: center;
 }
 
 .veracrypt .settings-tab-icon {
-  text-align: center;
+    text-align: center;
 }
 
 .veracrypt .settings-tab-page > .setting-item:first-child {
-  margin-top: 15px;
+    margin-top: 15px;
 }
 
 .veracrypt .settings-tab-page h5 {
-  margin-bottom: 10px !important;
+    margin-bottom: 10px !important;
 }
 
 .settings-tab-page code,
 .veracrypt.list-changed code.code-title,
 .code {
-  color: var(--code-normal);
-  font-family: var(--font-monospace);
-  background-color: var(--color-background);
-  border-radius: var(--radius-s);
-  font-size: var(--code-size);
+    color: var(--code-normal);
+    font-family: var(--font-monospace);
+    background-color: var(--color-background);
+    border-radius: var(--radius-s);
+    font-size: var(--code-size);
 }
 
 .veracrypt.list-changed .settings-tab-page code.code-title,
 .code.code-title {
-  font-size: calc(var(--code-size) * 12px);
-  font-weight: bolder;
-  text-decoration: underline;
+    font-size: calc(var(--code-size) * 12px);
+    font-weight: bolder;
+    text-decoration: underline;
 }
 
 .veracrypt .setting-item.title input[type="text"][placeholder="title"] {
-  width: 100%;
+    width: 100%;
 }
 
 
 .veracrypt .setting-item.no-display > .setting-item-info {
-  display: none;
+    display: none;
 }
 
 
 .veracrypt.veracrypt.modals.regex.file-path-name
 .disabled {
-  pointer-events: none;
-  opacity: 0.5;
-  font-style: italic;
-  color: var(--text-muted);
-  cursor: default;
-  box-shadow: none !important;
-  border: none !important;
-  background-color: transparent !important;
-  font-family: var(--font-monospace);
+    pointer-events: none;
+    opacity: 0.5;
+    font-style: italic;
+    color: var(--text-muted);
+    cursor: default;
+    box-shadow: none !important;
+    border: none !important;
+    background-color: transparent !important;
+    font-family: var(--font-monospace);
 
 }
 
 .veracrypt.modals.veracrypt.modals {
-  border-top: 0 !important;
+    border-top: 0 !important;
 }
 
 .veracrypt.list-changed h2.success {
-  text-align: center;
-  color: var(--color-green);
+    text-align: center;
+    color: var(--color-green);
 }
 
 .veracrypt.list-changed h2.error {
-  color: var(--text-error);
-  padding: 10px 10px;
+    color: var(--text-error);
+    padding: 10px 10px;
 }
 
 .veracrypt.list-changed .emoji {
-  padding-right: 5px;
-  font-size: 18px;
+    padding-right: 5px;
+    font-size: 18px;
 }
 
 .veracrypt .important {
-  color: var(--text-error);
-  font-weight: bold;
+    color: var(--text-error);
+    font-weight: bold;
 }
 
 .veracrypt .warning.embed {
-  color: var(--color-orange);
-  font-weight: bold;
-  border-left: 3px solid var(--color-orange);
-  padding-left: 5px;
+    color: var(--color-orange);
+    font-weight: bold;
+    border-left: 3px solid var(--color-orange);
+    padding-left: 5px;
 }
 
 
 .veracrypt .error input {
-  border: 1px solid var(--text-error);
+    border: 1px solid var(--text-error);
 }
 
 .veracrypt .max-width input,
 .veracrypt .max-width button {
-  width: 100%;
+    width: 100%;
 }
 
 .veracrypt .display-none .setting-item-info {
-  display: none;
+    display: none;
 }
 
 
@@ -220,7 +220,7 @@ hr.veracrypt-hr {
 */
 
 .settings {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 /*
@@ -228,14 +228,44 @@ hr.veracrypt-hr {
 */
 
 .volume {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 
 /*
    hide .vera
 */
-div[data-path$='*.vera'], div[data-path$='*.vera'] + div.nav-folder-children , div[data-path$='/*.vera'] + div.nav-folder-children
-{
-  display: none;
+div[data-path$='*.vera'], div[data-path$='*.vera'] + div.nav-folder-children, div[data-path$='/*.vera'] + div.nav-folder-children {
+    display: none;
+}
+
+
+/*
+      confirm-buttons
+*/
+
+.delete {
+    background-color: red !important;
+    padding: 15px;
+}
+
+.delete.active {
+    display: block;
+}
+
+.confirm-buttons-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.confirm-buttons-container .dont-ask {
+    cursor: pointer;
+}
+
+.confirm-buttons {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.5rem;
 }

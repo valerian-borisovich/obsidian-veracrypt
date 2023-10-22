@@ -1,6 +1,7 @@
 import { Notice, Plugin, setIcon, TFolder } from 'obsidian'
 import { ObsidianVeracryptSettings, VeraSettingTab, DEFAULT_SETTINGS } from './settings'
 import { Volume } from './volume'
+import { execute } from './execute.mjs'
 
 const __DEV_MODE__ = true
 
@@ -31,8 +32,9 @@ export default class VeraPlugin extends Plugin {
     )
 
     this.addRibbonIcon('dice', 'Plugin', async () => {
-      new Notice('This is a veracrypt notice!')
-      await this.mountVolumes()
+      // new Notice('This is a veracrypt notice!')
+      // await this.mountVolumes()
+      await this.list()
     })
 
     this.addStatusBarItem().setText('Veracrypt loaded')
@@ -121,6 +123,17 @@ export default class VeraPlugin extends Plugin {
     this.settings.volumes.forEach((volume) => {
       let v = new Volume(this, volume)
       v.umount()
+    })
+  }
+
+  async list(): Promise<void> {
+    console.log('list mounted')
+    let nomounted = 'Error: No volumes mounted.'
+    let SUDO_PASSWORD = this.settings.sudoPassword
+    let cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t -l --non-interactive --force`
+
+    await execute(cmd).then((o) => {
+      console.log('list mounted: ' + o.toString())
     })
   }
 }
