@@ -1,11 +1,9 @@
 import { App, PluginSettingTab, Setting } from 'obsidian'
 import VeraPlugin from './main'
-import { VolumeSettings, Volume } from './volume'
+import { VolumeSettings, Volume, DEFAULT_VOLUME_SETTINGS } from './volume'
 import { VolumeModal } from './volumeModal'
 
 export interface ObsidianVeracryptSettings {
-  mySetting: string
-
   mainDeviceId: string
   pluginVersion: string
 
@@ -26,8 +24,6 @@ export interface ObsidianVeracryptSettings {
 }
 
 export const DEFAULT_SETTINGS: ObsidianVeracryptSettings = {
-  mySetting: 'default',
-
   mainDeviceId: '',
   pluginVersion: '0.3.3',
 
@@ -95,6 +91,12 @@ export class VeraSettingTab extends PluginSettingTab {
         }),
       )
 
+    new Setting(containerEl).addButton((button) => {
+      button.setButtonText('Create new').onClick(() => {
+        new VolumeModal(this.app, this.plugin, DEFAULT_VOLUME_SETTINGS).open()
+      })
+    })
+
     containerEl.createEl('hr')
 
     this.plugin.settings.volumes.forEach((volume) => {
@@ -129,7 +131,7 @@ export class VeraSettingTab extends PluginSettingTab {
         .addToggle((toggle) => {
           toggle.setValue(volume.mounted).onChange(async (value) => {
             let v = new Volume(this.plugin, volume)
-            if (value) {
+            if (!value) {
               await v.umount()
             } else {
               await v.mount()

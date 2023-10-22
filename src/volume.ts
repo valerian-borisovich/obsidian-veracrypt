@@ -4,6 +4,7 @@ import { exec as exec } from 'child_process'
 import { App, PluginManifest, normalizePath, TFile, TFolder } from 'obsidian'
 
 import VeraPlugin from './main'
+import { getFilename } from './fs'
 
 export interface VolumeSettings {
   id?: string
@@ -13,6 +14,8 @@ export interface VolumeSettings {
 
   mountAtStart: boolean
   umountAtExit: boolean
+
+  createdTime?: string
   mountTime?: string
   umountTime?: string
 
@@ -31,24 +34,26 @@ export interface VolumeSettings {
 export const DEFAULT_VOLUME_SETTINGS: VolumeSettings = {
   id: v4(),
 
-  enabled: true,
+  enabled: false,
   mounted: false,
 
   mountAtStart: true,
   umountAtExit: true,
+
+  createdTime: '',
   mountTime: '',
   umountTime: '',
 
   mountPath: '',
-  filename: '',
+  filename: 'newVolume.vera',
 
   password: '',
   keyfile: '',
 
-  size: '44M',
-  fs: 'ext4',
-  encryption: 'aes',
-  hash: 'sha-512',
+  size: '3M',
+  fs: 'exFAT',
+  encryption: 'AES',
+  hash: 'SHA-512',
 }
 
 /**
@@ -124,6 +129,12 @@ export class Volume {
     // }
   }
 
+  async name() {
+    let n = this.volume.filename
+    n.substring(n.lastIndexOf('/') ? 0 : n.lastIndexOf('/'), n.lastIndexOf('.'))
+    return n
+  }
+
   async exists() {
     let volume = this.volume
     return await this.app.vault.adapter.exists(volume.filename)
@@ -160,6 +171,7 @@ export class Volume {
 
     console.log(cmd)
     exec(cmd)
+    this.volume.mountTime = Date.now().toString()
   }
 
   async _umount() {
@@ -170,8 +182,36 @@ export class Volume {
 
     console.log(cmd)
     exec(cmd)
-    cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t -d "${VOLUME_MOUNTPATH}" --non-interactive --force`
+    // cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t -d "${VOLUME_MOUNTPATH}" --non-interactive --force`
+    // console.log(cmd)
+    // exec(cmd)
+    this.volume.umountTime = Date.now().toString()
+  }
+
+  create() {
+    let SUDO_PASSWORD = this.plugin.settings.sudoPassword
+    let VOLUME_PASSWORD = this.volume.password
+    let VOLUME_KEYFILE = ''
+    let VOLUME_FILE = this.getAbsolutePath(this.volume.filename)
+    let VOLUME_MOUNTPATH = this.getAbsolutePath(this.volume.mountPath)
+    let VOLUME_HASH = this.volume.hash
+    let VOLUME_ENC = this.volume.encryption
+    let VOLUME_FS = this.volume.fs
+    let VOLUME_SIZE = this.volume.size
+
+    let cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt --text --create "${VOLUME_FILE}" --volume-type=normal --pim=0 -k "${VOLUME_KEYFILE}" --quick --encryption="${VOLUME_ENC}" --hash="${VOLUME_HASH}" --filesystem="${VOLUME_FS}" --size="${VOLUME_SIZE}" --password="${VOLUME_PASSWORD}" --random-source=/dev/urandom`
     console.log(cmd)
     exec(cmd)
+
+    this.volume.createdTime = Date.now().toString()
+  }
+
+  delete() {
+    console.log('volume.delete: ' + this.volume.filename)
+    this.plugin.settings.volumes.remove(this.volume)
+    this.plugin.saveSettings()
+    this.umount().then((r) => {
+      this.app.vault.adapter.remove(this.volume.filename).then((r) => {})
+    })
   }
 }

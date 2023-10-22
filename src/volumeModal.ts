@@ -2,11 +2,12 @@ import { App, ButtonComponent, Modal, Setting } from 'obsidian'
 import { Volume, VolumeSettings } from './volume'
 import { encryptionAlgorithm, filesystemType, hashAlgorithm } from './volumeDef'
 import VeraPlugin from './main'
+import { ConfirmModal, confirmWithModal } from './confirm'
 
 export class VolumeModal extends Modal {
   plugin?: VeraPlugin
   volume?: VolumeSettings
-
+  create: Boolean
   buttons: { cta: string; secondary: string } = {
     cta: 'Yes',
     secondary: 'No',
@@ -78,10 +79,17 @@ export class VolumeModal extends Modal {
       .setName('Filename')
       .addText((text) =>
         text
-          .setPlaceholder('volume/filename.vera')
-          .setValue(volume.filename)
+          .setPlaceholder('newVolume')
+          .setValue(
+            volume.filename.substring(
+              volume.filename.lastIndexOf('/') ? 0 : volume.filename.lastIndexOf('/'),
+              volume.filename.lastIndexOf('.'),
+            ),
+          )
           .onChange(async (value) => {
-            volume.filename = value
+            volume.filename = value.endsWith(this.plugin.settings.defaultVolumefileExtention)
+              ? value
+              : value + '.' + this.plugin.settings.defaultVolumefileExtention
             await this.plugin.saveSettings()
           }),
       )
@@ -95,7 +103,13 @@ export class VolumeModal extends Modal {
           .setPlaceholder('mount path')
           .setValue(volume.mountPath)
           .onChange(async (value) => {
-            volume.mountPath = value
+            volume.mountPath =
+              value.length > 2
+                ? value
+                : volume.filename.substring(
+                    volume.filename.lastIndexOf('/') ? 0 : volume.filename.lastIndexOf('/'),
+                    volume.filename.lastIndexOf('.'),
+                  )
             await this.plugin.saveSettings()
           }),
       )
@@ -142,9 +156,9 @@ export class VolumeModal extends Modal {
       .addText((text) =>
         text
           .setPlaceholder('size')
-          .setValue(volume.size)
+          .setValue(volume.size.substring(0, volume.size.length - 1))
           .onChange(async (value) => {
-            volume.size = value
+            volume.size = value + 'M'
             await this.plugin.saveSettings()
           }),
       )
@@ -206,10 +220,34 @@ export class VolumeModal extends Modal {
     containerEl.createEl('hr')
     containerEl.createEl('br')
 
-    const buttonEl = containerEl.createDiv('confirm-buttons')
-    new ButtonComponent(buttonEl).setButtonText('OK').onClick(() => {
-      this.plugin.saveSettings()
-      this.close()
-    })
+    const buttonEl = containerEl.createDiv('confirm')
+    if (volume.createdTime.length < 4) {
+      // create volume
+      new ButtonComponent(buttonEl).setButtonText(' Create ').onClick(() => {
+        this.plugin.settings.volumes.push(volume)
+        this.plugin.saveSettings()
+        this.close()
+        let v = new Volume(this.plugin, volume)
+        v.create()
+        this.plugin.saveSettings()
+        //this.plugin.app.workspace.activeLeaf.rebuildView()
+      })
+    } else {
+      new ButtonComponent(buttonEl).setButtonText(' Save ').onClick(() => {
+        this.plugin.saveSettings()
+        this.close()
+      })
+      new ButtonComponent(buttonEl).setButtonText(' Delete ').onClick(() => {
+        confirmWithModal(this.plugin.app, 'Do you have delete?').then((value) => {
+          if (value) {
+            let v = new Volume(this.plugin, volume)
+            v.delete()
+          }
+        })
+
+        this.plugin.saveSettings()
+        this.close()
+      })
+    }
   }
 }
