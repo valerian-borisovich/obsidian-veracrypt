@@ -1,7 +1,7 @@
 {
   "name": "obsidian-veracrypt",
   "description": "Veracrypt for obsidian",
-  "version": "0.3.18",
+  "version": "0.3.19",
   "main": "index.js",
   "keywords": [],
   "license": "MIT",
@@ -50,6 +50,7 @@
     "fs-jetpack": "latest",
     "glob": "^10.2.1",
     "gray-matter": "^4.0.3",
+    "localforage": "^1.10.0",
     "obsidian": "latest",
     "obsidian-plugin-cli": "^0.9.0",
     "uuid": "^9.0.1",
