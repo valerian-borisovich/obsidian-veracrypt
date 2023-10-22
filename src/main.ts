@@ -1,8 +1,8 @@
 import { Notice, Plugin, setIcon, TFolder } from 'obsidian'
-import { execute } from './execute'
-import { Volume } from './volume'
-import { VeraSettingTab } from './settingsModal'
 import { ObsidianVeracryptSettings, DEFAULT_SETTINGS } from './settings'
+import { Volume } from './volume'
+import { execute } from './execute'
+import { VeraSettingTab } from './settingsModal'
 
 const __DEV_MODE__ = true
 
@@ -10,8 +10,6 @@ export default class VeraPlugin extends Plugin {
   settings!: ObsidianVeracryptSettings
   ribbonIconButton!: HTMLElement
   statusBarItem!: HTMLElement
-
-  statCache = new Map()
 
   async toggleFunctionality() {
     this.settings.areLoaded = !this.settings.areLoaded
@@ -37,65 +35,49 @@ export default class VeraPlugin extends Plugin {
     this.addRibbonIcon('dice', 'Plugin', async () => {
       // new Notice('This is a veracrypt notice!')
       // await this.mountVolumes()
-      //await this.list()
+      await this.list()
+    })
 
-      /*
-      let path = '==pvt=='
-      this.app.vault.on('modify', (path) => {})
+    this.addStatusBarItem().setText('Veracrypt loaded')
 
-      const stat = await this.app.vault.adapter.stat(path)
-      if (stat) {
-        if (this.statCache.has(path) && stat.mtime !== this.statCache.get(path).mtime) {
-          // this.onFileChange(path)
-          // this.statCache.set(path).
-          //this.app.vault.adapter.startWatchPath(path, false)
-          //const lstat = fs.lstatSync(realPath)
-        }
-      }
-
-       */
-
-      this.addStatusBarItem().setText('Veracrypt loaded')
-
-      /*
-          this.addCommand({
-            id: 'vera-open-modal',
-            name: 'Veracrypt Modal',
-            // callback: () => {
-            // 	console.log('Veracrypt Modal Callback');
-            // },
-            checkCallback: (checking: boolean) => {
-              let leaf = this.app.workspace.activeLeaf
-              if (leaf) {
-                if (!checking) {
-                  new VolumeModal(this.app, this, ).open()
-                }
-                return true
+    /*
+        this.addCommand({
+          id: 'open-vera-modal',
+          name: 'Open Veracrypt Modal',
+          // callback: () => {
+          // 	console.log('Veracrypt Modal Callback');
+          // },
+          checkCallback: (checking: boolean) => {
+            let leaf = this.app.workspace.activeLeaf
+            if (leaf) {
+              if (!checking) {
+                new VolumeModal(this.app, this, ).open()
               }
-              return false
-            },
-          })
-          */
+              return true
+            }
+            return false
+          },
+        })
+        */
 
-      this.addSettingTab(new VeraSettingTab(this.app, this))
+    this.addSettingTab(new VeraSettingTab(this.app, this))
 
-      // this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-      //  console.log('click', evt) })
+    // this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
+    //  console.log('click', evt) })
 
-      // this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000))
+    // this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000))
 
-      this.app.workspace.onLayoutReady(async () => {
-        if (this.settings.mountAllAtStart) {
-          await this.mountVolumes()
-        }
-      })
+    this.app.workspace.onLayoutReady(async () => {
+      if (this.settings.mountAllAtStart) {
+        await this.mountVolumes()
+      }
     })
   }
 
   onunload() {
     console.log('unloading veracrypt plugin')
     if (this.settings.umountAllAtExit) {
-      this.umountVolumes()
+      this.umountVolumes().then((r) => {})
     }
   }
 
@@ -151,11 +133,7 @@ export default class VeraPlugin extends Plugin {
     let SUDO_PASSWORD = this.settings.sudoPassword
     let cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t -l --non-interactive --force`
 
-    await execute(cmd)
-    // console.log('list mounted: ' + o.toString())
-  }
-
-  test() {
-    // this.app.vault.adapter.read()
+    let o = await execute(cmd)
+    console.log('list mounted: ' + o.toString())
   }
 }
