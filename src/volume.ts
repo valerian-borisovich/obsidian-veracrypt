@@ -1,9 +1,9 @@
 //
 import { v4 } from 'uuid'
-import { exec as exec } from 'child_process'
 import { App, PluginManifest, normalizePath, TFile, TFolder } from 'obsidian'
 
 import VeraPlugin from './main'
+import { execute } from './execute'
 
 export interface VolumeSettings {
   id?: string
@@ -89,27 +89,6 @@ export const download = (encoding: string, data: any, filename: string) => {
   document.body.removeChild(element)
 }
 
-export const execute = (cmd: string) => {
-  try {
-    exec(cmd)
-  } catch (e) {
-    console.error(`exec error: ${e}`)
-  }
-
-  /*
-  exec(cmd, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`exec error: ${error}`)
-      return
-    }
-    console.log(`stdout: ${stdout}`)
-    console.error(`stderr: ${stderr}`)
-    return stdout
-  })
-
-   */
-}
-
 export class Volume {
   app?: App
   plugin?: VeraPlugin
@@ -174,8 +153,7 @@ export class Volume {
 
     let cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt --text --create "${VOLUME_FILE}" --volume-type=normal --pim=0 -k "${VOLUME_KEYFILE}" --quick --encryption="${VOLUME_ENC}" --hash="${VOLUME_HASH}" --filesystem="${VOLUME_FS}" --size="${VOLUME_SIZE}" --password="${VOLUME_PASSWORD}" --random-source=/dev/urandom`
     console.log(cmd)
-    // exec(cmd)
-    execute(cmd)
+    let o = execute(cmd)
 
     this.volume.createdTime = Date.now().toString()
   }
@@ -218,7 +196,8 @@ export class Volume {
     let cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t --non-interactive --force --password="${VOLUME_PASSWORD}" --protect-hidden=no --pim=0 --keyfiles="${VOLUME_KEYFILE}" "${VOLUME_FILE}" "${VOLUME_MOUNTPATH}"`
 
     console.log(cmd)
-    execute(cmd)
+    let r = execute(cmd)
+    console.log(r)
 
     this.volume.mountTime = Date.now().toString()
   }
@@ -230,6 +209,8 @@ export class Volume {
     let cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t -d "${VOLUME_FILE}" --non-interactive --force`
     console.log(cmd)
     execute(cmd)
+    let r = execute(cmd)
+    console.log(r)
 
     /*
     cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t -d "${VOLUME_MOUNTPATH}" --non-interactive --force`
@@ -239,8 +220,8 @@ export class Volume {
 
     cmd = `echo "${SUDO_PASSWORD}" | sudo -S rm -rf "${VOLUME_MOUNTPATH}"`
     console.log(cmd)
-    execute(cmd)
-
+    r = execute(cmd)
+    console.log(r)
     this.volume.umountTime = Date.now().toString()
   }
 }

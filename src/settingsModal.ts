@@ -1,46 +1,8 @@
-import { VolumeSettings } from './volume'
+import { App, PluginSettingTab, Setting } from 'obsidian'
+import VeraPlugin from './main'
+import { Volume, DEFAULT_VOLUME_SETTINGS } from './volume'
+import { VolumeModal } from './volumeModal'
 
-export interface ObsidianVeracryptSettings {
-  mainDeviceId: string
-  pluginVersion: string
-
-  areLoaded: boolean
-
-  debug: boolean
-  logFilename: string
-
-  defaultMountPath: string
-  defaultVolumefileExtention: string
-
-  mountAllAtStart: boolean
-  umountAllAtExit: boolean
-
-  sudoPassword: string
-
-  volumes: VolumeSettings[]
-}
-
-export const DEFAULT_SETTINGS: ObsidianVeracryptSettings = {
-  mainDeviceId: '',
-  pluginVersion: '0.3.3',
-
-  areLoaded: false,
-
-  debug: false,
-  logFilename: 'vera.log',
-
-  defaultMountPath: '==vera==',
-  defaultVolumefileExtention: 'vera',
-
-  mountAllAtStart: true,
-  umountAllAtExit: true,
-
-  sudoPassword: '',
-
-  volumes: [],
-}
-
-/*
 export class VeraSettingTab extends PluginSettingTab {
   plugin: VeraPlugin
 
@@ -136,4 +98,3 @@ export class VeraSettingTab extends PluginSettingTab {
       )
   }
 }
-*/
