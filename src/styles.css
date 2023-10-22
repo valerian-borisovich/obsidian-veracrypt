@@ -4,6 +4,22 @@
 * styles.css
 *
 */
+:root {
+    --code-size: 1.75em;
+    --text-error: red;
+    /* *** */
+    --color-blue: blue;
+    --color-orange: orange;
+    --color-green: green;
+    --code-normal: white;
+
+}
+
+h1, h2, h3, h4, h5, h6
+{
+    margin-top: 0 !important;
+}
+
 
 
 /* ---------- MODALS REGEX ---------- */
@@ -155,7 +171,7 @@ hr.veracrypt-hr {
 }
 
 
-.veracrypt.veracrypt.modals.regex.file-path-name
+.veracrypt.modals.regex.file-path-name
 .disabled {
     pointer-events: none;
     opacity: 0.5;
@@ -214,6 +230,16 @@ hr.veracrypt-hr {
     display: none;
 }
 
+.veracrypt .setting-item-name {
+    font-weight: bold;
+    font-size: calc(var(--code-size) * 12px);
+    width: calc(100% - 20px);
+}
+
+.veracrypt .setting-item-info {
+    color: var(--color-blue);
+}
+
 
 /*
     Volume settings
@@ -267,5 +293,43 @@ div[data-path$='*.vera'], div[data-path$='*.vera'] + div.nav-folder-children, di
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    gap: 0.5rem;
+    gap: 1rem;
+}
+
+.confirm-modal h1 p {
+    text-align: center;
+    font-weight: bold;
+}
+
+
+.confirm-modal button {
+    width: 80%;
+}
+
+/*
+    password input
+ */
+.password-field {
+    position: relative;
+}
+.password-field input {
+    width: 30rem;
+    height: 4em;
+    padding: 1em;
+    border: 0;
+    border-radius: 10px;
+    box-shadow: 0px 10px 40px rgba(0, 0, 0, 0.5);
+    font-size: 1rem;
+    letter-spacing: 1px;
+}
+.password-field input::placeholder {
+    color: #000;
+    font-weight: bold;
+}
+.password-field #toggler {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
 }

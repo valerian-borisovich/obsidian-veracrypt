@@ -7,11 +7,6 @@ import { ConfirmModal, confirmWithModal } from './confirm'
 export class VolumeModal extends Modal {
   plugin?: VeraPlugin
   volume?: VolumeSettings
-  create: Boolean
-  buttons: { cta: string; secondary: string } = {
-    cta: 'Yes',
-    secondary: 'No',
-  }
 
   constructor(app: App, plugin: VeraPlugin, volume: VolumeSettings) {
     super(app)
@@ -33,7 +28,7 @@ export class VolumeModal extends Modal {
     let volume = this.volume
     let { contentEl } = this
     contentEl.empty()
-    contentEl.addClasses(['veracrypt', 'modals', 'volume', 'add'])
+    contentEl.addClasses(['veracrypt', 'modals', 'volume', 'add', 'confirm-modal'])
     this.titleEl.setText('Volume')
 
     let containerEl = contentEl.createDiv('volume')
@@ -220,7 +215,7 @@ export class VolumeModal extends Modal {
     containerEl.createEl('hr')
     containerEl.createEl('br')
 
-    const buttonEl = containerEl.createDiv('confirm')
+    const buttonEl = containerEl.createDiv('confirm-buttons')
     if (volume.createdTime.length < 4) {
       // create volume
       new ButtonComponent(buttonEl).setButtonText(' Create ').onClick(() => {
@@ -237,17 +232,20 @@ export class VolumeModal extends Modal {
         this.plugin.saveSettings()
         this.close()
       })
-      new ButtonComponent(buttonEl).setButtonText(' Delete ').onClick(() => {
-        confirmWithModal(this.plugin.app, 'Do you have delete?').then((value) => {
-          if (value) {
-            let v = new Volume(this.plugin, volume)
-            v.delete()
-          }
-        })
+      new ButtonComponent(buttonEl)
+        .setButtonText(' Delete ')
+        .setClass('delete')
+        .onClick(() => {
+          confirmWithModal(this.plugin.app, 'Do you have delete?', volume.filename).then((value) => {
+            if (value) {
+              let v = new Volume(this.plugin, volume)
+              v.delete()
+            }
+          })
 
-        this.plugin.saveSettings()
-        this.close()
-      })
+          this.plugin.saveSettings()
+          this.close()
+        })
     }
   }
 }

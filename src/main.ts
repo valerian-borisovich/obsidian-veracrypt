@@ -136,4 +136,8 @@ export default class VeraPlugin extends Plugin {
       console.log('list mounted: ' + o.toString())
     })
   }
+
+  test() {
+    this.app.vault.adapter.read()
+  }
 }

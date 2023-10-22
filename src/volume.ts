@@ -142,9 +142,10 @@ export class Volume {
   }
 
   async name() {
-    let n = this.volume.filename
-    n.substring(n.lastIndexOf('/') ? 0 : n.lastIndexOf('/'), n.lastIndexOf('.'))
-    return n
+    return this.volume.filename.substring(
+      this.volume.filename.lastIndexOf('/') ? 0 : this.volume.filename.lastIndexOf('/'),
+      this.volume.filename.lastIndexOf('.'),
+    )
   }
 
   async exists() {

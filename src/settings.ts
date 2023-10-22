@@ -100,30 +100,16 @@ export class VeraSettingTab extends PluginSettingTab {
     containerEl.createEl('hr')
 
     this.plugin.settings.volumes.forEach((volume) => {
+      let name = volume.filename.substring(
+        volume.filename.lastIndexOf('/') ? 0 : volume.filename.lastIndexOf('/'),
+        volume.filename.lastIndexOf('.'),
+      )
       new Setting(containerEl)
-        .setName(volume.filename)
-        /*
-        .addText((text) =>
-          text
-            .setPlaceholder('volume filename')
-            .setValue(volume.filename)
-            .onChange(async (value) => {
-              volume.filename = value
-              await this.plugin.saveSettings()
-            }),
-        )
-        .addText((text) =>
-          text
-            .setPlaceholder('mount path')
-            .setValue(volume.mountPath)
-            .onChange(async (value) => {
-              volume.mountPath = value
-              await this.plugin.saveSettings()
-            }),
-        )
-        */
+        .setName(name)
+        .setDesc(volume.mountPath)
+
         .addButton((button) => {
-          button.setButtonText('config').onClick(() => {
+          button.setButtonText('Config').onClick(() => {
             new VolumeModal(this.app, this.plugin, volume).open()
           })
         })
