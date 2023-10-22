@@ -138,6 +138,6 @@ export default class VeraPlugin extends Plugin {
   }
 
   test() {
-    this.app.vault.adapter.read()
+    // this.app.vault.adapter.read()
   }
 }
