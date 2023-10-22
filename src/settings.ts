@@ -58,7 +58,7 @@ export class VeraSettingTab extends PluginSettingTab {
   display(): void {
     let { containerEl } = this
     containerEl.empty()
-    containerEl.addClass('settings')
+    containerEl.addClass('veracrypt')
     containerEl.createEl('h1', { text: 'Veracrypt ' + this.plugin.manifest.version })
 
     new Setting(containerEl)
@@ -95,9 +95,10 @@ export class VeraSettingTab extends PluginSettingTab {
         }),
       )
 
+    containerEl.createEl('hr')
+
     this.plugin.settings.volumes.forEach((volume) => {
       new Setting(containerEl)
-        .setClass('volume')
         .setName(volume.filename)
         /*
         .addText((text) =>
@@ -120,10 +121,11 @@ export class VeraSettingTab extends PluginSettingTab {
         )
         */
         .addButton((button) => {
-          button.setButtonText('edit').onClick(() => {
+          button.setButtonText('config').onClick(() => {
             new VolumeModal(this.app, this.plugin, volume).open()
           })
         })
+
         .addToggle((toggle) => {
           toggle.setValue(volume.mounted).onChange(async (value) => {
             let v = new Volume(this.plugin, volume)
@@ -135,6 +137,8 @@ export class VeraSettingTab extends PluginSettingTab {
           })
         })
     })
+
+    containerEl.createEl('hr')
 
     new Setting(containerEl)
       .setName('GitHub')

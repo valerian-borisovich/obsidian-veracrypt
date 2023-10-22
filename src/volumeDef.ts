@@ -22,3 +22,7 @@ export const hashAlgorithm = ['BLAKE2s-256', 'SHA-256', 'SHA-512', 'Whirlpool', 
 
 // Filesystem Types
 export const filesystemType = ['FAT', 'exFAT', 'NTFS', 'Ext2', 'Ext3', 'Ext4', 'Btrfs', 'MacOsExt', 'APFS', 'UFS']
+
+//
+export type ConnectionStatus = 'connected' | 'disconnected'
+export type PluginStatus = 'unloading' | 'unloaded' | 'loading' | 'loaded'

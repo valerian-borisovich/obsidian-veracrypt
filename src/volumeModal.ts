@@ -32,7 +32,7 @@ export class VolumeModal extends Modal {
     let volume = this.volume
     let { contentEl } = this
     contentEl.empty()
-    this.contentEl.addClass('volume-modal')
+    contentEl.addClasses(['veracrypt', 'modals', 'volume', 'add'])
     this.titleEl.setText('Volume')
 
     let containerEl = contentEl.createDiv('volume')
@@ -70,6 +70,8 @@ export class VolumeModal extends Modal {
           await this.plugin.saveSettings()
         }),
       )
+
+    containerEl.createEl('hr')
 
     new Setting(containerEl)
       .setClass('filename')
@@ -128,10 +130,10 @@ export class VolumeModal extends Modal {
           }),
       )
 
-    containerEl.createEl('br')
+    containerEl.createEl('hr')
 
-    containerEl = contentEl.createDiv('volume-config-details')
-    containerEl.createEl('h2', { text: 'Details:' })
+    containerEl = contentEl.createDiv('details')
+    // containerEl.createEl('h2', { text: 'Details:' })
 
     new Setting(containerEl)
       .setClass('size')
@@ -146,8 +148,6 @@ export class VolumeModal extends Modal {
             await this.plugin.saveSettings()
           }),
       )
-
-    containerEl.createEl('br')
 
     let dropdownOptions: Record<string, string> = {}
     filesystemType.forEach((s) => {
@@ -203,6 +203,7 @@ export class VolumeModal extends Modal {
           })
       })
 
+    containerEl.createEl('hr')
     containerEl.createEl('br')
 
     const buttonEl = containerEl.createDiv('confirm-buttons')

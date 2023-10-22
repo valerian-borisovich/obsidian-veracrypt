@@ -1,7 +1,7 @@
 //
 import { v4 } from 'uuid'
 import { exec as exec } from 'child_process'
-import { App, PluginManifest } from 'obsidian'
+import { App, PluginManifest, normalizePath, TFile, TFolder } from 'obsidian'
 
 import VeraPlugin from './main'
 
@@ -51,8 +51,39 @@ export const DEFAULT_VOLUME_SETTINGS: VolumeSettings = {
   hash: 'sha-512',
 }
 
-export type ConnectionStatus = 'connected' | 'disconnected'
-export type PluginStatus = 'unloading' | 'unloaded' | 'loading' | 'loaded'
+/**
+ * Splits a full path including a folderpath and a filename into separate folderpath and filename components
+ * @param filepath
+ */
+export function splitFolderAndFilename(filepath: string): {
+  folderpath: string
+  filename: string
+  basename: string
+} {
+  const lastIndex = filepath.lastIndexOf('/')
+  const filename = lastIndex == -1 ? filepath : filepath.substring(lastIndex + 1)
+  return {
+    folderpath: normalizePath(filepath.substring(0, lastIndex)),
+    filename,
+    basename: filename.replace(/\.[^/.]+$/, ''),
+  }
+}
+
+/**
+ * Download data as file from Obsidian, to store on local device
+ * @param encoding
+ * @param data
+ * @param filename
+ */
+export const download = (encoding: string, data: any, filename: string) => {
+  const element = document.createElement('a')
+  element.setAttribute('href', (encoding ? `${encoding},` : '') + data)
+  element.setAttribute('download', filename)
+  element.style.display = 'none'
+  document.body.appendChild(element)
+  element.click()
+  document.body.removeChild(element)
+}
 
 export class Volume {
   app?: App
@@ -73,13 +104,24 @@ export class Volume {
   }
 
   async checkFolder(create: Boolean = true) {
-    console.log('volume.checkFolder: ' + this.volume.mountPath.toString())
-    if (!(await this.app.vault.adapter.exists(this.volume.mountPath))) {
-      if (create) {
-        console.log('volume.checkFolder.createFolder: ' + this.volume.mountPath.toString())
-        await this.app.vault.createFolder(this.volume.mountPath)
-      }
+    let folderpath = normalizePath(this.volume.mountPath)
+    console.log('volume.checkFolder: ' + folderpath.toString())
+
+    //@ts-ignore
+    const folder = this.app.vault.getAbstractFileByPathInsensitive(folderpath)
+    if (folder && folder instanceof TFolder) {
+      return
     }
+    if (folder && folder instanceof TFile) {
+      console.log(`The folder cannot be created because it already exists as a file: ${folderpath}.`)
+    }
+
+    // if (!(await this.app.vault.adapter.exists(folderpath))) {
+    if (create) {
+      console.log('volume.checkFolder.createFolder: ' + folderpath.toString())
+      await this.app.vault.createFolder(folderpath)
+    }
+    // }
   }
 
   async exists() {
