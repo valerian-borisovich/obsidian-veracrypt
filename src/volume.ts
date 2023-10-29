@@ -1,9 +1,9 @@
 //
 import { v4 } from 'uuid'
 import { App, PluginManifest, normalizePath, TFile, TFolder } from 'obsidian'
-
+import { execute } from './lib/execute'
+import { filesystemType, encryptionAlgorithm, hashAlgorithm } from './volumeDef'
 import VeraPlugin from './main'
-import { execute } from './execute'
 
 export interface VolumeSettings {
   id?: string
@@ -25,9 +25,14 @@ export interface VolumeSettings {
   keyfile: string
 
   size: string
-  fs: string
-  encryption: string
-  hash: string
+
+  // filesystem: string
+  // encryption: string
+  // hash: string
+
+  filesystem: filesystemType
+  encryption: encryptionAlgorithm
+  hash: hashAlgorithm
 }
 
 export const DEFAULT_VOLUME_SETTINGS: VolumeSettings = {
@@ -44,16 +49,20 @@ export const DEFAULT_VOLUME_SETTINGS: VolumeSettings = {
   umountTime: '',
 
   mountPath: '',
-  filename: 'newVolume.vera',
+  filename: 'newvolume.vera',
 
   password: '',
   keyfile: '',
 
   size: '3M',
-  fs: 'exFAT',
+  filesystem: 'exFAT',
   encryption: 'AES',
   hash: 'SHA-512',
 }
+
+//
+//
+//
 
 export class Volume {
   app?: App
@@ -112,7 +121,7 @@ export class Volume {
     let VOLUME_MOUNTPATH = this.getAbsolutePath(this.volume.mountPath)
     let VOLUME_HASH = this.volume.hash
     let VOLUME_ENC = this.volume.encryption
-    let VOLUME_FS = this.volume.fs
+    let VOLUME_FS = this.volume.filesystem
     let VOLUME_SIZE = this.volume.size
 
     let cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt --text --create "${VOLUME_FILE}" --volume-type=normal --pim=0 -k "${VOLUME_KEYFILE}" --quick --encryption="${VOLUME_ENC}" --hash="${VOLUME_HASH}" --filesystem="${VOLUME_FS}" --size="${VOLUME_SIZE}" --password="${VOLUME_PASSWORD}" --random-source=/dev/urandom`
@@ -136,6 +145,7 @@ export class Volume {
     console.debug('volume.mount: ' + this.volume.filename.toString() + ' to: ' + this.volume.mountPath.toString())
     await this._mount()
     this.volume.mounted = true
+    this.volume.mountTime = Date.now().toString()
     await this.plugin.saveSettings()
   }
 

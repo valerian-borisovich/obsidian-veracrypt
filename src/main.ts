@@ -1,13 +1,13 @@
 import { Notice, Plugin, setIcon, TFolder, TFile, TAbstractFile, debounce } from 'obsidian'
 
-import { ObsidianVeracryptSettings, DEFAULT_SETTINGS } from './settings'
-import { Volume } from './volume'
-//import { execute } from './execute'
+// import { ObsidianVeracryptSettings, DEFAULT_SETTINGS } from './settings'
+import { VeraSettings, ObsidianVeracryptSettings, DEFAULT_SETTINGS } from './vera'
 import { VeraSettingTab } from './settingsModal'
-//import { exec, spawnSync as spawn } from 'child_process'
+import { Volume } from './volume'
 
 export default class VeraPlugin extends Plugin {
   settings!: ObsidianVeracryptSettings
+  vera!: VeraSettings
 
   ribbonIconButton!: HTMLElement
   statusBarItem!: HTMLElement
@@ -16,10 +16,14 @@ export default class VeraPlugin extends Plugin {
     console.debug('Loading veracrypt plugin')
     await this.loadSettings()
 
+    console.debug('Loading vera')
+    // this.vera = new VeraSettings(Object.assign({}, DEFAULT_SETTINGS, await this.loadData()))
+    this.vera = new VeraSettings(this.settings)
+
     // This creates an icon in the left ribbon.
     this.ribbonIconButton = this.addRibbonIcon(
-      this.settings.areLoaded ? 'eye' : 'eye-off',
-      this.settings.areLoaded ? 'Mount all' : 'Unmount all',
+      this.settings.pluginLoaded ? 'eye' : 'eye-off',
+      this.settings.pluginLoaded ? 'Mount all' : 'Unmount all',
       (evt: MouseEvent) => {
         this.toggleFunctionality()
       },
@@ -28,7 +32,7 @@ export default class VeraPlugin extends Plugin {
     /*    */
     this.addRibbonIcon('dice', 'Vera', async () => {
       // new Notice('is a veracrypt notice!')
-      let d = '==pvt=='
+      let d = '/'
       await this.refreshFolder(d)
     })
 
@@ -76,7 +80,7 @@ export default class VeraPlugin extends Plugin {
     */
 
     this.app.workspace.onLayoutReady(async () => {
-      if (this.settings.mountAllAtStart) {
+      if (this.settings.mountAtStart) {
         await this.volumesMount()
       }
     })
@@ -86,7 +90,7 @@ export default class VeraPlugin extends Plugin {
 
   onunload() {
     console.debug('Unloading veracrypt plugin')
-    if (this.settings.umountAllAtExit) {
+    if (this.settings.umountAtExit) {
       this.volumesUmount().then((r) => {})
     }
   }
@@ -113,10 +117,10 @@ export default class VeraPlugin extends Plugin {
   */
 
   async toggleFunctionality() {
-    this.settings.areLoaded = !this.settings.areLoaded
-    this.ribbonIconButton.ariaLabel = this.settings.areLoaded ? 'Mount' : 'Unmount'
-    setIcon(this.ribbonIconButton, this.settings.areLoaded ? 'eye' : 'eye-off')
-    // this.statusBarItem.innerHTML = this.settings.areLoaded ? 'Loaded' : ''
+    this.settings.pluginLoaded = !this.settings.pluginLoaded
+    this.ribbonIconButton.ariaLabel = this.settings.pluginLoaded ? 'Mount' : 'Unmount'
+    setIcon(this.ribbonIconButton, this.settings.pluginLoaded ? 'eye' : 'eye-off')
+    // this.statusBarItem.innerHTML = this.settings.pluginLoaded ? 'Loaded' : ''
     await this.volumesMount()
   }
 

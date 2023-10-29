@@ -169,9 +169,9 @@ export class VolumeModal extends Modal {
       .addDropdown((dropdown) => {
         dropdown
           .addOptions(dropdownOptions)
-          .setValue(volume.fs)
+          .setValue(volume.filesystem)
           .onChange(async (value) => {
-            volume.fs = value
+            volume.filesystem = value
             await this.plugin.saveSettings()
           })
       })

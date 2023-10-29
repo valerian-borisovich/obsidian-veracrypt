@@ -35,8 +35,8 @@ export class VeraSettingTab extends PluginSettingTab {
       .setName('Auto mount')
       .setDesc('Mount all enabled volumes at start')
       .addToggle((toggle) =>
-        toggle.setValue(this.plugin.settings.mountAllAtStart).onChange(async (value) => {
-          this.plugin.settings.mountAllAtStart = value
+        toggle.setValue(this.plugin.settings.mountAtStart).onChange(async (value) => {
+          this.plugin.settings.mountAtStart = value
           await this.plugin.saveSettings()
         }),
       )
@@ -45,8 +45,8 @@ export class VeraSettingTab extends PluginSettingTab {
       .setName('Auto unmount')
       .setDesc('Unmount all enabled volumes at exit')
       .addToggle((toggle) =>
-        toggle.setValue(this.plugin.settings.umountAllAtExit).onChange(async (value) => {
-          this.plugin.settings.umountAllAtExit = value
+        toggle.setValue(this.plugin.settings.umountAtExit).onChange(async (value) => {
+          this.plugin.settings.umountAtExit = value
           await this.plugin.saveSettings()
         }),
       )
