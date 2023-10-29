@@ -16,6 +16,7 @@ export interface ObsidianVeracryptSettings {
   umountAllAtExit: boolean
 
   sudoPassword: string
+  sudoSave: boolean
 
   volumes: VolumeSettings[]
 }
@@ -36,6 +37,7 @@ export const DEFAULT_SETTINGS: ObsidianVeracryptSettings = {
   umountAllAtExit: true,
 
   sudoPassword: '',
+  sudoSave: true,
 
   volumes: [],
 }

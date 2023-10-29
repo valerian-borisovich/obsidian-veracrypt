@@ -57,18 +57,23 @@ export const execute2 = (cmd: string) => {
 
 import { spawn as process_spawn } from 'node:child_process'
 
-export const spawn = (cmd: string) => {
-  const ls = process_spawn('ls', ['-lh', '/usr'])
+export const spawn = (cmd: string, args: string[] = []) => {
+  // const proc = process_spawn('ls', ['-lh', '/usr'])
+  const proc = process_spawn(cmd, args)
 
-  ls.stdout.on('data', (data) => {
+  proc.stdout.on('data', (data) => {
     console.log(`stdout: ${data}`)
   })
 
-  ls.stderr.on('data', (data) => {
+  proc.stderr.on('data', (data) => {
     console.error(`stderr: ${data}`)
   })
 
-  ls.on('close', (code) => {
-    console.log(`child process exited with code ${code}`)
+  proc.on('close', (code) => {
+    console.debug(`child process exited with code ${code}`)
   })
+}
+
+function exampl() {
+  spawn('ls', ['-lh', '/usr'])
 }
