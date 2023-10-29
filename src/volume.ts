@@ -55,40 +55,6 @@ export const DEFAULT_VOLUME_SETTINGS: VolumeSettings = {
   hash: 'SHA-512',
 }
 
-/**
- * Splits a full path including a folderpath and a filename into separate folderpath and filename components
- * @param filepath
- */
-export function splitFolderAndFilename(filepath: string): {
-  folderpath: string
-  filename: string
-  basename: string
-} {
-  const lastIndex = filepath.lastIndexOf('/')
-  const filename = lastIndex == -1 ? filepath : filepath.substring(lastIndex + 1)
-  return {
-    folderpath: normalizePath(filepath.substring(0, lastIndex)),
-    filename,
-    basename: filename.replace(/\.[^/.]+$/, ''),
-  }
-}
-
-/**
- * Download data as file from Obsidian, to store on local device
- * @param encoding
- * @param data
- * @param filename
- */
-export const download = (encoding: string, data: any, filename: string) => {
-  const element = document.createElement('a')
-  element.setAttribute('href', (encoding ? `${encoding},` : '') + data)
-  element.setAttribute('download', filename)
-  element.style.display = 'none'
-  document.body.appendChild(element)
-  element.click()
-  document.body.removeChild(element)
-}
-
 export class Volume {
   app?: App
   plugin?: VeraPlugin
@@ -194,10 +160,11 @@ export class Volume {
     let VOLUME_FILE = this.getAbsolutePath(this.volume.filename)
     let VOLUME_MOUNTPATH = this.getAbsolutePath(this.volume.mountPath)
     let cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t --non-interactive --force --password="${VOLUME_PASSWORD}" --protect-hidden=no --pim=0 --keyfiles="${VOLUME_KEYFILE}" "${VOLUME_FILE}" "${VOLUME_MOUNTPATH}"`
-
     console.log(cmd)
     let r = execute(cmd)
     console.log(r)
+
+    cmd = `echo "${SUDO_PASSWORD}" | sudo -S ln -s /tmp ./t`
 
     this.volume.mountTime = Date.now().toString()
   }
@@ -218,10 +185,18 @@ export class Volume {
     execute(cmd)
      */
 
-    cmd = `echo "${SUDO_PASSWORD}" | sudo -S rm -rf "${VOLUME_MOUNTPATH}"`
-    console.log(cmd)
-    r = execute(cmd)
-    console.log(r)
+    const adapter = this.app.vault.adapter
+    // @ts-ignore
+    const existingFileNames = new Set(await adapter.fsPromises.readdir(`${adapter.basePath}/${directoryPath}`))
+
+    if (existingFileNames.size == 0) {
+      cmd = `echo "${SUDO_PASSWORD}" | sudo -S rm -rf "${VOLUME_MOUNTPATH}"`
+      console.log(cmd)
+      r = execute(cmd)
+      console.log(r)
+    } else {
+      console.log(`Can't delete "${VOLUME_MOUNTPATH}", is not empty!`)
+    }
     this.volume.umountTime = Date.now().toString()
   }
 }
