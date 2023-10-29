@@ -124,14 +124,16 @@ export class Volume {
 
   async delete() {
     console.log('volume.delete: ' + this.volume.filename)
-    this.plugin.settings.volumes.remove(this.volume)
-    await this.plugin.saveSettings()
     await this.umount()
-    await this.app.vault.adapter.remove(this.volume.filename)
+    if (this.isMounted()) {
+      await this.app.vault.adapter.remove(this.volume.filename)
+      this.plugin.settings.volumes.remove(this.volume)
+      await this.plugin.saveSettings()
+    }
   }
 
   async mount() {
-    console.log('volume.mount: ' + this.volume.filename.toString() + ' to: ' + this.volume.mountPath.toString())
+    console.debug('volume.mount: ' + this.volume.filename.toString() + ' to: ' + this.volume.mountPath.toString())
     await this._mount()
     this.volume.mounted = true
     await this.plugin.saveSettings()
@@ -146,25 +148,21 @@ export class Volume {
     let VOLUME_FILE = this.getAbsolutePath(this.volume.filename)
     let VOLUME_MOUNTPATH = this.getAbsolutePath(this.volume.mountPath)
     let cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t --non-interactive --force --password="${VOLUME_PASSWORD}" --protect-hidden=no --pim=0 --keyfiles="${VOLUME_KEYFILE}" "${VOLUME_FILE}" "${VOLUME_MOUNTPATH}"`
-    console.log(cmd)
-    let r = execute(cmd)
-    console.log(r)
-
-    cmd = `echo "${SUDO_PASSWORD}" | sudo -S ln -s /tmp ./t`
-
+    //console.debug(cmd)
+    execute(cmd)
     this.volume.mountTime = Date.now().toString()
   }
 
   async umount() {
-    console.log('volume.umount: ' + this.volume.filename.toString() + ' from: ' + this.volume.mountPath.toString())
+    console.debug('volume.umount: ' + this.volume.filename.toString() + ' from: ' + this.volume.mountPath.toString())
     await this._umount()
     let l = await this.app.vault.adapter.list(this.volume.mountPath)
     if (l.files.length + l.files.length <= 0) {
-      console.log('volume.umount.rmdir: ' + this.volume.mountPath.toString())
-      await this.app.vault.adapter.rmdir(this.volume.mountPath, true)
-      this.volume.mounted = false
-      await this.plugin.saveSettings()
+      //console.log('volume.umount.rmdir: ' + this.volume.mountPath.toString())
+      //await this.app.vault.adapter.rmdir(this.volume.mountPath, true)
     }
+    this.volume.mounted = false
+    await this.plugin.saveSettings()
   }
 
   async _umount() {
@@ -172,7 +170,7 @@ export class Volume {
     let VOLUME_FILE = this.getAbsolutePath(this.volume.filename)
     let VOLUME_MOUNTPATH = this.getAbsolutePath(this.volume.mountPath)
     let cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t -d "${VOLUME_FILE}" --non-interactive --force`
-    console.log(cmd)
+    console.debug(cmd)
     execute(cmd)
 
     /*
@@ -187,31 +185,34 @@ export class Volume {
       // @ts-ignore
       const existingFileNames = new Set(await adapter.fsPromises.readdir(`${VOLUME_MOUNTPATH}`))
 
-      console.log('existingFileNames.size ' + existingFileNames.size.toString())
+      console.debug('existingFileNames.size ' + existingFileNames.size.toString())
 
       if (existingFileNames.size === 0) {
         cmd = `echo "${SUDO_PASSWORD}" | sudo -S rm -rf "${VOLUME_MOUNTPATH}"`
-        console.log(cmd)
+        console.debug(cmd)
         execute(cmd)
-        // await this.app.vault.adapter.rmdir(this.volume.mountPath, false)
-        break
+        this.volume.umountTime = Date.now().toString()
+        return
       } else {
-        console.log(`Can't delete "${VOLUME_MOUNTPATH}", is not empty! ${i}`)
+        console.log(`"${VOLUME_MOUNTPATH}" is not empty! ${i}`)
         await sleep(333)
       }
     }
-    this.volume.umountTime = Date.now().toString()
+    console.error(`"${VOLUME_MOUNTPATH}" is not empty! Can't remove folder!`)
   }
 
   isMounted() {
     let r = false
-
-    this.plugin.volumesList().forEach((v) => {
+    let l = this.plugin.volumesList()
+    // console.debug('isMounted.l: ' + l.toString())
+    l.forEach((v) => {
+      console.debug('isMounted: ' + v['mount'])
+      console.debug('isMounted: ' + v)
+      // console.log('isMounted: ' + v['mount'])
       if (this.volume.mountPath === v['mount']) {
-        r = true
+        return true
       }
     })
-
-    return r
+    return false
   }
 }

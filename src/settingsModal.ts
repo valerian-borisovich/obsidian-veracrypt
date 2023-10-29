@@ -64,6 +64,9 @@ export class VeraSettingTab extends PluginSettingTab {
         volume.filename.lastIndexOf('/') ? 0 : volume.filename.lastIndexOf('/'),
         volume.filename.lastIndexOf('.'),
       )
+
+      const v = new Volume(this.plugin, volume)
+
       new Setting(containerEl)
         .setName(name)
         .setDesc(volume.mountPath)
@@ -75,9 +78,8 @@ export class VeraSettingTab extends PluginSettingTab {
         })
 
         .addToggle((toggle) => {
-          toggle.setValue(volume.mounted).onChange(async (value) => {
-            let v = new Volume(this.plugin, volume)
-            if (!value) {
+          toggle.setValue(v.isMounted()).onChange(async (value) => {
+            if (v.isMounted()) {
               await v.umount()
             } else {
               await v.mount()

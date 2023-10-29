@@ -29,7 +29,7 @@ export default class VeraPlugin extends Plugin {
     this.addRibbonIcon('dice', 'Vera', async () => {
       // new Notice('is a veracrypt notice!')
       let d = '==pvt=='
-      await this.reloadDirectory(d)
+      await this.refreshFolder(d)
     })
 
     this.addRibbonIcon('eye', 'Vera', async () => {
@@ -127,117 +127,99 @@ export default class VeraPlugin extends Plugin {
    *
    */
 
-  async mountVolumes0(): Promise<void> {
-    console.debug('mountVolumes')
-    let skip = false
-    let l = this.volumesList()
-    this.settings.volumes.forEach((volume) => {
-      skip = false
-      l.forEach((v) => {
-        if (volume.mountPath === v['mount']) {
-          skip = true
-        }
-      })
-
-      // if (volume.enabled && !volume.isMounted()) {
-      if (!skip && volume.enabled) {
-        let v = new Volume(this, volume)
-        v.mount()
-      }
-    })
-  }
-
   async volumesMount(): Promise<void> {
-    console.log('volumesMount')
+    console.debug('volumesMountAll')
     this.settings.volumes.forEach((volume) => {
       if (volume.enabled) {
         let v = new Volume(this, volume)
         if (!v.isMounted()) {
           v.mount()
-          this.reloadDirectory(v.volume.mountPath)
+          this.refreshFolder(v.volume.mountPath)
         } else {
-          console.error('volumesMount.mount: ' + v.volume.mountPath + ' already mounted!')
+          console.warn('volumesMount.mount: ' + v.volume.mountPath + ' already mounted!')
         }
       }
     })
   }
 
   async volumesUmount(): Promise<void> {
-    console.log('volumesUmount')
+    console.log('volumesUmountAll')
 
     this.settings.volumes.forEach((volume) => {
-      console.log('volumesUmount.volume: ' + volume.filename)
       let v = new Volume(this, volume)
       if (v.isMounted()) {
         v.umount()
-        this.reloadDirectory(v.volume.mountPath)
+        this.refreshFolder(v.volume.mountPath)
       } else {
-        console.error('volumesUmount.umount: ' + v.volume.mountPath + ' already unmounted!')
+        console.warn('volumesUmount.umount: ' + v.volume.mountPath + ' already unmounted!')
       }
     })
   }
 
   volumesList() {
-    console.log('volumesList')
     let r, a, v
     let l: [] = []
     let nomounted = 'Error: No volumes mounted.'
-    let SUDO_PASSWORD = this.settings.sudoPassword
     // let cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t -l --non-interactive --force`
     const spawn = require('child_process').spawnSync
 
-    r = spawn('veracrypt', ['-t', '-l', '--non-interactive', '--force']).stdout.toString('utf8')
-    console.log(r.toString())
-    if (r.substring(nomounted)) {
-      return l
-    }
-
-    r.split('\n').forEach((v: string) => {
-      if (v.length) {
-        a = v.split(' ')
-        // @ts-ignore
-        l.push({ filename: a[1], mount: a[3] })
+    try {
+      r = spawn('veracrypt', ['-t', '-l', '--non-interactive', '--force']).stdout.toString('utf8')
+      console.debug('volumesList.spawn.r: ' + r.toString())
+      if (r.substring(nomounted).length) {
+        return l
       }
-    })
 
-    process.on('exit', function () {
-      console.log('volumesList: ')
-      l.forEach((v) => {
-        console.log(v['filename'])
+      r.split('\n').forEach((v: string) => {
+        if (v.length) {
+          a = v.split(' ')
+          // @ts-ignore
+          l.push({ filename: a[1], mount: a[3] })
+        }
       })
-      return l
-    })
+
+      process.on('exit', function () {
+        console.debug('volumesList: ' + l.toString())
+        return l
+      })
+    } catch (e) {
+      console.error('volumesList.err: ' + e.toString())
+    }
     return l
   }
 
-  async reloadDirectory(directoryPath: string) {
-    const adapter = this.app.vault.adapter // const adapter = this.app.vault.adapter as any
-    await reload(directoryPath)
-    // @ts-ignore
-    const existingFileNames = new Set(await adapter.fsPromises.readdir(`${adapter.basePath}/${directoryPath}`))
-    const dir = this.app.vault.getAbstractFileByPath(directoryPath)
-    // @ts-ignore
-    const obsidianFileNames = new Set(dir.children.map((child) => child.name))
-
-    for (const fileName of existingFileNames) {
-      if (!obsidianFileNames.has(fileName)) {
-        await reload(`${directoryPath}/${fileName}`)
-      }
-    }
-
-    for (const fileName of obsidianFileNames) {
-      if (!existingFileNames.has(fileName)) {
-        const path = `${directoryPath}/${fileName}`
-        console.debug(`Deleting ${path}`)
-        // @ts-ignore
-        await adapter.reconcileFile('', path)
-      }
-    }
-
-    async function reload(path: string) {
-      console.debug(`Reloading ${path}`)
+  async refreshFolder(folderPath: string) {
+    try {
+      const adapter = this.app.vault.adapter // const adapter = this.app.vault.adapter as any
+      await reload(folderPath)
       // @ts-ignore
-      await adapter.reconcileFile(path, path)
+      const existingFileNames = new Set(await adapter.fsPromises.readdir(`${adapter.basePath}/${folderPath}`))
+      const dir = this.app.vault.getAbstractFileByPath(folderPath)
+      // @ts-ignore
+      const obsidianFileNames = new Set(dir.children.map((child) => child.name))
+
+      for (const fileName of existingFileNames) {
+        if (!obsidianFileNames.has(fileName)) {
+          await reload(`${folderPath}/${fileName}`)
+        }
+      }
+
+      for (const fileName of obsidianFileNames) {
+        if (!existingFileNames.has(fileName)) {
+          const path = `${folderPath}/${fileName}`
+          console.debug(`refreshFolder.onDeleting: ${path}`)
+          // @ts-ignore
+          await adapter.reconcileFile('', path)
+        }
+      }
+
+      async function reload(path: string) {
+        console.debug(`reconcileFile: ${path}`)
+        // @ts-ignore
+        await adapter.reconcileFile(path, path)
+      }
+    } catch (e) {
+      console.error(`refreshFolder: ${e}`)
     }
   }
 }
