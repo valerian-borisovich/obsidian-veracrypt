@@ -202,9 +202,8 @@ export class Volume {
   }
 
   isMounted() {
-    let r = false
-    let l = this.plugin.volumesList()
-    // console.debug('isMounted.l: ' + l.toString())
+    const l = this.plugin.volumesList()
+    console.debug('isMounted.l: ' + l.toString())
     l.forEach((v) => {
       console.debug('isMounted: ' + v['mount'])
       console.debug('isMounted: ' + v)
