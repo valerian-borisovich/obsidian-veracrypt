@@ -1,7 +1,7 @@
 {
   "name": "obsidian-veracrypt",
   "description": "Veracrypt for obsidian",
-  "version": "0.3.40",
+  "version": "0.3.41",
   "main": "index.js",
   "keywords": [],
   "license": "MIT",
@@ -91,7 +91,7 @@
   "config": {
     "vault": {
       "name": "vera",
-      "path": "./vera",
+      "path": "/pub/==vaults==/vera",
       "conf": ".obsidian"
     },
     "commitizen": {
