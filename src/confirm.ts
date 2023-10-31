@@ -1,5 +1,5 @@
 import { App, ButtonComponent, Modal } from 'obsidian'
-import VeraPlugin from './main'
+import VeraPlugin from './veraPlugin'
 
 export async function confirmWithModal(
   app: App,

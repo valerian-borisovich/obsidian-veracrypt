@@ -1,7 +1,7 @@
 //
 //
 import { App, PluginManifest, normalizePath, TFile, TFolder } from 'obsidian'
-import VeraPlugin from './main'
+import VeraPlugin from './veraPlugin'
 import { v4, getCurrenVersion, execute, filesystemType, encryptionAlgorithm, hashAlgorithm } from './vera'
 
 export interface VolumeSettings {

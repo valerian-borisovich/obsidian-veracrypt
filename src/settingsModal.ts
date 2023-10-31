@@ -1,5 +1,5 @@
 import { App, PluginSettingTab, Setting } from 'obsidian'
-import VeraPlugin from './main'
+import VeraPlugin from './veraPlugin'
 import { Volume, DEFAULT_VOLUME_SETTINGS } from './volume'
 import { VolumeModal } from './volumeModal'
 

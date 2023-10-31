@@ -4,7 +4,7 @@ export interface ObsidianVeracryptSettings {
   devID: string
 
   pluginVersion: string
-  pluginLoaded: string
+  pluginLoaded: boolean
   pluginDebug: boolean
   logFilename: string
 
@@ -27,7 +27,7 @@ export const DEFAULT_SETTINGS: ObsidianVeracryptSettings = {
   devID: '',
 
   pluginVersion: '0.3.3',
-  pluginLoaded: '',
+  pluginLoaded: false,
   pluginDebug: false,
 
   logFilename: 'vera.log',

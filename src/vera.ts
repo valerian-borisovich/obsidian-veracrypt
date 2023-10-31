@@ -76,6 +76,14 @@ function getCurrenVersion(): string {
 //
 
 /*
+ *
+ */
+
+//
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+
+/*
  *    imports
  */
 import { v4 } from 'uuid'
@@ -83,9 +91,25 @@ import { v4 } from 'uuid'
 import { filesystemType, encryptionAlgorithm, hashAlgorithm } from './defines'
 import { log } from './lib/log'
 import { getID } from './lib/machine-id'
+import { proxyList, proxyGet, proxySet, proxyCheck } from './lib/proxies'
 import { execute } from './lib/execute'
 
 /*
  *    exports
  */
-export { Vera, Manifest, getCurrenVersion, log, getID, execute, filesystemType, encryptionAlgorithm, hashAlgorithm, v4 }
+export {
+  Vera,
+  Manifest,
+  proxyList,
+  proxyGet,
+  proxySet,
+  proxyCheck,
+  getCurrenVersion,
+  log,
+  getID,
+  execute,
+  filesystemType,
+  encryptionAlgorithm,
+  hashAlgorithm,
+  v4,
+}
