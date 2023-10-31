@@ -1,12 +1,12 @@
 //
-import { v4 } from 'uuid'
+//
 import { App, PluginManifest, normalizePath, TFile, TFolder } from 'obsidian'
-import { execute } from './lib/execute'
-import { filesystemType, encryptionAlgorithm, hashAlgorithm } from './volumeDef'
 import VeraPlugin from './main'
+import { v4, getCurrenVersion, execute, filesystemType, encryptionAlgorithm, hashAlgorithm } from './vera'
 
 export interface VolumeSettings {
   id?: string
+  version: string
 
   enabled: boolean
   mounted: boolean
@@ -26,10 +26,6 @@ export interface VolumeSettings {
 
   size: string
 
-  // filesystem: string
-  // encryption: string
-  // hash: string
-
   filesystem: filesystemType
   encryption: encryptionAlgorithm
   hash: hashAlgorithm
@@ -37,6 +33,7 @@ export interface VolumeSettings {
 
 export const DEFAULT_VOLUME_SETTINGS: VolumeSettings = {
   id: v4(),
+  version: getCurrenVersion(),
 
   enabled: false,
   mounted: false,
@@ -118,7 +115,7 @@ export class Volume {
     let VOLUME_PASSWORD = this.volume.password
     let VOLUME_KEYFILE = ''
     let VOLUME_FILE = this.getAbsolutePath(this.volume.filename)
-    let VOLUME_MOUNTPATH = this.getAbsolutePath(this.volume.mountPath)
+    // let VOLUME_MOUNTPATH = this.getAbsolutePath(this.volume.mountPath)
     let VOLUME_HASH = this.volume.hash
     let VOLUME_ENC = this.volume.encryption
     let VOLUME_FS = this.volume.filesystem

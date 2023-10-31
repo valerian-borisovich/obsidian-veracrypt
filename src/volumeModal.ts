@@ -1,8 +1,9 @@
 import { App, ButtonComponent, Modal, Setting } from 'obsidian'
 import { Volume, VolumeSettings } from './volume'
-import { encryptionAlgorithm, filesystemType, hashAlgorithm } from './volumeDef'
+
 import VeraPlugin from './main'
 import { ConfirmModal, confirmWithModal } from './confirm'
+import { encryptionAlgorithm, filesystemType, hashAlgorithm } from './vera'
 
 export class VolumeModal extends Modal {
   plugin?: VeraPlugin

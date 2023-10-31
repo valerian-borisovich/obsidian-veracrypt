@@ -1,7 +1,7 @@
 import { Notice, Plugin, setIcon, TFolder, TFile, TAbstractFile, debounce } from 'obsidian'
 
 // import { ObsidianVeracryptSettings, DEFAULT_SETTINGS } from './settings'
-import { VeraSettings, ObsidianVeracryptSettings, DEFAULT_SETTINGS } from './vera'
+import { VeraSettings, ObsidianVeracryptSettings, DEFAULT_SETTINGS } from './veraSettings'
 import { VeraSettingTab } from './settingsModal'
 import { Volume } from './volume'
 
