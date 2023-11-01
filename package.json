@@ -1,7 +1,7 @@
 {
   "name": "obsidian-veracrypt",
   "description": "Veracrypt for obsidian",
-  "version": "0.3.41",
+  "version": "0.3.42",
   "main": "index.js",
   "keywords": [],
   "license": "MIT",
@@ -23,7 +23,7 @@
   },
   "author": {
     "name": "Valerian Borisovich",
-    "email": "zachleatherman@gmail.com",
+    "email": "Valerian.Borisovich@gmail.com",
     "url": "https://valerian-borisovich.github.io/"
   },
   "funding": {
@@ -44,22 +44,23 @@
   },
   "dependencies": {
     "@sindresorhus/slugify": "latest",
-    "axios": "^1.2.2",
+    "axios": "latest",
     "dotenv": "latest",
-    "electron": "^27.0.2",
+    "electron": "latest",
+    "electron-proxy-agent": "latest",
     "fs-file-tree": "latest",
     "fs-jetpack": "latest",
-    "glob": "^10.2.1",
-    "gray-matter": "^4.0.3",
-    "localforage": "^1.10.0",
-    "node-machine-id": "^1.1.12",
+    "glob": "latest",
+    "gray-matter": "latest",
+    "localforage": "latest",
+    "node-machine-id": "latest",
     "obsidian": "latest",
-    "obsidian-plugin-cli": "^0.9.0",
+    "obsidian-plugin-cli": "latest",
     "uuid": "^9.0.1",
     "uuid4": "^2.0.3"
   },
   "devDependencies": {
-    "@types/node": "^20.8.4",
+    "@types/node": "^18.18.8",
     "@types/uuid": "^9.0.6",
     "@typescript-eslint/eslint-plugin": "^6.5.0",
     "@typescript-eslint/parser": "^6.5.0",
