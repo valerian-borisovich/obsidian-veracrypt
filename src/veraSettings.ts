@@ -2,14 +2,13 @@
 //
 //
 //
-import localforage from 'localforage'
-import { LOCALSTORAGE, WEBSQL, INDEXEDDB } from 'localforage'
+import localforage, { INDEXEDDB, WEBSQL } from 'localforage'
 //
 //
 //
-import { ObsidianVeracryptSettings, DEFAULT_SETTINGS } from './settings'
+import { DEFAULT_SETTINGS, ObsidianVeracryptSettings } from './settings'
 // import { getMachineId } from './lib/machine-id'
-import { log, getID } from './vera'
+import { getID, log } from './hlp'
 
 localforage.config({
   driver: localforage.WEBSQL, // Force WebSQL; same as using setDriver()
@@ -26,18 +25,13 @@ export class VeraSettings {
   volumes?: LocalForage
 
   constructor(settings: ObsidianVeracryptSettings = DEFAULT_SETTINGS) {
+    log('VeraSettings loading')
+
     this.settings = settings
+
+    log('VeraSettings loading 1')
     // this.volumes = localforage.createInstance({ name: 'volumes', storeName: 'volumes' })
     // this.store = localforage.createInstance({ name: 'store', storeName: 'store' })
-    let volumes = localforage.createInstance({
-      name: 'volumes',
-      storeName: 'volumes',
-      driver: WEBSQL,
-      version: 1.0,
-      size: 4980736,
-    })
-    this.volumes = volumes
-
     let store = localforage.createInstance({
       name: 'store',
       storeName: 'store',
@@ -45,12 +39,23 @@ export class VeraSettings {
       version: 1.0,
       size: 4980736,
     })
+
     this.store = store
 
-    log('VeraSettings loading')
+    log('VeraSettings loading 9')
+
+    this.volumes = localforage.createInstance({
+      name: 'volumes',
+      storeName: 'volumes',
+      driver: WEBSQL,
+      version: 1.0,
+      size: 4980736,
+    })
+
+    log('VeraSettings loading 10')
 
     store.getItem('devID', function (err, deviceID) {
-      log('devID1: ' + deviceID)
+      log('devID: ' + deviceID)
       if (deviceID === null) {
         deviceID = getID()
         store.setItem('devID', deviceID, (err, value) => {})
@@ -97,6 +102,7 @@ export { ObsidianVeracryptSettings, DEFAULT_SETTINGS }
 //
 //
 //
+/*
 localforage
   .ready(function () {
     console.log('ready', arguments)
@@ -128,3 +134,4 @@ localforage
       )
     },
   )
+*/

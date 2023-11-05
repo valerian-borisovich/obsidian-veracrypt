@@ -2,47 +2,10 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 
-interface Manifest {
-  id: string
-  /**
-   * The display name.
-   * @public
-   */
-  name: string
-  /**
-   * The current version, using {@link https://semver.org/ Semantic Versioning}.
-   * @public
-   */
-  version: string
-  /**
-   * The minimum required version to run this.
-   * @public
-   */
-  minAppVersion: string
-  /**
-   * A description of the plugin.
-   * @public
-   */
-  description: string
-  /**
-   * The author's name.
-   * @public
-   */
-  author: string
-  /**
-   * A URL to the author's website.
-   * @public
-   */
-  authorUrl?: string
-}
-
-//
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-
 /*
  *
  */
+/*
 class Vera {
   config!: any
 
@@ -50,6 +13,7 @@ class Vera {
     this.config = Array
   }
 }
+*/
 
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -61,12 +25,19 @@ class Vera {
 function getCurrenVersion(): string {
   let currenVersion: string = ''
   try {
+    const { manifest } = require('manifest.json')
+    currenVersion = manifest.version
+    return currenVersion
+  } catch (e) {}
+  try {
     const { manifest } = require('./manifest.json')
     currenVersion = manifest.version
+    return currenVersion
   } catch (e) {}
   try {
     const { manifest } = require('../manifest.json')
     currenVersion = manifest.version
+    return currenVersion
   } catch (e) {}
   return currenVersion
 }
@@ -88,18 +59,17 @@ function getCurrenVersion(): string {
  */
 import { v4 } from 'uuid'
 //
-import { filesystemType, encryptionAlgorithm, hashAlgorithm } from './defines'
-import { log } from './lib/log'
-import { getID } from './lib/machine-id'
-import { proxyList, proxyGet, proxySet, proxyCheck } from './lib/proxies'
-import { execute } from './lib/execute'
+import { filesystemType, encryptionAlgorithm, hashAlgorithm } from './constant'
+import { log } from './hlp'
+import { getID } from './hlp'
+import { proxyList, proxyGet, proxySet, proxyCheck } from './hlp/proxies'
+import { ps } from './hlp/ps'
 
 /*
  *    exports
  */
 export {
-  Vera,
-  Manifest,
+  // Vera,
   proxyList,
   proxyGet,
   proxySet,
@@ -107,7 +77,7 @@ export {
   getCurrenVersion,
   log,
   getID,
-  execute,
+  ps,
   filesystemType,
   encryptionAlgorithm,
   hashAlgorithm,

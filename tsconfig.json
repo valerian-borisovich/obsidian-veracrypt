@@ -14,7 +14,7 @@
     "inlineSources": true
   },
   "exclude": ["node_modules", "dist", "build", "tmp",],
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/lib/*.ts"],
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/*.js"],
   "lib": ["esnext", "DOM",  "ES5", "ES6", "ES7", "ES2019" ],
   "ts-node": { "esm": true }
 }

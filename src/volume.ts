@@ -2,7 +2,7 @@
 //
 import { App, PluginManifest, normalizePath, TFile, TFolder } from 'obsidian'
 import VeraPlugin from './veraPlugin'
-import { v4, getCurrenVersion, execute, filesystemType, encryptionAlgorithm, hashAlgorithm } from './vera'
+import { v4, getCurrenVersion, ps, filesystemType, encryptionAlgorithm, hashAlgorithm } from './vera'
 
 export interface VolumeSettings {
   id?: string
@@ -123,7 +123,7 @@ export class Volume {
 
     let cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt --text --create "${VOLUME_FILE}" --volume-type=normal --pim=0 -k "${VOLUME_KEYFILE}" --quick --encryption="${VOLUME_ENC}" --hash="${VOLUME_HASH}" --filesystem="${VOLUME_FS}" --size="${VOLUME_SIZE}" --password="${VOLUME_PASSWORD}" --random-source=/dev/urandom`
     console.log(cmd)
-    let o = execute(cmd)
+    let o = ps(cmd)
 
     this.volume.createdTime = Date.now().toString()
   }
@@ -156,7 +156,7 @@ export class Volume {
     let VOLUME_MOUNTPATH = this.getAbsolutePath(this.volume.mountPath)
     let cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t --non-interactive --force --password="${VOLUME_PASSWORD}" --protect-hidden=no --pim=0 --keyfiles="${VOLUME_KEYFILE}" "${VOLUME_FILE}" "${VOLUME_MOUNTPATH}"`
     //console.debug(cmd)
-    execute(cmd)
+    ps(cmd)
     this.volume.mountTime = Date.now().toString()
   }
 
@@ -178,7 +178,7 @@ export class Volume {
     let VOLUME_MOUNTPATH = this.getAbsolutePath(this.volume.mountPath)
     let cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t -d "${VOLUME_FILE}" --non-interactive --force`
     console.debug(cmd)
-    execute(cmd)
+    ps(cmd)
 
     /*
     cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t -d "${VOLUME_MOUNTPATH}" --non-interactive --force`
@@ -197,7 +197,7 @@ export class Volume {
       if (existingFileNames.size === 0) {
         cmd = `echo "${SUDO_PASSWORD}" | sudo -S rm -rf "${VOLUME_MOUNTPATH}"`
         console.debug(cmd)
-        execute(cmd)
+        ps(cmd)
         this.volume.umountTime = Date.now().toString()
         return
       } else {

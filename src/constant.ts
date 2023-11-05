@@ -1,6 +1,6 @@
 // https://www.veracrypt.fr/en/Encryption%20Algorithms.html
 // Encryption Algorithms
-type encryptionAlgorithm = [
+const encryptionAlgorithm = [
   'AES',
   'Camellia',
   'Kuznyechik',
@@ -19,13 +19,13 @@ type encryptionAlgorithm = [
 ]
 
 // Hash Algorithms
-type hashAlgorithm = ['BLAKE2s-256', 'SHA-256', 'SHA-512', 'Whirlpool', 'Streebog']
+const hashAlgorithm = ['BLAKE2s-256', 'SHA-256', 'SHA-512', 'Whirlpool', 'Streebog']
 
 // Filesystem Types
-type filesystemType = ['FAT', 'exFAT', 'NTFS', 'Ext2', 'Ext3', 'Ext4', 'Btrfs', 'MacOsExt', 'APFS', 'UFS']
+const filesystemType = ['FAT', 'exFAT', 'NTFS', 'Ext2', 'Ext3', 'Ext4', 'Btrfs', 'MacOsExt', 'APFS', 'UFS']
 
 // Mounted Status
-type MountStatus = ['mounted', 'dismount']
+const MountStatus = ['mounted', 'dismount']
 
 //
 //

@@ -4,7 +4,7 @@
 
 // export const execute = (command: string, args?: ReadonlyArray<string>) => {
 // export const execute = (command: string, args?: string[]) => {
-export const execute = (command: string) => {
+export const ps = (command: string) => {
   let r = ''
   // const spawn = require('child_process').spawnSync
   const spawn = require('child_process').execSync
