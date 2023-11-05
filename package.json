@@ -1,7 +1,7 @@
 {
   "name": "obsidian-veracrypt",
   "description": "Veracrypt for obsidian",
-  "version": "0.3.48",
+  "version": "0.3.49",
   "main": "index.js",
   "keywords": [],
   "license": "MIT",
@@ -17,7 +17,7 @@
     "lint-staged": "lint-staged",
     "build:prod": "obsidian-plugin build --with-stylesheet src/styles.css src/main.ts",
     "build:dev0": "obsidian-plugin dev --with-stylesheet src/styles.css src/main.ts --vault-path /pub/==vaults==/vera",
-    "build:dev": "obsidian-plugin dev src/main.ts --vault-path /pub/==vaults==/vera",
+    "build:dev": "obsidian-plugin dev src/main.ts -v /pub/==vaults==/vera",
     "test": "echo test pass...",
     "start": "npm run dev",
     "dev": "npm run bump && npm run build:dev"
