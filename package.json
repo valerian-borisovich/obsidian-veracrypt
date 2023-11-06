@@ -1,7 +1,7 @@
 {
   "name": "obsidian-veracrypt",
   "description": "Veracrypt for obsidian",
-  "version": "0.3.67",
+  "version": "0.3.68",
   "main": "index.js",
   "keywords": [],
   "license": "MIT",
@@ -50,7 +50,7 @@
     "@types/node": "latest",
     "axios": "latest",
     "dotenv": "latest",
-    "electron": "latest",
+    "electron": "^27.0.3",
     "electron-proxy-agent": "^1.2.1",
     "fs-file-tree": "latest",
     "fs-jetpack": "latest",
