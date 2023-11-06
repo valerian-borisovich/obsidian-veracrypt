@@ -1,13 +1,13 @@
 import { App, ButtonComponent, Modal, Setting } from 'obsidian'
 import { Volume, VolumeSettings } from './volume'
 
-import VeraPlugin from './main'
 import { ConfirmModal, confirmWithModal } from './confirm'
-import { encryptionAlgorithm, filesystemType, hashAlgorithm } from './vera'
+import { encryptionAlgorithm, filesystemType, hashAlgorithm } from './hlp'
+import VeraPlugin from './main'
 
 export class VolumeModal extends Modal {
-  plugin?: VeraPlugin
-  volume?: VolumeSettings
+  plugin!: VeraPlugin
+  volume!: VolumeSettings
 
   constructor(app: App, plugin: VeraPlugin, volume: VolumeSettings) {
     super(app)
@@ -217,7 +217,7 @@ export class VolumeModal extends Modal {
     containerEl.createEl('br')
 
     const buttonEl = containerEl.createDiv('confirm-buttons')
-    if (volume.createdTime.length < 4) {
+    if (volume.createdTime === '') {
       // create volume
       new ButtonComponent(buttonEl).setButtonText(' Create ').onClick(() => {
         this.plugin.settings.volumes.push(volume)

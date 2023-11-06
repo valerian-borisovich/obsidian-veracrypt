@@ -1,13 +1,14 @@
 import { Notice, Plugin, setIcon, TFolder, TFile, TAbstractFile, debounce } from 'obsidian'
 
-// import { ObsidianVeracryptSettings, DEFAULT_SETTINGS } from './settings'
-import { VeraSettings, ObsidianVeracryptSettings, DEFAULT_SETTINGS } from './veraSettings'
+import { ObsidianVeracryptSettings, DEFAULT_SETTINGS } from './settings'
 import { VeraSettingTab } from './settingsModal'
 import { Volume } from './volume'
+import { Vera } from './vera'
+import { getVersion } from './hlp'
 
 export default class VeraPlugin extends Plugin {
   settings!: ObsidianVeracryptSettings
-  vera!: VeraSettings
+  vera!: Vera
 
   ribbonIconButton!: HTMLElement
   statusBarItem!: HTMLElement
@@ -16,15 +17,15 @@ export default class VeraPlugin extends Plugin {
     console.debug('Loading veracrypt plugin')
     await this.loadSettings()
 
-    console.debug('Loading vera')
-    // this.vera = new VeraSettings(Object.assign({}, DEFAULT_SETTINGS, await this.loadData()))
-    this.vera = new VeraSettings(this.settings)
+    this.vera = new Vera(this.settings)
+
+    await getVersion()
 
     // This creates an icon in the left ribbon.
     this.ribbonIconButton = this.addRibbonIcon(
       this.settings.pluginLoaded ? 'eye' : 'eye-off',
       this.settings.pluginLoaded ? 'Mount all' : 'Unmount all',
-      (evt: MouseEvent) => {
+      () => {
         this.toggleFunctionality()
       },
     )
@@ -118,7 +119,7 @@ export default class VeraPlugin extends Plugin {
 
   async toggleFunctionality() {
     this.settings.pluginLoaded = !this.settings.pluginLoaded
-    this.ribbonIconButton.ariaLabel = this.settings.pluginLoaded ? 'Mount' : 'Unmount'
+    // this.ribbonIconButton.ariaLabel = this.settings.pluginLoaded ? 'Mount' : 'Unmount'
     setIcon(this.ribbonIconButton, this.settings.pluginLoaded ? 'eye' : 'eye-off')
     // this.statusBarItem.innerHTML = this.settings.pluginLoaded ? 'Loaded' : ''
     await this.volumesMount()
@@ -187,7 +188,7 @@ export default class VeraPlugin extends Plugin {
         return l
       })
     } catch (e) {
-      console.error('volumesList.err: ' + e.toString())
+      console.error('volumesList.err: ' + e)
     }
     return l
   }

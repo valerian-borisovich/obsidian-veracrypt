@@ -1,6 +1,6 @@
 import { App, PluginSettingTab, Setting } from 'obsidian'
-import VeraPlugin from './veraPlugin'
-import { Volume, DEFAULT_VOLUME_SETTINGS } from './volume'
+import VeraPlugin from './main'
+import { Volume, VolumeSettings, DEFAULT_VOLUME_SETTINGS } from './volume'
 import { VolumeModal } from './volumeModal'
 
 export class VeraSettingTab extends PluginSettingTab {
@@ -59,7 +59,7 @@ export class VeraSettingTab extends PluginSettingTab {
 
     containerEl.createEl('hr')
 
-    this.plugin.settings.volumes.forEach((volume) => {
+    this.plugin.settings.volumes.forEach((volume: VolumeSettings) => {
       let name = volume.filename.substring(
         volume.filename.lastIndexOf('/') ? 0 : volume.filename.lastIndexOf('/'),
         volume.filename.lastIndexOf('.'),

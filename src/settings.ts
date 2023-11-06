@@ -1,3 +1,4 @@
+import { version } from './hlp'
 import { VolumeSettings } from './volume'
 
 export interface ObsidianVeracryptSettings {
@@ -26,7 +27,7 @@ export interface ObsidianVeracryptSettings {
 export const DEFAULT_SETTINGS: ObsidianVeracryptSettings = {
   devID: '',
 
-  pluginVersion: '0.3.3',
+  pluginVersion: version,
   pluginLoaded: false,
   pluginDebug: false,
 

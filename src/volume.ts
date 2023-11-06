@@ -1,8 +1,8 @@
 //
 //
 import { App, PluginManifest, normalizePath, TFile, TFolder } from 'obsidian'
+import { version, ps, v4 } from './hlp'
 import VeraPlugin from './main'
-import { v4, getVersion, ps, filesystemType, encryptionAlgorithm, hashAlgorithm } from './vera'
 
 export interface VolumeSettings {
   id?: string
@@ -33,7 +33,7 @@ export interface VolumeSettings {
 
 export const DEFAULT_VOLUME_SETTINGS: VolumeSettings = {
   id: v4(),
-  version: getVersion(),
+  version: version,
 
   enabled: false,
   mounted: false,
@@ -62,10 +62,10 @@ export const DEFAULT_VOLUME_SETTINGS: VolumeSettings = {
 //
 
 export class Volume {
-  app?: App
-  plugin?: VeraPlugin
-  manifest?: PluginManifest
-  volume?: VolumeSettings
+  app!: App
+  plugin!: VeraPlugin
+  manifest!: PluginManifest
+  volume!: VolumeSettings
 
   constructor(plugin: VeraPlugin, volume: VolumeSettings) {
     this.plugin = plugin
