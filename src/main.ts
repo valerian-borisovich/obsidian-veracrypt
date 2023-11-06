@@ -3,6 +3,7 @@ import { Notice, Plugin, setIcon, TFolder, TFile, TAbstractFile, debounce } from
 import { ObsidianVeracryptSettings, DEFAULT_SETTINGS } from './settings'
 import { VeraSettingTab } from './settingsModal'
 import { Volume } from './volume'
+import { PasswordModal } from './passwordModal'
 import { Vera } from './vera'
 import { getVersion } from './hlp'
 
@@ -13,13 +14,24 @@ export default class VeraPlugin extends Plugin {
   ribbonIconButton!: HTMLElement
   statusBarItem!: HTMLElement
 
+  async getPassword(id: string) {
+    let pass = await this.vera.getPassword(id)
+    console.debug('VeraPlugin.getPassword: ' + id + ' == ' + pass)
+    let dlg = new PasswordModal(this.app, this, id, '')
+    dlg.open()
+  }
+
+  async setPassword(id: string, password: string) {
+    let pass = await this.vera.setPassword(id, password)
+    console.debug('VeraPlugin.getPassword: ' + id + ' : ' + password + ' == ' + pass)
+  }
+
   async onload() {
     console.debug('Loading veracrypt plugin')
+    await getVersion()
     await this.loadSettings()
 
     this.vera = new Vera(this.settings)
-
-    await getVersion()
 
     // This creates an icon in the left ribbon.
     this.ribbonIconButton = this.addRibbonIcon(
