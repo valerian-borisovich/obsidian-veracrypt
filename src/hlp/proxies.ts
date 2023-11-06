@@ -34,7 +34,7 @@ MAP * baz, EXCLUDE www.google.com Перенаправляет всё на "baz"
 
 //
 import * as electron from 'electron'
-import { getCurrenVersion } from '../vera'
+import { getVersion } from '../vera'
 
 let proxyList = ['136.244.99.51:8888']
 

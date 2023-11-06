@@ -1,8 +1,8 @@
 //
 //
 import { App, PluginManifest, normalizePath, TFile, TFolder } from 'obsidian'
-import VeraPlugin from './veraPlugin'
-import { v4, getCurrenVersion, ps, filesystemType, encryptionAlgorithm, hashAlgorithm } from './vera'
+import VeraPlugin from './main'
+import { v4, getVersion, ps, filesystemType, encryptionAlgorithm, hashAlgorithm } from './vera'
 
 export interface VolumeSettings {
   id?: string
@@ -26,14 +26,14 @@ export interface VolumeSettings {
 
   size: string
 
-  filesystem: filesystemType
-  encryption: encryptionAlgorithm
-  hash: hashAlgorithm
+  filesystem: string
+  encryption: string
+  hash: string
 }
 
 export const DEFAULT_VOLUME_SETTINGS: VolumeSettings = {
   id: v4(),
-  version: getCurrenVersion(),
+  version: getVersion(),
 
   enabled: false,
   mounted: false,
@@ -209,9 +209,9 @@ export class Volume {
   }
 
   isMounted() {
-    const l = this.plugin.volumesList()
-    console.debug('isMounted.l: ' + l.toString())
-    l.forEach((v) => {
+    const volumes = this.plugin.volumesList()
+    console.debug('isMounted.volumes: ' + volumes.toString())
+    volumes.forEach((v) => {
       console.debug('isMounted: ' + v['mount'])
       console.debug('isMounted: ' + v)
       // console.log('isMounted: ' + v['mount'])

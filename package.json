@@ -5,9 +5,11 @@
   "main": "index.js",
   "keywords": [],
   "license": "MIT",
+  "type": "module",
   "scripts": {
-    "clear": "rm -rf ./dist",
-    "setup": "npm run clear && npm install --legacy-peer-deps && npm audit fix --force",
+    "clear": "rimraf dist node_modules",
+    "setup0": "npm run clear && npm install --legacy-peer-deps && npm audit fix --force",
+    "setup": "npm run clear && npm install --save && npm audit fix --force",
     "prebuild": "npm run bump",
     "bump": "standard-version",
     "commit": "git-cz",
@@ -44,28 +46,28 @@
     ]
   },
   "dependencies": {
+    "@types/node": "latest",
     "@sindresorhus/slugify": "latest",
     "axios": "latest",
     "dotenv": "latest",
     "electron": "latest",
-    "electron-proxy-agent": "latest",
+    "obsidian": "latest",
+    "obsidian-plugin-cli": "latest",
+    "node-machine-id": "latest",
+    "node-jq": "latest",
     "fs-file-tree": "latest",
     "fs-jetpack": "latest",
     "glob": "latest",
     "gray-matter": "latest",
     "localforage": "latest",
-    "node-jq": "^4.2.2",
-    "node-machine-id": "latest",
-    "obsidian": "latest",
-    "obsidian-plugin-cli": "latest",
-    "uuid": "^9.0.1"
+    "uuid": "latest"
   },
   "devDependencies": {
-    "@types/node": "^18.18.8",
     "@types/uuid": "^9.0.6",
     "@typescript-eslint/eslint-plugin": "^6.5.0",
     "@typescript-eslint/parser": "^6.5.0",
     "ansi-colors": "^4.1.3",
+    "bin-build": "^2.1.2",
     "builtin-modules": "latest",
     "commander": "latest",
     "commitizen": "^4.3.0",
@@ -86,9 +88,10 @@
     "obsidian-dataview": "latest",
     "obsidian-undocumented": "latest",
     "prettier": "latest",
+    "rimraf": "latest",
     "standard-version": "latest",
     "tslib": "latest",
-    "typescript": "^4.1.5"
+    "typescript": "^4.5.4"
   },
   "config": {
     "vault": {
