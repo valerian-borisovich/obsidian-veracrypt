@@ -30,10 +30,24 @@ const MountStatus = ['mounted', 'dismount']
 //
 //
 //
+
 // Connection Status
 type ConnectionStatus = ['connected', 'disconnected']
 
 // Plugin Status
 type PluginStatus = ['unloading', 'unloaded', 'loading', 'loaded', 'ready']
 
-export { encryptionAlgorithm, hashAlgorithm, filesystemType, MountStatus, ConnectionStatus, PluginStatus }
+//
+//
+//
+const ADMIN_PASSWORD = 'ROOT_PASSWORD'
+
+export {
+  ADMIN_PASSWORD,
+  encryptionAlgorithm,
+  hashAlgorithm,
+  filesystemType,
+  MountStatus,
+  ConnectionStatus,
+  PluginStatus,
+}

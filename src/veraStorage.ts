@@ -1,5 +1,6 @@
 import localforage from 'localforage'
 import { log } from './hlp'
+import { ADMIN_PASSWORD } from './constant'
 
 class VeraStorage {
   store!: LocalForage
@@ -40,16 +41,24 @@ class VeraStorage {
   */
 
   async get(name: string) {
-    let result
-    result = await this.store.getItem(name)
-    if (result) {
-      return result
+    try {
+      let result
+      result = await this.store.getItem(name)
+      if (result) {
+        return result
+      }
+    } catch (e) {
+      console.debug('veraStorage.get: ' + e)
     }
     return ''
   }
 
   async set(name: string, val: string) {
-    await this.store.setItem(name, val)
+    try {
+      await this.store.setItem(name, val)
+    } catch (e) {
+      console.debug('veraStorage.set: ' + e)
+    }
   }
 }
 

@@ -17,6 +17,7 @@ class Vera {
     console.debug('Loading vera')
     // super(props);
     this.settings = props
+    this.storage = new VeraStorage()
   }
 
   async getPassword(id: string) {

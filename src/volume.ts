@@ -4,6 +4,8 @@ import { App, PluginManifest, normalizePath, TFile, TFolder } from 'obsidian'
 import { version, ps, v4 } from './hlp'
 import VeraPlugin from './main'
 
+import { ADMIN_PASSWORD } from './constant'
+
 export interface VolumeSettings {
   id?: string
   version: string
@@ -111,7 +113,7 @@ export class Volume {
   }
 
   async create() {
-    let SUDO_PASSWORD = this.plugin.settings.sudoPassword
+    let SUDO_PASSWORD = this.plugin.getPassword(ADMIN_PASSWORD)
     let VOLUME_PASSWORD = this.volume.password
     let VOLUME_KEYFILE = ''
     let VOLUME_FILE = this.getAbsolutePath(this.volume.filename)
@@ -149,7 +151,7 @@ export class Volume {
   async _mount() {
     await this.checkFolder()
 
-    let SUDO_PASSWORD = this.plugin.settings.sudoPassword
+    let SUDO_PASSWORD = this.plugin.getPassword(ADMIN_PASSWORD)
     let VOLUME_PASSWORD = this.volume.password
     let VOLUME_KEYFILE = ''
     let VOLUME_FILE = this.getAbsolutePath(this.volume.filename)
@@ -173,7 +175,7 @@ export class Volume {
   }
 
   async _umount() {
-    let SUDO_PASSWORD = this.plugin.settings.sudoPassword
+    let SUDO_PASSWORD = this.plugin.getPassword(ADMIN_PASSWORD)
     let VOLUME_FILE = this.getAbsolutePath(this.volume.filename)
     let VOLUME_MOUNTPATH = this.getAbsolutePath(this.volume.mountPath)
     let cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t -d "${VOLUME_FILE}" --non-interactive --force`
