@@ -1,8 +1,8 @@
 //
-import { ObsidianVeracryptSettings } from './settings'
+import { VeraPluginSettings } from './settings'
 import { VeraStorage } from './veraStorage'
 
-interface VeraSettings extends ObsidianVeracryptSettings {}
+interface VeraSettings extends VeraPluginSettings {}
 
 interface IVera {
   getPassword(id: string): string

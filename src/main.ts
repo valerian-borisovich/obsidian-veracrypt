@@ -1,6 +1,6 @@
 import { Notice, Plugin, setIcon, TFolder, TFile, TAbstractFile, debounce } from 'obsidian'
 
-import { ObsidianVeracryptSettings, DEFAULT_SETTINGS } from './settings'
+import { VeraPluginSettings, DEFAULT_SETTINGS } from './settings'
 import { VeraSettingTab } from './settingsModal'
 import { Volume } from './volume'
 import { PasswordModal } from './passwordModal'
@@ -8,7 +8,7 @@ import { Vera } from './vera'
 import { getVersion } from './hlp'
 
 export default class VeraPlugin extends Plugin {
-  settings!: ObsidianVeracryptSettings
+  settings!: VeraPluginSettings
   vera!: Vera
 
   ribbonIconButton!: HTMLElement
