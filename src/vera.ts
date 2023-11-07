@@ -1,6 +1,7 @@
 //
 import { VeraPluginSettings } from './settings'
 import { VeraStorage } from './veraStorage'
+import { debug } from './hlp'
 
 interface VeraSettings extends VeraPluginSettings {}
 
@@ -14,8 +15,8 @@ class Vera {
   storage!: VeraStorage
 
   constructor(props: any) {
-    console.debug('Loading vera')
     // super(props);
+    debug('Loading vera')
     this.settings = props
     this.storage = new VeraStorage()
   }

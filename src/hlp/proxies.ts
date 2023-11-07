@@ -34,6 +34,7 @@ MAP * baz, EXCLUDE www.google.com Перенаправляет всё на "baz"
 
 //
 // import * as electron from 'electron'
+//
 
 let proxyList = ['136.244.99.51:8888']
 
@@ -44,19 +45,22 @@ function proxyCheck(proxy: string) {
 }
 
 /* get valid proxy address */
-function proxyGet(validate: boolean = false) {
-  let res = ''
-  proxyList.forEach((proxy) => {
+async function proxyGet(validate: boolean = false) {
+  let proxy = ''
+  console.log('proxyGet: ')
+  proxyList.forEach((pxy) => {
+    proxy = pxy
+    console.log(`proxyGet: ${proxy}`)
     if (proxyCheck(proxy)) {
       return proxy
     }
   })
-  return res
+  return proxy
 }
 
-function proxySet(host = '*', proxy = '') {
+async function proxySet(host = '*', proxy = '') {
   if (proxy === '') {
-    proxy = proxyGet()
+    proxy = await proxyGet()
   }
   console.log('proxySet: ' + `MAP ${host} ${proxy}`)
   const electron = require('electron')

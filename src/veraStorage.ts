@@ -1,5 +1,5 @@
 import localforage from 'localforage'
-import { log } from './hlp'
+import { log, err } from './hlp'
 import { ADMIN_PASSWORD } from './constant'
 
 class VeraStorage {
@@ -19,27 +19,6 @@ class VeraStorage {
     log('VeraStorage loaded')
   }
 
-  /*
-  _load_from_settings(){
-
-    this.store.getItem('devID', function (err, deviceID) {
-      log('devID: ' + deviceID)
-      if (deviceID === null) {
-        deviceID = getID()
-        this.store.setItem('devID', deviceID, (err, value) => {})
-        log('devID: ' + deviceID)
-        for (let [key, value] of Object.entries(settings)) {
-          log('settings: ' + key + ' == ' + value)
-          this.store.setItem(key, value, (err, value) => {})
-          // this.store.setItem(key, value)
-          // key + ' : ' + value
-        }
-        // this.store.setItem('devID', getMachineId(), (error, value) => {})
-      }
-    })
-  }
-  */
-
   async get(name: string) {
     try {
       let result
@@ -48,7 +27,7 @@ class VeraStorage {
         return result
       }
     } catch (e) {
-      console.debug('veraStorage.get: ' + e)
+      err(`veraStorage.get: ${e}`)
     }
     return ''
   }
@@ -57,7 +36,7 @@ class VeraStorage {
     try {
       await this.store.setItem(name, val)
     } catch (e) {
-      console.debug('veraStorage.set: ' + e)
+      err(`veraStorage.set: ${e}`)
     }
   }
 }
@@ -67,6 +46,28 @@ export { VeraStorage }
 //
 //
 //
+/*
+_load_from_settings(){
+
+  this.store.getItem('devID', function (err, deviceID) {
+    log('devID: ' + deviceID)
+    if (deviceID === null) {
+      deviceID = getID()
+      this.store.setItem('devID', deviceID, (err, value) => {})
+      log('devID: ' + deviceID)
+      for (let [key, value] of Object.entries(settings)) {
+        log('settings: ' + key + ' == ' + value)
+        this.store.setItem(key, value, (err, value) => {})
+        // this.store.setItem(key, value)
+        // key + ' : ' + value
+      }
+      // this.store.setItem('devID', getMachineId(), (error, value) => {})
+    }
+  })
+}
+*/
+
+
 /*
 localforage
   .ready(function () {

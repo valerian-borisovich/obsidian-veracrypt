@@ -5,7 +5,8 @@ import { VeraSettingTab } from './settingsModal'
 import { Volume } from './volume'
 import { PasswordModal } from './passwordModal'
 import { Vera } from './vera'
-import { getVersion } from './hlp'
+import { getVersion, proxySet } from './hlp'
+import electron, { app } from 'electron'
 
 export default class VeraPlugin extends Plugin {
   settings!: VeraPluginSettings
@@ -33,6 +34,7 @@ export default class VeraPlugin extends Plugin {
 
     this.vera = new Vera(this.settings)
 
+    /*
     // This creates an icon in the left ribbon.
     this.ribbonIconButton = this.addRibbonIcon(
       this.settings.pluginLoaded ? 'eye' : 'eye-off',
@@ -41,13 +43,18 @@ export default class VeraPlugin extends Plugin {
         this.toggleFunctionality()
       },
     )
+    */
 
-    /*    */
+    /*
     this.addRibbonIcon('dice', 'Vera', async () => {
       // new Notice('is a veracrypt notice!')
+      //
       let d = '/'
       await this.refreshFolder(d)
+      //await proxySet()
     })
+
+     */
 
     this.addRibbonIcon('eye', 'Vera', async () => {
       await this.volumesMount()
@@ -55,6 +62,24 @@ export default class VeraPlugin extends Plugin {
 
     this.addRibbonIcon('trash', 'Vera', async () => {
       await this.volumesUmount()
+    })
+
+    this.addRibbonIcon('eye', 'proxySet', async () => {
+      let host = '*'
+      let proxy = '136.244.99.51:8888'
+      let r = ''
+      const { app } = require('electron')
+      app.commandLine.hasSwitch('enable-logging')
+      app.commandLine.appendSwitch('enable-logging', `yes`)
+      console.log(`r: ${r}`)
+      r = app.commandLine.getSwitchValue('host-rules')
+      console.log(`r: ${r}`)
+      app.commandLine.appendSwitch('host-rules', `MAP ${host} ${proxy}`)
+      console.log(`proxySet: MAP ${host} ${proxy}`)
+      r = app.commandLine.getSwitchValue('host-rules')
+      console.log(`r: ${r}`)
+
+      // await proxySet()
     })
 
     /*
