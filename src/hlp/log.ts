@@ -10,7 +10,11 @@ const dbg = debug
 const error = (msg) => console.error(msg)
 const err = error
 
+// @ts-ignore
+const warning = (msg) => console.warn(msg)
+const warn = warning
+
 //
 //
 //
-export { log, dbg, debug, err, error}
+export { log, dbg, debug, err, error, warn, warning }

@@ -17,6 +17,7 @@ export class VeraSettingTab extends PluginSettingTab {
     containerEl.addClass('veracrypt')
     containerEl.createEl('h1', { text: 'Veracrypt ' + this.plugin.manifest.version })
 
+    /*
     new Setting(containerEl)
       .setName('SUDO')
       .setDesc('sudo password')
@@ -30,10 +31,11 @@ export class VeraSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings()
           }),
       )
+    */
 
     new Setting(containerEl)
       .setName('Auto mount')
-      .setDesc('Mount all enabled volumes at start')
+      .setDesc('mount all enabled volumes at start')
       .addToggle((toggle) =>
         toggle.setValue(this.plugin.settings.mountAtStart).onChange(async (value) => {
           this.plugin.settings.mountAtStart = value
@@ -43,7 +45,7 @@ export class VeraSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName('Auto unmount')
-      .setDesc('Unmount all enabled volumes at exit')
+      .setDesc('unmount all mounted volumes at exit')
       .addToggle((toggle) =>
         toggle.setValue(this.plugin.settings.umountAtExit).onChange(async (value) => {
           this.plugin.settings.umountAtExit = value
@@ -52,7 +54,7 @@ export class VeraSettingTab extends PluginSettingTab {
       )
 
     new Setting(containerEl).addButton((button) => {
-      button.setButtonText('Create new').onClick(() => {
+      button.setButtonText('New').onClick(() => {
         new VolumeModal(this.app, this.plugin, DEFAULT_VOLUME_SETTINGS).open()
       })
     })

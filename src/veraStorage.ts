@@ -1,12 +1,12 @@
 import localforage from 'localforage'
-import { log, err } from './hlp'
+import { log, dbg, err } from './hlp'
 import { ADMIN_PASSWORD } from './constant'
 
 class VeraStorage {
   store!: LocalForage
 
   constructor() {
-    log('VeraStorage loading')
+    dbg('VeraStorage loading')
 
     this.store = localforage.createInstance({
       name: 'vera',
@@ -66,7 +66,6 @@ _load_from_settings(){
   })
 }
 */
-
 
 /*
 localforage

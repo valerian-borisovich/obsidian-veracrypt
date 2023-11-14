@@ -3,10 +3,12 @@ import { Notice, Plugin, setIcon, TFolder, TFile, TAbstractFile, debounce } from
 import { VeraPluginSettings, DEFAULT_SETTINGS } from './settings'
 import { VeraSettingTab } from './settingsModal'
 import { Volume } from './volume'
-import { PasswordModal } from './passwordModal'
+import { PasswordPromt } from './passwordModal'
 import { Vera } from './vera'
-import { getVersion, proxySet } from './hlp'
-import electron, { app } from 'electron'
+// import { getVersion, proxySet } from './hlp'
+import { getVersion, log, dbg, err, warn } from './hlp'
+// import { ADMIN_PASSWORD } from './constant'
+// import electron, { app } from 'electron'
 
 export default class VeraPlugin extends Plugin {
   settings!: VeraPluginSettings
@@ -17,19 +19,24 @@ export default class VeraPlugin extends Plugin {
 
   async getPassword(id: string) {
     let pass = await this.vera.getPassword(id)
-    console.debug('VeraPlugin.getPassword: ' + id + ' == ' + pass)
-    let dlg = new PasswordModal(this.app, this, id, '')
-    dlg.open()
+    // dbg('VeraPlugin.getPassword: ' + id + ' == ' + pass)
+    if (pass === '') {
+      let dlg = new PasswordPromt(this.app, this, id, '')
+      dlg.open()
+      // pass = dlg.newPassword
+      pass = await this.vera.getPassword(id)
+    }
+    return pass
   }
 
   async setPassword(id: string, password: string) {
     let pass = await this.vera.setPassword(id, password)
-    console.debug('VeraPlugin.getPassword: ' + id + ' : ' + password + ' == ' + pass)
+    dbg('VeraPlugin.getPassword: ' + id + ' : ' + password + ' == ' + pass)
   }
 
   async onload() {
-    console.debug('Loading veracrypt plugin')
-    await getVersion()
+    let plugin_version = await getVersion()
+    dbg(`Loading veracrypt plugin ${plugin_version} version`)
     await this.loadSettings()
 
     this.vera = new Vera(this.settings)
@@ -64,30 +71,12 @@ export default class VeraPlugin extends Plugin {
       await this.volumesUmount()
     })
 
-    this.addRibbonIcon('eye', 'proxySet', async () => {
-      let host = '*'
-      let proxy = '136.244.99.51:8888'
-      let r = ''
-      const { app } = require('electron')
-      app.commandLine.hasSwitch('enable-logging')
-      app.commandLine.appendSwitch('enable-logging', `yes`)
-      console.log(`r: ${r}`)
-      r = app.commandLine.getSwitchValue('host-rules')
-      console.log(`r: ${r}`)
-      app.commandLine.appendSwitch('host-rules', `MAP ${host} ${proxy}`)
-      console.log(`proxySet: MAP ${host} ${proxy}`)
-      r = app.commandLine.getSwitchValue('host-rules')
-      console.log(`r: ${r}`)
-
-      // await proxySet()
-    })
-
     /*
     this.addCommand({
       id: 'open-vera-modal',
       name: 'Open Veracrypt Modal',
       // callback: () => {
-      // 	console.log('Veracrypt Modal Callback');
+      // 	log('Veracrypt Modal Callback');
       // },
       checkCallback: (checking: boolean) => {
         let leaf = this.app.workspace.activeLeaf
@@ -101,17 +90,30 @@ export default class VeraPlugin extends Plugin {
       },
     })
     */
+    this.addCommand({
+      id: 'veracrypt-umount-all',
+      name: 'Veracrypt Unmount All',
+      callback: () => {
+        log('Veracrypt Unmount Callback')
+      },
+      checkCallback: (checking: boolean) => {
+        if (!checking) {
+          log('Veracrypt checkCallback checking')
+        }
+        this.volumesUmount()
+      },
+    })
 
     this.addSettingTab(new VeraSettingTab(this.app, this))
 
-    // this.registerDomEvent(document, 'click', (evt: MouseEvent) => { console.log('click', evt) })
+    // this.registerDomEvent(document, 'click', (evt: MouseEvent) => { log('click', evt) })
 
-    // this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000))
+    // this.registerInterval(window.setInterval(() => log('setInterval'), 5 * 60 * 1000))
 
     /*
     this.registerInterval(
       window.setInterval(() => {
-        console.log('listVolumes')
+        log('listVolumes')
         this.volumesList()
       }, 2 * 1000),
     )
@@ -119,6 +121,7 @@ export default class VeraPlugin extends Plugin {
 
     this.app.workspace.onLayoutReady(async () => {
       if (this.settings.mountAtStart) {
+        log(`app.workspace.onLayoutReady : settings.mountAtStart`)
         await this.volumesMount()
       }
     })
@@ -127,7 +130,7 @@ export default class VeraPlugin extends Plugin {
   }
 
   onunload() {
-    console.debug('Unloading veracrypt plugin')
+    dbg('Unloading veracrypt plugin')
     if (this.settings.umountAtExit) {
       this.volumesUmount().then((r) => {})
     }
@@ -170,7 +173,7 @@ export default class VeraPlugin extends Plugin {
    */
 
   async volumesMount(): Promise<void> {
-    console.debug('volumesMountAll')
+    dbg('volumesMountAll')
     this.settings.volumes.forEach((volume) => {
       if (volume.enabled) {
         let v = new Volume(this, volume)
@@ -178,14 +181,14 @@ export default class VeraPlugin extends Plugin {
           v.mount()
           this.refreshFolder(v.volume.mountPath)
         } else {
-          console.warn('volumesMount.mount: ' + v.volume.mountPath + ' already mounted!')
+          warn('volumesMount.mount: ' + v.volume.mountPath + ' already mounted!')
         }
       }
     })
   }
 
   async volumesUmount(): Promise<void> {
-    console.log('volumesUmountAll')
+    log('volumesUmountAll')
 
     this.settings.volumes.forEach((volume) => {
       let v = new Volume(this, volume)
@@ -193,7 +196,7 @@ export default class VeraPlugin extends Plugin {
         v.umount()
         this.refreshFolder(v.volume.mountPath)
       } else {
-        console.warn('volumesUmount.umount: ' + v.volume.mountPath + ' already unmounted!')
+        warn('volumesUmount.umount: ' + v.volume.mountPath + ' already unmounted!')
       }
     })
   }
@@ -207,7 +210,7 @@ export default class VeraPlugin extends Plugin {
 
     try {
       r = spawn('veracrypt', ['-t', '-l', '--non-interactive', '--force']).stdout.toString('utf8')
-      console.debug('volumesList.spawn.r: ' + r.toString())
+      dbg('volumesList.spawn.r: ' + r.toString())
       if (r.substring(nomounted).length) {
         return l
       }
@@ -221,11 +224,11 @@ export default class VeraPlugin extends Plugin {
       })
 
       process.on('exit', function () {
-        console.debug('volumesList: ' + l.toString())
+        dbg('volumesList: ' + l.toString())
         return l
       })
     } catch (e) {
-      console.error('volumesList.err: ' + e)
+      err('volumesList.err: ' + e)
     }
     return l
   }
@@ -249,19 +252,19 @@ export default class VeraPlugin extends Plugin {
       for (const fileName of obsidianFileNames) {
         if (!existingFileNames.has(fileName)) {
           const path = `${folderPath}/${fileName}`
-          console.debug(`refreshFolder.onDeleting: ${path}`)
+          dbg(`refreshFolder.onDeleting: ${path}`)
           // @ts-ignore
           await adapter.reconcileFile('', path)
         }
       }
 
       async function reload(path: string) {
-        console.debug(`reconcileFile: ${path}`)
+        dbg(`reconcileFile: ${path}`)
         // @ts-ignore
         await adapter.reconcileFile(path, path)
       }
     } catch (e) {
-      console.error(`refreshFolder: ${e}`)
+      err(`refreshFolder: ${e}`)
     }
   }
 }

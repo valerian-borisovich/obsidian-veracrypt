@@ -1,13 +1,13 @@
 //
 //
 import { App, PluginManifest, normalizePath, TFile, TFolder } from 'obsidian'
-import { version, ps, v4 } from './hlp'
+import { version, ps, v4, log, debug, err } from './hlp'
 import VeraPlugin from './main'
 
 import { ADMIN_PASSWORD } from './constant'
 
 export interface VolumeSettings {
-  id?: string
+  id: string
   version: string
 
   enabled: boolean
@@ -48,7 +48,7 @@ export const DEFAULT_VOLUME_SETTINGS: VolumeSettings = {
   umountTime: '',
 
   mountPath: '',
-  filename: 'newvolume.vera',
+  filename: 'volume.vera',
 
   password: '',
   keyfile: '',
@@ -90,7 +90,7 @@ export class Volume {
       return
     }
     if (folder && folder instanceof TFile) {
-      console.log(`The folder cannot be created because it already exists as a file: ${folderpath}.`)
+      log(`The folder cannot be created because it already exists as a file: ${folderpath}.`)
     }
 
     // if (!(await this.app.vault.adapter.exists(folderpath))) {
@@ -114,7 +114,8 @@ export class Volume {
 
   async create() {
     let SUDO_PASSWORD = this.plugin.getPassword(ADMIN_PASSWORD)
-    let VOLUME_PASSWORD = this.volume.password
+    // let VOLUME_PASSWORD = this.volume.password
+    let VOLUME_PASSWORD = this.plugin.getPassword(this.volume.id)
     let VOLUME_KEYFILE = ''
     let VOLUME_FILE = this.getAbsolutePath(this.volume.filename)
     // let VOLUME_MOUNTPATH = this.getAbsolutePath(this.volume.mountPath)
@@ -124,14 +125,14 @@ export class Volume {
     let VOLUME_SIZE = this.volume.size
 
     let cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt --text --create "${VOLUME_FILE}" --volume-type=normal --pim=0 -k "${VOLUME_KEYFILE}" --quick --encryption="${VOLUME_ENC}" --hash="${VOLUME_HASH}" --filesystem="${VOLUME_FS}" --size="${VOLUME_SIZE}" --password="${VOLUME_PASSWORD}" --random-source=/dev/urandom`
-    console.log(cmd)
+    log(cmd)
     let o = ps(cmd)
 
     this.volume.createdTime = Date.now().toString()
   }
 
   async delete() {
-    console.log('volume.delete: ' + this.volume.filename)
+    log('volume.delete: ' + this.volume.filename)
     await this.umount()
     if (this.isMounted()) {
       await this.app.vault.adapter.remove(this.volume.filename)
@@ -141,7 +142,7 @@ export class Volume {
   }
 
   async mount() {
-    console.debug('volume.mount: ' + this.volume.filename.toString() + ' to: ' + this.volume.mountPath.toString())
+    debug('volume.mount: ' + this.volume.filename.toString() + ' to: ' + this.volume.mountPath.toString())
     await this._mount()
     this.volume.mounted = true
     this.volume.mountTime = Date.now().toString()
@@ -157,17 +158,17 @@ export class Volume {
     let VOLUME_FILE = this.getAbsolutePath(this.volume.filename)
     let VOLUME_MOUNTPATH = this.getAbsolutePath(this.volume.mountPath)
     let cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t --non-interactive --force --password="${VOLUME_PASSWORD}" --protect-hidden=no --pim=0 --keyfiles="${VOLUME_KEYFILE}" "${VOLUME_FILE}" "${VOLUME_MOUNTPATH}"`
-    //console.debug(cmd)
+    //dbg(cmd)
     ps(cmd)
     this.volume.mountTime = Date.now().toString()
   }
 
   async umount() {
-    console.debug('volume.umount: ' + this.volume.filename.toString() + ' from: ' + this.volume.mountPath.toString())
+    debug('volume.umount: ' + this.volume.filename.toString() + ' from: ' + this.volume.mountPath.toString())
     await this._umount()
     let l = await this.app.vault.adapter.list(this.volume.mountPath)
     if (l.files.length + l.files.length <= 0) {
-      //console.log('volume.umount.rmdir: ' + this.volume.mountPath.toString())
+      //log('volume.umount.rmdir: ' + this.volume.mountPath.toString())
       //await this.app.vault.adapter.rmdir(this.volume.mountPath, true)
     }
     this.volume.mounted = false
@@ -179,7 +180,7 @@ export class Volume {
     let VOLUME_FILE = this.getAbsolutePath(this.volume.filename)
     let VOLUME_MOUNTPATH = this.getAbsolutePath(this.volume.mountPath)
     let cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t -d "${VOLUME_FILE}" --non-interactive --force`
-    console.debug(cmd)
+    debug(cmd)
     ps(cmd)
 
     /*
@@ -194,28 +195,28 @@ export class Volume {
       // @ts-ignore
       const existingFileNames = new Set(await adapter.fsPromises.readdir(`${VOLUME_MOUNTPATH}`))
 
-      console.debug('existingFileNames.size ' + existingFileNames.size.toString())
+      debug('existingFileNames.size ' + existingFileNames.size.toString())
 
       if (existingFileNames.size === 0) {
         cmd = `echo "${SUDO_PASSWORD}" | sudo -S rm -rf "${VOLUME_MOUNTPATH}"`
-        console.debug(cmd)
+        debug(cmd)
         ps(cmd)
         this.volume.umountTime = Date.now().toString()
         return
       } else {
-        console.log(`"${VOLUME_MOUNTPATH}" is not empty! ${i}`)
+        log(`"${VOLUME_MOUNTPATH}" is not empty! ${i}`)
         await sleep(333)
       }
     }
-    console.error(`"${VOLUME_MOUNTPATH}" is not empty! Can't remove folder!`)
+    err(`"${VOLUME_MOUNTPATH}" is not empty! Can't remove folder!`)
   }
 
   isMounted() {
     const volumes = this.plugin.volumesList()
-    console.debug('isMounted.volumes: ' + volumes.toString())
+    debug('isMounted.volumes: ' + volumes.toString())
     volumes.forEach((v) => {
-      console.debug('isMounted: ' + v['mount'])
-      console.debug('isMounted: ' + v)
+      debug('isMounted: ' + v['mount'])
+      debug('isMounted: ' + v)
       // console.log('isMounted: ' + v['mount'])
       if (this.volume.mountPath === v['mount']) {
         return true

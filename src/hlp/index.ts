@@ -21,7 +21,7 @@ export type ValueOf<T> = T[keyof T]
  */
 //
 import { getVersion, version } from './ver'
-import { log, debug, dbg, err } from './log'
+import { log, dbg, debug, err, error, warn, warning } from './log'
 // import { machineId, machineIdSync } from './machine-id'
 import { getID } from './machine-id'
 
@@ -33,7 +33,7 @@ import { v4 } from 'uuid'
 /*
  *    exports
  */
-export { log, debug, dbg, err }
+export { log, dbg, debug, err, error, warn, warning }
 export { v4, ps, getID }
 export { version, getVersion }
 export { filesystemType, encryptionAlgorithm, hashAlgorithm }

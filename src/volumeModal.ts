@@ -126,6 +126,7 @@ export class VolumeModal extends Modal {
           }),
       )
 
+    /*
     new Setting(containerEl)
       .setClass('keyfile')
       .setName('Keyfile')
@@ -139,6 +140,7 @@ export class VolumeModal extends Modal {
             await this.plugin.saveSettings()
           }),
       )
+    */
 
     containerEl.createEl('hr')
 
