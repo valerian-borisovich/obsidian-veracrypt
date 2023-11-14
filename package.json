@@ -1,7 +1,7 @@
 {
   "name": "obsidian-veracrypt",
   "description": "Veracrypt for obsidian",
-  "version": "0.3.71",
+  "version": "0.3.72",
   "main": "index.js",
   "keywords": [],
   "license": "MIT",
