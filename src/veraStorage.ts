@@ -20,11 +20,11 @@ class VeraStorage {
   }
 
   async get(name: string) {
+    let result
     try {
-      let result
       result = await this.store.getItem(name)
       if (result) {
-        return result
+        return result.toString()
       }
     } catch (e) {
       err(`veraStorage.get: ${e}`)

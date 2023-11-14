@@ -1,12 +1,12 @@
 //
 //
 import { App, PluginManifest, normalizePath, TFile, TFolder } from 'obsidian'
-import { version, ps, v4, log, debug, err } from './hlp'
+import { getVersion, ps, v4, log, dbg, err } from './hlp'
 import VeraPlugin from './main'
 
 import { ADMIN_PASSWORD } from './constant'
 
-export interface VolumeSettings {
+export interface VolumeConfig {
   id: string
   version: string
 
@@ -33,9 +33,9 @@ export interface VolumeSettings {
   hash: string
 }
 
-export const DEFAULT_VOLUME_SETTINGS: VolumeSettings = {
+export const DEFAULT_VOLUME_CONFIG: VolumeConfig = {
   id: v4(),
-  version: version,
+  version: getVersion(),
 
   enabled: false,
   mounted: false,
@@ -67,9 +67,9 @@ export class Volume {
   app!: App
   plugin!: VeraPlugin
   manifest!: PluginManifest
-  volume!: VolumeSettings
+  volume!: VolumeConfig
 
-  constructor(plugin: VeraPlugin, volume: VolumeSettings) {
+  constructor(plugin: VeraPlugin, volume: VolumeConfig) {
     this.plugin = plugin
     this.app = this.plugin.app
     this.manifest = this.plugin.manifest
@@ -113,9 +113,9 @@ export class Volume {
   }
 
   async create() {
-    let SUDO_PASSWORD = this.plugin.getPassword(ADMIN_PASSWORD)
+    let SUDO_PASSWORD = await this.plugin.getPassword(ADMIN_PASSWORD)
     // let VOLUME_PASSWORD = this.volume.password
-    let VOLUME_PASSWORD = this.plugin.getPassword(this.volume.id)
+    let VOLUME_PASSWORD = await this.plugin.getPassword(this.volume.id)
     let VOLUME_KEYFILE = ''
     let VOLUME_FILE = this.getAbsolutePath(this.volume.filename)
     // let VOLUME_MOUNTPATH = this.getAbsolutePath(this.volume.mountPath)
@@ -142,7 +142,7 @@ export class Volume {
   }
 
   async mount() {
-    debug('volume.mount: ' + this.volume.filename.toString() + ' to: ' + this.volume.mountPath.toString())
+    dbg('volume.mount: ' + this.volume.filename.toString() + ' to: ' + this.volume.mountPath.toString())
     await this._mount()
     this.volume.mounted = true
     this.volume.mountTime = Date.now().toString()
@@ -152,8 +152,9 @@ export class Volume {
   async _mount() {
     await this.checkFolder()
 
-    let SUDO_PASSWORD = this.plugin.getPassword(ADMIN_PASSWORD)
-    let VOLUME_PASSWORD = this.volume.password
+    let SUDO_PASSWORD = await this.plugin.getPassword(ADMIN_PASSWORD)
+    // let VOLUME_PASSWORD = this.volume.password
+    let VOLUME_PASSWORD = await this.plugin.getPassword(this.volume.id)
     let VOLUME_KEYFILE = ''
     let VOLUME_FILE = this.getAbsolutePath(this.volume.filename)
     let VOLUME_MOUNTPATH = this.getAbsolutePath(this.volume.mountPath)
@@ -164,7 +165,7 @@ export class Volume {
   }
 
   async umount() {
-    debug('volume.umount: ' + this.volume.filename.toString() + ' from: ' + this.volume.mountPath.toString())
+    dbg('volume.umount: ' + this.volume.filename.toString() + ' from: ' + this.volume.mountPath.toString())
     await this._umount()
     let l = await this.app.vault.adapter.list(this.volume.mountPath)
     if (l.files.length + l.files.length <= 0) {
@@ -176,11 +177,11 @@ export class Volume {
   }
 
   async _umount() {
-    let SUDO_PASSWORD = this.plugin.getPassword(ADMIN_PASSWORD)
+    let SUDO_PASSWORD = await this.plugin.getPassword(ADMIN_PASSWORD)
     let VOLUME_FILE = this.getAbsolutePath(this.volume.filename)
     let VOLUME_MOUNTPATH = this.getAbsolutePath(this.volume.mountPath)
     let cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t -d "${VOLUME_FILE}" --non-interactive --force`
-    debug(cmd)
+    dbg(cmd)
     ps(cmd)
 
     /*
@@ -195,11 +196,12 @@ export class Volume {
       // @ts-ignore
       const existingFileNames = new Set(await adapter.fsPromises.readdir(`${VOLUME_MOUNTPATH}`))
 
-      debug('existingFileNames.size ' + existingFileNames.size.toString())
+      dbg('existingFileNames.size ' + existingFileNames.size.toString())
 
       if (existingFileNames.size === 0) {
         cmd = `echo "${SUDO_PASSWORD}" | sudo -S rm -rf "${VOLUME_MOUNTPATH}"`
-        debug(cmd)
+        cmd = `echo "${SUDO_PASSWORD}" | sudo -S rm "${VOLUME_MOUNTPATH}"`
+        dbg(cmd)
         ps(cmd)
         this.volume.umountTime = Date.now().toString()
         return
@@ -213,10 +215,10 @@ export class Volume {
 
   isMounted() {
     const volumes = this.plugin.volumesList()
-    debug('isMounted.volumes: ' + volumes.toString())
+    dbg('isMounted.volumes: ' + volumes.toString())
     volumes.forEach((v) => {
-      debug('isMounted: ' + v['mount'])
-      debug('isMounted: ' + v)
+      dbg('isMounted: ' + v['mount'])
+      dbg('isMounted: ' + v)
       // console.log('isMounted: ' + v['mount'])
       if (this.volume.mountPath === v['mount']) {
         return true

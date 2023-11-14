@@ -92,11 +92,13 @@ class PasswordPromt extends Modal {
   }
 
   async save() {
+    this.plugin.settings.savePassword = this.savePassword
     if (this.savePassword) {
+      dbg(`save password '${this.newPassword}' for ${this.name}`)
       await this.plugin.setPassword(this.name, this.newPassword)
-      await this.plugin.saveSettings()
       new Notice(`Password for ${this.name} saved!`)
     }
+    await this.plugin.saveSettings()
   }
 
   onOpen() {
@@ -109,24 +111,30 @@ class PasswordPromt extends Modal {
     }
 
     if (this.newPassword === '') {
-      // this.plugin.getPassword(this.name).then(value => {this.newPassword = value})
+      this.plugin.getPassword(this.name).then((v) => {
+        this.newPassword = v
+      })
     }
 
     // contentEl.setText("Add Or change password.");
     // contentEl.createEl('h2', { text: t('password_promt_title') })
-    contentEl.createEl('h2', { text: this.name })
+    let title = `Password for ${this.name}`
+    if (this.name === ADMIN_PASSWORD) {
+      title = `Password for 'root' user or Administrator`
+    }
+
+    contentEl.createEl('h2', { text: title })
 
     new Setting(contentEl)
       .setName('Password')
       .setDesc('password')
       .addText((text) =>
         text
-          .setPlaceholder('put your password')
+          .setPlaceholder('enter password here')
           .setValue(this.newPassword)
           .onChange(async (value) => {
-            log('set password: ' + value)
+            //dbg(`set password: ${value}`)
             this.newPassword = value
-            await this.save()
           }),
       )
 
@@ -134,9 +142,8 @@ class PasswordPromt extends Modal {
       .setName('Save')
       .setDesc('save password')
       .addToggle((toggle) =>
-        toggle.setValue(this.savePassword).onChange(async (value) => {
+        toggle.setValue(this.plugin.settings.savePassword).onChange(async (value) => {
           this.savePassword = value
-          await this.save()
         }),
       )
 

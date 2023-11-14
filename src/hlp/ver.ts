@@ -23,8 +23,11 @@ async function getVersionAsync(): Promise<void> {
   }
 }
 
-async function getVersion() {
-  await getVersionAsync()
+function getVersion() {
+  getVersionAsync().then((v) => {
+    //version = v
+    return v
+  })
   return version
 }
 

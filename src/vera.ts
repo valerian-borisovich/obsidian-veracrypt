@@ -1,7 +1,7 @@
 //
 import { VeraPluginSettings } from './settings'
 import { VeraStorage } from './veraStorage'
-import { debug } from './hlp'
+import { dbg } from './hlp'
 
 interface VeraSettings extends VeraPluginSettings {}
 
@@ -16,13 +16,15 @@ class Vera {
 
   constructor(props: any) {
     // super(props);
-    debug('Loading vera')
+    dbg('Loading vera')
     this.settings = props
     this.storage = new VeraStorage()
   }
 
   async getPassword(id: string) {
-    return await this.storage.get(id)
+    let result: string = ''
+    result = await this.storage.get(id)
+    return result
   }
   async setPassword(id: string, password: string) {
     return await this.storage.set(id, password)

@@ -10,15 +10,16 @@ async function getMachineId() {
 }
 */
 
-export function getID() {
+function getID() {
   return v4()
 }
 
-export async function getMachineId1() {
+async function getMachineId() {
   await machineId().then((id) => {
     // log(id)
     return id
   })
+  return ''
 }
 
 // export { machineId, machineIdSync }
@@ -33,3 +34,5 @@ export async function getMachineId1() {
 //
 //log('testim')
 //log(getMachineId())
+
+export { machineId, machineIdSync, getID, getMachineId }

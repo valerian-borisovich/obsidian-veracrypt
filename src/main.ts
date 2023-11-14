@@ -2,11 +2,11 @@ import { Notice, Plugin, setIcon, TFolder, TFile, TAbstractFile, debounce } from
 
 import { VeraPluginSettings, DEFAULT_SETTINGS } from './settings'
 import { VeraSettingTab } from './settingsModal'
-import { Volume } from './volume'
+import { Volume, DEFAULT_VOLUME_CONFIG, VolumeConfig } from './volume'
 import { PasswordPromt } from './passwordModal'
 import { Vera } from './vera'
-// import { getVersion, proxySet } from './hlp'
-import { getVersion, log, dbg, err, warn } from './hlp'
+import { getVersion, version, log, dbg, err, warn, machineIdSync } from './hlp'
+import { v4 } from 'uuid'
 // import { ADMIN_PASSWORD } from './constant'
 // import electron, { app } from 'electron'
 
@@ -19,25 +19,26 @@ export default class VeraPlugin extends Plugin {
 
   async getPassword(id: string) {
     let pass = await this.vera.getPassword(id)
-    // dbg('VeraPlugin.getPassword: ' + id + ' == ' + pass)
+    dbg(`VeraPlugin.getPassword: ${id} == ${pass}`)
     if (pass === '') {
       let dlg = new PasswordPromt(this.app, this, id, '')
       dlg.open()
       // pass = dlg.newPassword
       pass = await this.vera.getPassword(id)
+      dbg(`VeraPlugin.getPassword 2: ${id} == ${pass}`)
     }
     return pass
   }
 
   async setPassword(id: string, password: string) {
-    let pass = await this.vera.setPassword(id, password)
-    dbg('VeraPlugin.getPassword: ' + id + ' : ' + password + ' == ' + pass)
+    await this.vera.setPassword(id, password)
+    dbg(`VeraPlugin.setPassword: ${id} : ${password}`)
   }
 
   async onload() {
-    let plugin_version = await getVersion()
-    dbg(`Loading veracrypt plugin ${plugin_version} version`)
+    let plugin_version = getVersion()
     await this.loadSettings()
+    log(`Loading veracrypt plugin ${version} version`)
 
     this.vera = new Vera(this.settings)
 
@@ -58,16 +59,14 @@ export default class VeraPlugin extends Plugin {
       //
       let d = '/'
       await this.refreshFolder(d)
-      //await proxySet()
     })
+    */
 
-     */
-
-    this.addRibbonIcon('eye', 'Vera', async () => {
+    this.addRibbonIcon('eye', 'Vera mount all', async () => {
       await this.volumesMount()
     })
 
-    this.addRibbonIcon('trash', 'Vera', async () => {
+    this.addRibbonIcon('trash', 'Vera umount all', async () => {
       await this.volumesUmount()
     })
 
@@ -121,7 +120,7 @@ export default class VeraPlugin extends Plugin {
 
     this.app.workspace.onLayoutReady(async () => {
       if (this.settings.mountAtStart) {
-        log(`app.workspace.onLayoutReady : settings.mountAtStart`)
+        log(`onLayoutReady : mountAtStart`)
         await this.volumesMount()
       }
     })
@@ -136,8 +135,31 @@ export default class VeraPlugin extends Plugin {
     }
   }
 
+  async setup() {
+    log(`Vera setup started`)
+    // this.settings.devID = await getMachineId()
+    this.settings.devID = machineIdSync(true)
+
+    dbg(`Vera setup devID ${this.settings.devID}`)
+    await this.saveSettings()
+
+    log(`Vera setup create example volume`)
+    let vol: VolumeConfig = DEFAULT_VOLUME_CONFIG
+    vol.enabled = true
+    vol.id = 'example'
+    vol.password = 'example'
+    vol.filename = 'example.vera'
+    vol.mountPath = '==example=='
+    this.settings.volumes.push(vol)
+
+    await this.saveSettings()
+  }
+
   async loadSettings() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData())
+    if (this.settings.devID === '') {
+      await this.setup()
+    }
   }
 
   async saveSettings() {

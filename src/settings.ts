@@ -1,5 +1,5 @@
 import { version } from './hlp'
-import { VolumeSettings } from './volume'
+import { VolumeConfig } from './volume'
 
 export interface VeraPluginSettings {
   devID: string
@@ -15,13 +15,13 @@ export interface VeraPluginSettings {
   umountAtExit: boolean
 
   sudoPassword: string
-  sudoSave: boolean
+  savePassword: boolean
 
   vaultName: string
   vaultPath: string
   vaultConfig: string
 
-  volumes: VolumeSettings[]
+  volumes: VolumeConfig[]
 }
 
 export const DEFAULT_SETTINGS: VeraPluginSettings = {
@@ -40,7 +40,7 @@ export const DEFAULT_SETTINGS: VeraPluginSettings = {
   umountAtExit: true,
 
   sudoPassword: '',
-  sudoSave: true,
+  savePassword: true,
 
   vaultName: 'vera',
   vaultPath: '/pub/==vaults==/vera',
