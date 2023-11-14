@@ -6,7 +6,7 @@ import VeraPlugin from './main'
 
 import { ADMIN_PASSWORD } from './constant'
 
-export interface VolumeConfig {
+interface VolumeConfig {
   id: string
   version: string
 
@@ -33,7 +33,7 @@ export interface VolumeConfig {
   hash: string
 }
 
-export const DEFAULT_VOLUME_CONFIG: VolumeConfig = {
+const DEFAULT_VOLUME_CONFIG: VolumeConfig = {
   id: v4(),
   version: getVersion(),
 
@@ -63,7 +63,7 @@ export const DEFAULT_VOLUME_CONFIG: VolumeConfig = {
 //
 //
 
-export class Volume {
+class Volume {
   app!: App
   plugin!: VeraPlugin
   manifest!: PluginManifest
@@ -227,3 +227,5 @@ export class Volume {
     return false
   }
 }
+
+export { Volume, VolumeConfig, DEFAULT_VOLUME_CONFIG }

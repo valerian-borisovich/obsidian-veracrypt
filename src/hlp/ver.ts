@@ -31,4 +31,4 @@ function getVersion() {
   return version
 }
 
-export { getVersion, version }
+export { getVersion, getVersionAsync }

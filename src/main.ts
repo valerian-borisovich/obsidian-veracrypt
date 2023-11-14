@@ -1,14 +1,11 @@
-import { Notice, Plugin, setIcon, TFolder, TFile, TAbstractFile, debounce } from 'obsidian'
+import { Notice, Plugin, setIcon, TFolder, TFile, TAbstractFile, debounce, DropdownComponent } from 'obsidian'
 
 import { VeraPluginSettings, DEFAULT_SETTINGS } from './settings'
 import { VeraSettingTab } from './settingsModal'
 import { Volume, DEFAULT_VOLUME_CONFIG, VolumeConfig } from './volume'
 import { PasswordPromt } from './passwordModal'
 import { Vera } from './vera'
-import { getVersion, version, log, dbg, err, warn, machineIdSync } from './hlp'
-import { v4 } from 'uuid'
-// import { ADMIN_PASSWORD } from './constant'
-// import electron, { app } from 'electron'
+import { getVersion, log, dbg, err, warn, machineIdSync } from './hlp'
 
 export default class VeraPlugin extends Plugin {
   settings!: VeraPluginSettings
@@ -36,9 +33,9 @@ export default class VeraPlugin extends Plugin {
   }
 
   async onload() {
-    let plugin_version = getVersion()
+    let ver = getVersion()
     await this.loadSettings()
-    log(`Loading veracrypt plugin ${version} version`)
+    log(`Loading veracrypt plugin ${ver}`)
 
     this.vera = new Vera(this.settings)
 
@@ -126,6 +123,7 @@ export default class VeraPlugin extends Plugin {
     })
 
     this.addStatusBarItem().setText('Veracrypt loaded')
+    // DropdownComponent
   }
 
   onunload() {
@@ -135,15 +133,12 @@ export default class VeraPlugin extends Plugin {
     }
   }
 
-  async setup() {
-    log(`Vera setup started`)
-    // this.settings.devID = await getMachineId()
+  async install() {
     this.settings.devID = machineIdSync(true)
-
-    dbg(`Vera setup devID ${this.settings.devID}`)
+    dbg(`Vera install devID ${this.settings.devID}`)
     await this.saveSettings()
 
-    log(`Vera setup create example volume`)
+    log(`Vera install create example volume`)
     let vol: VolumeConfig = DEFAULT_VOLUME_CONFIG
     vol.enabled = true
     vol.id = 'example'
@@ -152,13 +147,16 @@ export default class VeraPlugin extends Plugin {
     vol.mountPath = '==example=='
     this.settings.volumes.push(vol)
 
+    let v = new Volume(this, vol)
+    await v.create()
+
     await this.saveSettings()
   }
 
   async loadSettings() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData())
     if (this.settings.devID === '') {
-      await this.setup()
+      await this.install()
     }
   }
 

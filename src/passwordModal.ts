@@ -133,7 +133,6 @@ class PasswordPromt extends Modal {
           .setPlaceholder('enter password here')
           .setValue(this.newPassword)
           .onChange(async (value) => {
-            //dbg(`set password: ${value}`)
             this.newPassword = value
           }),
       )
@@ -149,6 +148,12 @@ class PasswordPromt extends Modal {
 
     new Setting(contentEl)
       .addButton((button) => {
+        button.setButtonText(t('Cancel'))
+        button.onClick(() => {
+          this.close()
+        })
+      })
+      .addButton((button) => {
         button.setButtonText(t('OK'))
         button.onClick(async () => {
           // await this.plugin.setPassword(this.name, this.newPassword)
@@ -156,12 +161,6 @@ class PasswordPromt extends Modal {
           this.close()
         })
         button.setClass('password-second-confirm')
-      })
-      .addButton((button) => {
-        button.setButtonText(t('Cancel'))
-        button.onClick(() => {
-          this.close()
-        })
       })
   }
 

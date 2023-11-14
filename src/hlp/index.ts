@@ -20,7 +20,7 @@ export type ValueOf<T> = T[keyof T]
  *    imports
  */
 //
-import { getVersion, version } from './ver'
+import { getVersion, getVersionAsync } from './ver'
 import { log, dbg, debug, err, error, warn, warning } from './log'
 // import { machineId, machineIdSync } from './machine-id'
 import { machineId, machineIdSync, getID, getMachineId } from './machine-id'
@@ -36,6 +36,6 @@ import { v4 } from 'uuid'
 export { log, dbg, debug, err, error, warn, warning }
 export { machineId, machineIdSync, getID, getMachineId }
 export { v4, ps }
-export { version, getVersion }
+export { getVersionAsync, getVersion }
 export { filesystemType, encryptionAlgorithm, hashAlgorithm }
 export { proxyList, proxyGet, proxySet, proxyCheck }
