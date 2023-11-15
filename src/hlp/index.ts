@@ -27,7 +27,7 @@ import { machineId, machineIdSync, getID, getMachineId } from './machine-id'
 
 import { filesystemType, encryptionAlgorithm, hashAlgorithm } from '../constant'
 import { proxyList, proxyGet, proxySet, proxyCheck } from './proxies'
-import { ps } from './ps'
+import { ps, exec, run } from './ps'
 import { v4 } from 'uuid'
 
 /*
@@ -35,7 +35,8 @@ import { v4 } from 'uuid'
  */
 export { log, dbg, debug, err, error, warn, warning }
 export { machineId, machineIdSync, getID, getMachineId }
-export { v4, ps }
+export { v4 }
+export { ps, exec, run }
 export { getVersionAsync, getVersion }
 export { filesystemType, encryptionAlgorithm, hashAlgorithm }
 export { proxyList, proxyGet, proxySet, proxyCheck }

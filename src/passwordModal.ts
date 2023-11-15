@@ -167,6 +167,7 @@ class PasswordPromt extends Modal {
   onClose() {
     let { contentEl } = this
     contentEl.empty()
+    this.plugin.promts.remove(this.name)
   }
 }
 

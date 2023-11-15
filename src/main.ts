@@ -1,28 +1,48 @@
-import { Notice, Plugin, setIcon, TFolder, TFile, TAbstractFile, debounce, DropdownComponent } from 'obsidian'
+import {
+  Notice,
+  Plugin,
+  setIcon,
+  TFolder,
+  TFile,
+  TAbstractFile,
+  debounce,
+  DropdownComponent,
+  normalizePath,
+} from 'obsidian'
 
 import { VeraPluginSettings, DEFAULT_SETTINGS } from './settings'
 import { VeraSettingTab } from './settingsModal'
 import { Volume, DEFAULT_VOLUME_CONFIG, VolumeConfig } from './volume'
 import { PasswordPromt } from './passwordModal'
 import { Vera } from './vera'
-import { getVersion, log, dbg, err, warn, machineIdSync } from './hlp'
+import { getVersion, log, dbg, err, warn, machineIdSync, ps, exec, run } from './hlp'
 
 export default class VeraPlugin extends Plugin {
   settings!: VeraPluginSettings
   vera!: Vera
 
+  // this.manifest = this.plugin.manifest
+
   ribbonIconButton!: HTMLElement
   statusBarItem!: HTMLElement
 
+  promts: string[] = []
+
+  /*
+   *
+   */
   async getPassword(id: string) {
     let pass = await this.vera.getPassword(id)
     dbg(`VeraPlugin.getPassword: ${id} == ${pass}`)
     if (pass === '') {
-      let dlg = new PasswordPromt(this.app, this, id, '')
-      dlg.open()
-      // pass = dlg.newPassword
-      pass = await this.vera.getPassword(id)
-      dbg(`VeraPlugin.getPassword 2: ${id} == ${pass}`)
+      if (!this.promts.contains(id)) {
+        this.promts.push(id)
+        let dlg = new PasswordPromt(this.app, this, id, '')
+        dlg.open()
+        // pass = dlg.newPassword
+        pass = await this.vera.getPassword(id)
+        dbg(`VeraPlugin.getPassword 2: ${id} == ${pass}`)
+      }
     }
     return pass
   }
@@ -31,9 +51,55 @@ export default class VeraPlugin extends Plugin {
     await this.vera.setPassword(id, password)
     dbg(`VeraPlugin.setPassword: ${id} : ${password}`)
   }
+  /*
+   *
+   */
+  getAbsolutePath(path: String) {
+    let root = (this.app.vault.adapter as any).basePath
+    return root + '/' + path
+  }
 
+  async checkFolder(path: string, create: Boolean = true) {
+    let folderpath = normalizePath(path)
+
+    //@ts-ignore
+    const folder = this.app.vault.getAbstractFileByPathInsensitive(folderpath)
+    if (folder && folder instanceof TFolder) {
+      return
+    }
+    if (folder && folder instanceof TFile) {
+      log(`The folder cannot be created because it already exists as a file: ${folderpath}.`)
+    }
+
+    // if (!(await this.app.vault.adapter.exists(folderpath))) {
+    if (create) {
+      await this.app.vault.createFolder(folderpath)
+    }
+    // }
+  }
+
+  /*
+   *
+   */
   async onload() {
-    let ver = getVersion()
+    let result = ''
+    // let ver = getVersion()
+    let ver = this.manifest.version
+    // let result = await exec('veracrypt -t -l')
+    //let result = await exec('echo testim!')
+    exec('/bin/bash -c help').then((result) => {
+      log(`onload.exec.result: ${result}`)
+    })
+    //log(`onload.exec.result: ${result}`)
+
+    result = ps('/bin/bash -c help')
+    log(`onload.ps.result: ${result}`)
+
+    // result = run('/bin/bash -c help')
+    // result = run('/bin/bash', ['-c', 'help'])
+    result = run('/bin/veracrypt', ['-t', '-l', '--non-interactive'])
+    log(`onload.run.result: ${result}`)
+
     await this.loadSettings()
     log(`Loading veracrypt plugin ${ver}`)
 
