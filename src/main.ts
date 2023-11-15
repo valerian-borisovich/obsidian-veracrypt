@@ -78,6 +78,14 @@ export default class VeraPlugin extends Plugin {
     // }
   }
 
+  async name(filename: string) {
+    return filename.substring(filename.lastIndexOf('/') ? 0 : filename.lastIndexOf('/'), filename.lastIndexOf('.'))
+  }
+
+  async exists(filename: string) {
+    return await this.app.vault.adapter.exists(filename)
+  }
+
   /*
    *
    */
@@ -86,18 +94,14 @@ export default class VeraPlugin extends Plugin {
     // let ver = getVersion()
     let ver = this.manifest.version
     // let result = await exec('veracrypt -t -l')
-    //let result = await exec('echo testim!')
-    exec('/bin/bash -c help').then((result) => {
-      log(`onload.exec.result: ${result}`)
-    })
-    //log(`onload.exec.result: ${result}`)
+    result = await exec('/bin/bash -c help')
+    //exec('/bin/bash -c help').then((result) => {log(`onload.exec.result: ${result}`)})
+    log(`onload.exec.result: ${result}`)
 
-    result = ps('/bin/bash -c help')
-    log(`onload.ps.result: ${result}`)
+    //result = ps('/bin/bash -c help')
+    //log(`onload.ps.result: ${result}`)
 
-    // result = run('/bin/bash -c help')
-    // result = run('/bin/bash', ['-c', 'help'])
-    result = run('/bin/veracrypt', ['-t', '-l', '--non-interactive'])
+    result = run('/usr/bin/veracrypt', ['-t', '-l', '--non-interactive', '--force'])
     log(`onload.run.result: ${result}`)
 
     await this.loadSettings()

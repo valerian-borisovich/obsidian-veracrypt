@@ -1,12 +1,8 @@
-// import { spawnSync, SpawnSyncOptions, SpawnSyncReturns } from 'child_process'
-// export const execute = (command: string, args?: ReadonlyArray<string>, options?: SpawnSyncOptions,):
 // import { SpawnSyncOptions } from 'child_process'
+// import { SpawnOptionsWithoutStdio } from 'child_process'
+// import { spawnSync, SpawnSyncOptions, SpawnSyncReturns } from 'child_process'
 
-// export const execute = (command: string, args?: ReadonlyArray<string>) => {
-// export const execute = (command: string, args?: string[]) => {
-import { SpawnOptionsWithoutStdio } from 'child_process'
-
-export const ps = (command: string) => {
+const ps = (command: string) => {
   let result = ''
   // const spawn = require('child_process').spawnSync
   const start = require('child_process').execSync
@@ -42,7 +38,7 @@ export const ps = (command: string) => {
  *
  */
 
-export async function exec(cmd: string) {
+async function exec(cmd: string) {
   try {
     // return require('child_process').execSync(cmd).toString()
     return require('child_process').execSync(cmd, { encoding: 'utf8', stdio: 'inherit' }).toString()
@@ -81,11 +77,8 @@ var spawn = require('child_process').spawn, ls = spawn('ls', ['-a']); ls
  */
 
 /*
-
- */
-
-//export function sp(cmd: string, arg: [] = []) {
-export function sp0(cmd: string) {
+// function sp(cmd: string, arg: [] = []) {
+function sp(cmd: string) {
   let spawn = require('child_process').spawn
   let ls = spawn('ls', ['-a'])
   // @ts-ignore
@@ -105,14 +98,12 @@ export function sp0(cmd: string) {
   })
   return ''
 }
+*/
 
-// export function run(cmd: string) {
 // export function run(cmd: string, args?: ReadonlyArray<string>, options?: SpawnOptionsWithoutStdio) {
-export function run(cmd: string, args?: ReadonlyArray<string>) {
+function run(cmd: string, args?: ReadonlyArray<string>) {
   let spawn = require('child_process').spawn
-  // let ls = spawn('ls', ['-a'])
   // let proc = spawn(cmd, args, options)
-  // let proc = spawn(cmd, args)
   let proc = spawn(cmd, args)
   let result: string = ''
 
@@ -120,19 +111,20 @@ export function run(cmd: string, args?: ReadonlyArray<string>) {
   proc.stdout.on('data', function (data) {
     console.debug(`run.stdout: ${data}`)
     result = data
-    // return data
   })
+
   // @ts-ignore
   proc.stderr.on('data', function (data) {
     console.error(`run.stderr: ${data}`)
-    // return data
+    result = data
   })
   // @ts-ignore
   proc.on('exit', function (code) {
     console.debug(`run.on.exit code: ${code} result: ${result} `)
-    // return code
     return result
   })
 
   return result
 }
+
+export { run, exec, ps }

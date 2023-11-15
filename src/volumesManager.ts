@@ -1,7 +1,6 @@
 //
-//
 import { App, PluginManifest, normalizePath, TFile, TFolder } from 'obsidian'
-import { ps, log, err, dbg, warn } from './hlp'
+import { ps, log, err, dbg, warn, run } from './hlp'
 import VeraPlugin from './main'
 import { VolumeConfig } from './volume'
 import { ADMIN_PASSWORD } from './constant'
@@ -57,8 +56,9 @@ export class VolumesManager {
     const spawn = require('child_process').spawnSync
 
     try {
-      // r = spawn('veracrypt', ['-t', '-l', '--non-interactive', '--force']).stdout.toString('utf8')
-      result = spawn('veracrypt', ['-t', '-l', '--non-interactive', '--force']).toString('utf8')
+      result = run('/usr/bin/veracrypt', ['-t', '-l', '--non-interactive', '--force'])
+      log(`onload.run.result: ${result}`)
+
       dbg(`listRefresh.spawn: ${result}`)
 
       result.split('\n').forEach((v: string) => {
