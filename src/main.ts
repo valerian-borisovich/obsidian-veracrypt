@@ -15,12 +15,14 @@ import { VeraSettingTab } from './settingsModal'
 import { Volume, DEFAULT_VOLUME_CONFIG, VolumeConfig } from './volume'
 import { PasswordPromt } from './passwordModal'
 import { Vera } from './vera'
-import { getVersion, log, dbg, err, warn, machineIdSync, ps, exec, run } from './hlp'
+import { log, dbg, err, warn, machineIdSync, ps, exec, run } from './hlp'
+import { VolumesManager } from './volumesManager'
 
 export default class VeraPlugin extends Plugin {
   settings!: VeraPluginSettings
   vera!: Vera
 
+  volumes!: VolumesManager
   // this.manifest = this.plugin.manifest
 
   ribbonIconButton!: HTMLElement
@@ -91,8 +93,6 @@ export default class VeraPlugin extends Plugin {
    */
   async onload() {
     let result = ''
-    // let ver = getVersion()
-    let ver = this.manifest.version
     // let result = await exec('veracrypt -t -l')
     result = await exec('/bin/bash -c help')
     //exec('/bin/bash -c help').then((result) => {log(`onload.exec.result: ${result}`)})
@@ -105,9 +105,11 @@ export default class VeraPlugin extends Plugin {
     log(`onload.run.result: ${result}`)
 
     await this.loadSettings()
-    log(`Loading veracrypt plugin ${ver}`)
+    log(`Loading veracrypt plugin ${this.manifest.version}`)
 
     this.vera = new Vera(this.settings)
+    this.volumes = new VolumesManager(this)
+    await this.volumes.mountedRefresh()
 
     /*
     // This creates an icon in the left ribbon.
