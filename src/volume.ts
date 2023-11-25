@@ -112,6 +112,7 @@ class Volume {
     return await this.app.vault.adapter.exists(volume.filename)
   }
 
+  /*
   async create() {
     let SUDO_PASSWORD = await this.plugin.getPassword(ADMIN_PASSWORD)
     // let VOLUME_PASSWORD = this.volume.password
@@ -184,12 +185,6 @@ class Volume {
     dbg(cmd)
     ps(cmd)
 
-    /*
-    cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t -d "${VOLUME_MOUNTPATH}" --non-interactive --force`
-    console.log(cmd)
-    execute(cmd)
-     */
-
     const adapter = this.app.vault.adapter
 
     for (let i = 0; i <= 10; i++) {
@@ -226,6 +221,9 @@ class Volume {
     })
     return false
   }
+
+  */
 }
 
-export { Volume, VolumeConfig, DEFAULT_VOLUME_CONFIG }
+// export { Volume, VolumeConfig, DEFAULT_VOLUME_CONFIG }
+export { VolumeConfig, DEFAULT_VOLUME_CONFIG }

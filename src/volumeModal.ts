@@ -1,5 +1,5 @@
 import { App, ButtonComponent, Modal, Setting } from 'obsidian'
-import { Volume, VolumeConfig } from './volume'
+import { VolumeConfig } from './volume'
 
 import { ConfirmModal, confirmWithModal } from './confirm'
 import { encryptionAlgorithm, filesystemType, hashAlgorithm } from './hlp'
@@ -225,8 +225,7 @@ export class VolumeModal extends Modal {
         this.plugin.settings.volumes.push(volume)
         this.plugin.saveSettings()
         this.close()
-        let v = new Volume(this.plugin, volume)
-        v.create()
+        this.plugin.mng.create(volume)
         this.plugin.saveSettings()
         //this.plugin.app.workspace.activeLeaf.rebuildView()
       })
@@ -241,8 +240,7 @@ export class VolumeModal extends Modal {
         .onClick(() => {
           confirmWithModal(this.plugin.app, 'Do you have delete?', volume.filename).then((value) => {
             if (value) {
-              let v = new Volume(this.plugin, volume)
-              v.delete()
+              this.plugin.mng.delete(volume)
             }
           })
 

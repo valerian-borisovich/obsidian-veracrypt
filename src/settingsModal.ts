@@ -1,6 +1,7 @@
 import { App, PluginSettingTab, Setting } from 'obsidian'
 import VeraPlugin from './main'
-import { Volume, VolumeConfig, DEFAULT_VOLUME_CONFIG } from './volume'
+//import { Volume, VolumeConfig, DEFAULT_VOLUME_CONFIG } from './volume'
+import { VolumeConfig, DEFAULT_VOLUME_CONFIG } from './volume'
 import { VolumeModal } from './volumeModal'
 
 export class VeraSettingTab extends PluginSettingTab {
@@ -67,8 +68,6 @@ export class VeraSettingTab extends PluginSettingTab {
         volume.filename.lastIndexOf('.'),
       )
 
-      const v = new Volume(this.plugin, volume)
-
       new Setting(containerEl)
         .setName(name)
         .setDesc(volume.mountPath)
@@ -80,11 +79,11 @@ export class VeraSettingTab extends PluginSettingTab {
         })
 
         .addToggle((toggle) => {
-          toggle.setValue(v.isMounted()).onChange(async (value) => {
-            if (v.isMounted()) {
-              await v.umount()
+          toggle.setValue(this.plugin.mng.isMounted(volume)).onChange(async (value) => {
+            if (this.plugin.mng.isMounted(volume)) {
+              await this.plugin.mng.umount(volume)
             } else {
-              await v.mount()
+              await this.plugin.mng.mount(volume)
             }
           })
         })

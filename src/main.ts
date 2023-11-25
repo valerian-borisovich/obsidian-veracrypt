@@ -1,28 +1,23 @@
-import {
-  Notice,
-  Plugin,
-  setIcon,
-  TFolder,
-  TFile,
-  TAbstractFile,
-  debounce,
-  DropdownComponent,
-  normalizePath,
-} from 'obsidian'
-
+//
+// import {Notice,Plugin,setIcon,TFolder,TFile,TAbstractFile,debounce,DropdownComponent,normalizePath,} from 'obsidian'
+import {Plugin,TFolder,TFile,normalizePath,} from 'obsidian'
 import { VeraPluginSettings, DEFAULT_SETTINGS } from './settings'
 import { VeraSettingTab } from './settingsModal'
-import { Volume, DEFAULT_VOLUME_CONFIG, VolumeConfig } from './volume'
+//import { Volume, DEFAULT_VOLUME_CONFIG, VolumeConfig } from './volume'
+import { DEFAULT_VOLUME_CONFIG, VolumeConfig } from './volume'
 import { PasswordPromt } from './passwordModal'
 import { Vera } from './vera'
-import { log, dbg, err, warn, machineIdSync, ps, exec, run } from './hlp'
+//import { log, dbg, err, warn, machineIdSync, ps, exec, run } from './hlp'
+import { log, dbg, err, warn, machineIdSync } from './hlp'
 import { VolumesManager } from './volumesManager'
+import { ADMIN_PASSWORD } from './constant'
 
 export default class VeraPlugin extends Plugin {
   settings!: VeraPluginSettings
   vera!: Vera
 
-  volumes!: VolumesManager
+  mng!: VolumesManager
+  // volumes!: VolumesManager
   // this.manifest = this.plugin.manifest
 
   ribbonIconButton!: HTMLElement
@@ -33,17 +28,16 @@ export default class VeraPlugin extends Plugin {
   /*
    *
    */
-  async getPassword(id: string) {
+  async getPassword(id: string, promt: boolean = true) {
     let pass = await this.vera.getPassword(id)
     dbg(`VeraPlugin.getPassword: ${id} == ${pass}`)
-    if (pass === '') {
+    if (pass === '' && promt) {
       if (!this.promts.contains(id)) {
         this.promts.push(id)
         let dlg = new PasswordPromt(this.app, this, id, '')
         dlg.open()
-        // pass = dlg.newPassword
         pass = await this.vera.getPassword(id)
-        dbg(`VeraPlugin.getPassword 2: ${id} == ${pass}`)
+        dbg(`VeraPlugin.getPassword again: ${id} == ${pass}`)
       }
     }
     return pass
@@ -92,24 +86,17 @@ export default class VeraPlugin extends Plugin {
    *
    */
   async onload() {
-    let result = ''
-    // let result = await exec('veracrypt -t -l')
-    result = await exec('/bin/bash -c help')
-    //exec('/bin/bash -c help').then((result) => {log(`onload.exec.result: ${result}`)})
-    log(`onload.exec.result: ${result}`)
-
-    //result = ps('/bin/bash -c help')
-    //log(`onload.ps.result: ${result}`)
-
-    result = run('/usr/bin/veracrypt', ['-t', '-l', '--non-interactive', '--force'])
-    log(`onload.run.result: ${result}`)
-
     await this.loadSettings()
     log(`Loading veracrypt plugin ${this.manifest.version}`)
 
     this.vera = new Vera(this.settings)
-    this.volumes = new VolumesManager(this)
-    await this.volumes.mountedRefresh()
+    this.mng = new VolumesManager(this)
+
+    await this.install(true)
+
+    this.settings.pluginLoaded = true
+
+    await this.mng.refresh()
 
     /*
     // This creates an icon in the left ribbon.
@@ -132,11 +119,15 @@ export default class VeraPlugin extends Plugin {
     */
 
     this.addRibbonIcon('eye', 'Vera mount all', async () => {
-      await this.volumesMount()
+      await this.mng.mountAll()
     })
 
     this.addRibbonIcon('trash', 'Vera umount all', async () => {
-      await this.volumesUmount()
+      await this.mng.umountAll()
+    })
+
+    this.addRibbonIcon('refresh', 'Vera refresh', async () => {
+      await this.mng.refresh()
     })
 
     /*
@@ -168,7 +159,7 @@ export default class VeraPlugin extends Plugin {
         if (!checking) {
           log('Veracrypt checkCallback checking')
         }
-        this.volumesUmount()
+        this.mng.umountAll()
       },
     })
 
@@ -189,8 +180,8 @@ export default class VeraPlugin extends Plugin {
 
     this.app.workspace.onLayoutReady(async () => {
       if (this.settings.mountAtStart) {
-        log(`onLayoutReady : mountAtStart`)
-        await this.volumesMount()
+        dbg(`onLayoutReady : mountAtStart`)
+        await this.mng.mountAll()
       }
     })
 
@@ -198,38 +189,35 @@ export default class VeraPlugin extends Plugin {
     // DropdownComponent
   }
 
-  onunload() {
+  async onunload() {
     dbg('Unloading veracrypt plugin')
     if (this.settings.umountAtExit) {
-      this.volumesUmount().then((r) => {})
+      // this.mng.umountAll().then((r) => {})
+      await this.mng.umountAll()
     }
   }
 
-  async install() {
+  async install(force: boolean = false) {
+    if (this.settings.devID !== '' && !force) return
+
+    /*   install plugin   */
     this.settings.devID = machineIdSync(true)
-    dbg(`Vera install devID ${this.settings.devID}`)
+    this.settings.pluginVersion = this.manifest.version
+    this.settings.pluginDebug = true
+    log(`${this.manifest.name} install on device ${this.settings.devID}`)
+    let pass = await this.getPassword(ADMIN_PASSWORD)
+    if (pass !== '') await this.setPassword(ADMIN_PASSWORD, pass)
     await this.saveSettings()
 
-    log(`Vera install create example volume`)
+    /*   create exampe volume   */
     let vol: VolumeConfig = DEFAULT_VOLUME_CONFIG
-    vol.enabled = true
-    vol.id = 'example'
-    vol.password = 'example'
     vol.filename = 'example.vera'
     vol.mountPath = '==example=='
-    this.settings.volumes.push(vol)
-
-    let v = new Volume(this, vol)
-    await v.create()
-
-    await this.saveSettings()
+    await this.mng.create(vol, 'example')
   }
 
   async loadSettings() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData())
-    if (this.settings.devID === '') {
-      await this.install()
-    }
   }
 
   async saveSettings() {
@@ -249,6 +237,7 @@ export default class VeraPlugin extends Plugin {
     }
   */
 
+  /*
   async toggleFunctionality() {
     this.settings.pluginLoaded = !this.settings.pluginLoaded
     // this.ribbonIconButton.ariaLabel = this.settings.pluginLoaded ? 'Mount' : 'Unmount'
@@ -257,77 +246,54 @@ export default class VeraPlugin extends Plugin {
     await this.volumesMount()
   }
 
+   */
+
   /*
    *
    *
    *
    *
-   */
 
-  async volumesMount(): Promise<void> {
-    dbg('volumesMountAll')
+  async volumesMount0(): Promise<void> {
+    log('volumesMountAll')
     this.settings.volumes.forEach((volume) => {
       if (volume.enabled) {
-        let v = new Volume(this, volume)
-        if (!v.isMounted()) {
-          v.mount()
-          this.refreshFolder(v.volume.mountPath)
+        if (!this.mng.isMounted(volume)) {
+          this.mng.mount(volume)
+          this.refreshFolder(volume.mountPath)
         } else {
-          warn('volumesMount.mount: ' + v.volume.mountPath + ' already mounted!')
+          warn(`volumesMount: '${volume.mountPath}' already mounted!`)
         }
+      }
+    })
+  }
+
+  async volumesUmount0(): Promise<void> {
+    log('volumesUmountAll')
+    this.settings.volumes.forEach((volume) => {
+      if (this.mng.isMounted(volume)) {
+        this.mng.umount(volume)
+        this.refreshFolder(volume.mountPath)
+      } else {
+        warn(`volumesUmount: ${volume.mountPath} already unmounted!`)
       }
     })
   }
 
   async volumesUmount(): Promise<void> {
     log('volumesUmountAll')
-
-    this.settings.volumes.forEach((volume) => {
-      let v = new Volume(this, volume)
-      if (v.isMounted()) {
-        v.umount()
-        this.refreshFolder(v.volume.mountPath)
-      } else {
-        warn('volumesUmount.umount: ' + v.volume.mountPath + ' already unmounted!')
-      }
-    })
+    await this.mng.umountAll()
   }
 
-  volumesList() {
-    let r, a, v
-    let l: [] = []
-    let nomounted = 'Error: No volumes mounted.'
-    // let cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t -l --non-interactive --force`
-    const spawn = require('child_process').spawnSync
-
-    try {
-      r = spawn('veracrypt', ['-t', '-l', '--non-interactive', '--force']).stdout.toString('utf8')
-      dbg('volumesList.spawn.r: ' + r.toString())
-      if (r.substring(nomounted).length) {
-        return l
-      }
-
-      r.split('\n').forEach((v: string) => {
-        if (v.length) {
-          a = v.split(' ')
-          // @ts-ignore
-          l.push({ filename: a[1], mount: a[3] })
-        }
-      })
-
-      process.on('exit', function () {
-        dbg('volumesList: ' + l.toString())
-        return l
-      })
-    } catch (e) {
-      err('volumesList.err: ' + e)
-    }
-    return l
+  async volumesMount(): Promise<void> {
+    log('volumesMountAll')
+    await this.mng.mountAll()
   }
+  */
 
-  async refreshFolder(folderPath: string) {
+  async reloadFolder(folderPath: string) {
     try {
-      const adapter = this.app.vault.adapter // const adapter = this.app.vault.adapter as any
+      const adapter = this.app.vault.adapter
       await reload(folderPath)
       // @ts-ignore
       const existingFileNames = new Set(await adapter.fsPromises.readdir(`${adapter.basePath}/${folderPath}`))

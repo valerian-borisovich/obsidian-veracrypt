@@ -2,6 +2,11 @@
 // import { SpawnOptionsWithoutStdio } from 'child_process'
 // import { spawnSync, SpawnSyncOptions, SpawnSyncReturns } from 'child_process'
 
+/*
+ *    child_process.execSync
+ */
+import { SpawnSyncOptionsWithStringEncoding } from 'child_process'
+
 const ps = (command: string) => {
   let result = ''
   // const spawn = require('child_process').spawnSync
@@ -11,31 +16,25 @@ const ps = (command: string) => {
     //  r = spawn('veracrypt', ['-t', '-l', '--non-interactive', '--force']).stdout.toString('utf8')
     console.debug(`ps.start("${command}")`)
     // r = spawn(command).stdout.toString('utf8')
-    //result = spawn(command).toString('utf8')
+    // result = spawn(command).toString('utf8')
     result = start(command, { encoding: 'utf8', stdio: 'inherit' }).toString()
-    console.debug(`ps.start.result : ${result}`)
+    // result = start(command, { encoding: 'utf8', stdio: 'inherit' })
+    console.debug(`ps.result : ${result}`)
     if (result !== null) {
       process.on('exit', function () {
         // console.debug(`ps.process.on => ${command} : ${result.toString()}`)
-        console.debug(`ps.process.on => ${command} : ${result}`)
+        console.debug(`ps.exit(${command}) : ${result}`)
         return result
       })
     }
   } catch (e) {
-    console.error(`ps.err: ${e}`)
+    console.error(`ps.error: ${e}`)
   }
-  /*
-  finally {
-    if (r === null) {
-      r = ''
-    }
-  }
-  */
   return result
 }
 
 /*
- *
+ *    require('child_process').execSync(cmd, { encoding: 'utf8', stdio: 'inherit' }).toString()
  */
 
 async function exec(cmd: string) {
@@ -100,6 +99,10 @@ function sp(cmd: string) {
 }
 */
 
+/*
+ *    child_process.spawn(cmd, args)
+ *
+ */
 // export function run(cmd: string, args?: ReadonlyArray<string>, options?: SpawnOptionsWithoutStdio) {
 function run(cmd: string, args?: ReadonlyArray<string>) {
   let spawn = require('child_process').spawn
@@ -109,22 +112,48 @@ function run(cmd: string, args?: ReadonlyArray<string>) {
 
   // @ts-ignore
   proc.stdout.on('data', function (data) {
-    console.debug(`run.stdout: ${data}`)
+    // console.debug(`run.output: ${data}`)
     result = data
   })
 
   // @ts-ignore
   proc.stderr.on('data', function (data) {
-    console.error(`run.stderr: ${data}`)
+    // console.error(`run.stderr: ${data}`)
+    // console.debug(`run.err: ${data}`)
     result = data
   })
   // @ts-ignore
   proc.on('exit', function (code) {
-    console.debug(`run.on.exit code: ${code} result: ${result} `)
+    // console.debug(`run.on.exit(${code}): ${result} `)
+    console.log(`run.exit: ${result} `)
     return result
   })
 
   return result
 }
 
-export { run, exec, ps }
+
+/*
+ *    child_process.spawnSync(cmd, args)
+ *
+ */
+function runSync(cmd: string, args?: ReadonlyArray<string>) {
+  try {
+    return require('child_process').spawnSync(cmd, args,
+      require('child_process').SpawnSyncOptionsWithStringEncoding.encoding='utf8',
+      require('child_process').SpawnSyncOptionsWithStringEncoding.stdiostdio='inherit')
+      .toString()
+  } catch (e) {
+    console.error(`runSync.error: ${e}`)
+    return ''
+  }
+
+}
+
+
+/*
+ *
+ *
+ *
+ */
+export { run, runSync, exec, ps }

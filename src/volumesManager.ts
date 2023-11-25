@@ -11,19 +11,21 @@ class VolumesManager {
   plugin!: VeraPlugin
 
   mounted: [] = []
+  private mountedRefreshStart: string
+  private mountedRefreshedTime: string
+
 
   constructor(plugin: VeraPlugin) {
     this.plugin = plugin
     this.app = this.plugin.app
+    this.mountedRefreshStart = ''
+    this.mountedRefreshedTime = ''
   }
 
   /*
    *
    */
-  private mountedRefreshStart = ''
-  private mountedRefreshedTime = ''
-
-  async mountedRefresh() {
+  async refresh() {
     let a, v
     let l: [] = []
     let nomounted = 'Error: No volumes mounted.'
@@ -31,11 +33,11 @@ class VolumesManager {
 
     try {
       this.mountedRefreshStart = Date.now().toString()
-      result = run('veracrypt', ['-t', '-l', '--non-interactive', '--force'])
-      dbg(`mountedRefresh.result: ${result}`)
-      if(nomounted===result){
+      result = run(`veracrypt`, ['-t', '-l', '--non-interactive'])
+      dbg(`volumesManager.refresh.result: ${result}`)
+      if (nomounted === result) {
         this.mounted = []
-      }else {
+      } else {
         result.split('\n').forEach((v: string) => {
           if (v.length) {
             a = v.split(' ')
@@ -47,10 +49,29 @@ class VolumesManager {
         this.mountedRefreshedTime = Date.now().toString()
       }
     } catch (e) {
-      err(`mountedRefresh.err: ${e}`)
+      err(`volumesManager.refresh.err: ${e}`)
     }
   }
 
+  isMounted(volume: VolumeConfig, wait = 1000) {
+    dbg(`volumesManager.isMounted: ${volume.filename}`)
+    const sleep_interval = 333
+    for (let i = 1, w= 1; w < wait ; i++, w = w + sleep_interval) {
+      this.mounted.forEach((vol) => {
+        if (volume.filename === vol['filename']) {
+          return true
+        }
+      })
+      dbg(`volumesManager.isMounted: ${volume.filename} try: ${i}`)
+      sleep(sleep_interval).then(r => {
+      })
+    }
+    return false
+  }
+
+  /*
+   *
+   */
   async mountAll(): Promise<void> {
     log('volumesManager.mountAll')
     this.plugin.settings.volumes.forEach((volume) => {
@@ -65,22 +86,13 @@ class VolumesManager {
     })
   }
 
-  async umountAll(): Promise<void> {
-    dbg('volumesManager.umountAll')
+  async umountAll(force: boolean = false): Promise<void> {
+    log('volumesManager.umountAll')
     let result: string = ''
     let cmd: string = ''
     let SUDO_PASSWORD = await this.plugin.getPassword(ADMIN_PASSWORD)
-    /*
-    this.plugin.settings.volumes.forEach((volume) => {
-      if (this.isMounted(volume)) {
-        this.umount(volume)
-        // this.refreshFolder(v.volume.mountPath)
-      } else {
-        warn(`volumesManager.umountAll: ${volume.mountPath} not mounted!`)
-      }
-    })
-    */
     cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t -d --non-interactive`
+    if (force) cmd = cmd + ' --force'
     dbg(`volumesManager.umountAll.cmd: ${cmd}`)
     result = run(cmd)
   }
@@ -89,98 +101,113 @@ class VolumesManager {
    *
    */
 
-  async create(volume: VolumeConfig) {
+  async create(volume: VolumeConfig, password: string = '', keyfile: string = '') {
     log(`volumeManager.create: ${volume.filename}`)
     let SUDO_PASSWORD = await this.plugin.getPassword(ADMIN_PASSWORD)
-    let VOLUME_PASSWORD = await this.plugin.getPassword(volume.id)
-    let VOLUME_KEYFILE = ''
+    let VOLUME_PASSWORD = password
+    let VOLUME_KEYFILE = keyfile
     let VOLUME_FILE = this.plugin.getAbsolutePath(volume.filename)
-    // let VOLUME_MOUNTPATH = this.getAbsolutePath(this.volume.mountPath)
     let VOLUME_HASH = volume.hash
     let VOLUME_ENC = volume.encryption
     let VOLUME_FS = volume.filesystem
     let VOLUME_SIZE = volume.size
+    let cmd = ''
 
-    let cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt --text --create "${VOLUME_FILE}" --volume-type=normal --pim=0 -k "${VOLUME_KEYFILE}" --quick --encryption="${VOLUME_ENC}" --hash="${VOLUME_HASH}" --filesystem="${VOLUME_FS}" --size="${VOLUME_SIZE}" --password="${VOLUME_PASSWORD}" --random-source=/dev/urandom`
-    dbg(cmd)
-    let o = ps(cmd)
+    if (await this.plugin.exists(volume.filename)) {
+      err(`volumesManager.create.error: "${volume.filename}" already exists!`)
+      return
+    }
+    if (SUDO_PASSWORD == '') {
+      err(`volumesManager.create.error: Admin password not exists!`)
+      return
+    }
+    if(VOLUME_PASSWORD==='') VOLUME_PASSWORD = await this.plugin.getPassword(volume.filename)
 
-    volume.version = this.plugin.manifest.version
-    volume.createdTime = Date.now().toString()
+    cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt --text --create "${VOLUME_FILE}" --volume-type=normal --pim=0 -k "${VOLUME_KEYFILE}" --quick --encryption="${VOLUME_ENC}" --hash="${VOLUME_HASH}" --filesystem="${VOLUME_FS}" --size="${VOLUME_SIZE}" --password="${VOLUME_PASSWORD}" --random-source=/dev/urandom`
+    if(this.plugin.settings.pluginDebug) dbg(cmd)
+    ps(cmd)
+
+    if (await this.plugin.exists(volume.filename)) {
+      volume.version = this.plugin.manifest.version
+      volume.createdTime = Date.now().toString()
+      this.plugin.settings.volumes.push(volume)
+      await this.plugin.saveSettings()
+    }
   }
 
-  async delete(volume: VolumeConfig) {
+  async delete(volume: VolumeConfig, force: boolean = true) {
     log(`volumesManager.delete: ${volume.filename}`)
-    await this.umount(volume)
+    await this.umount(volume, force)
     if (this.isMounted(volume)) {
-      await this.app.vault.adapter.remove(volume.filename)
+      err(`volumesManager.delete.error: ${volume.filename} not unmount from ${volume.mountPath}!`)
+      return
+    }
+    await this.app.vault.adapter.remove(volume.filename)
+    if (!await this.plugin.exists(volume.filename)) {
       this.plugin.settings.volumes.remove(volume)
       await this.plugin.saveSettings()
     }
   }
 
-  async mount(volume: VolumeConfig) {
-    log(`volumesManager.mount: ${volume.filename} => ${volume.mountPath}`)
-    await this.plugin.checkFolder(volume.mountPath, true)
-
+  async mount(volume: VolumeConfig, force: boolean = false) {
+    log(`volumesManager.mount: ${volume.filename} to: ${volume.mountPath}`)
     let SUDO_PASSWORD = await this.plugin.getPassword(ADMIN_PASSWORD)
-    // let VOLUME_PASSWORD = this.volume.password
-    let VOLUME_PASSWORD = await this.plugin.getPassword(volume.id)
+    let VOLUME_PASSWORD = await this.plugin.getPassword(volume.filename)
     let VOLUME_KEYFILE = ''
     let VOLUME_FILE = this.plugin.getAbsolutePath(volume.filename)
     let VOLUME_MOUNTPATH = this.plugin.getAbsolutePath(volume.mountPath)
-    let cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t --non-interactive --force --password="${VOLUME_PASSWORD}" --protect-hidden=no --pim=0 --keyfiles="${VOLUME_KEYFILE}" "${VOLUME_FILE}" "${VOLUME_MOUNTPATH}"`
+    let cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t --non-interactive --password="${VOLUME_PASSWORD}" --protect-hidden=no --pim=0 --keyfiles="${VOLUME_KEYFILE}" "${VOLUME_FILE}" "${VOLUME_MOUNTPATH}"`
     //dbg(cmd)
     if (SUDO_PASSWORD == '') {
-      err(`Admin password not exists!`)
+      err(`volumesManager.mount.error: Admin password not exists!`)
       return
     }
+    if (force) cmd = cmd + ' --force'
+    if (!await this.plugin.exists(volume.filename)) {
+      err(`volumesManager.mount.error: "${volume.filename}" not exists!`)
+      return
+    }
+    await this.plugin.checkFolder(volume.mountPath, true)
     ps(cmd)
-    volume.mounted = true
-    volume.mountTime = Date.now().toString()
-    await this.plugin.saveSettings()
+    if (this.isMounted(volume)) {
+      volume.mounted = true
+      volume.mountTime = Date.now().toString()
+      await this.plugin.saveSettings()
+      await this.plugin.reloadFolder(volume.mountPath)
+    }
   }
 
-  async umount(volume: VolumeConfig) {
+  async umount(volume: VolumeConfig, force: boolean = false) {
     log(`volumesManager.umount: ${volume.filename} from: ${volume.mountPath}`)
-    let cmd = ''
     let SUDO_PASSWORD = await this.plugin.getPassword(ADMIN_PASSWORD)
     let VOLUME_FILE = this.plugin.getAbsolutePath(volume.filename)
     let VOLUME_MOUNTPATH = this.plugin.getAbsolutePath(volume.mountPath)
-    // cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t -d "${VOLUME_FILE}" --non-interactive --force`
-    cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t -d "${VOLUME_FILE}" --non-interactive`
-    // dbg(cmd)
+    let cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t -d "${VOLUME_FILE}" --non-interactive`
+
     if (SUDO_PASSWORD == '') {
-      err(`Admin password not exists!`)
+      err(`volumesManager.umount.error: Admin password not exists!`)
       return
     }
+    if (force) cmd = cmd + ' --force'
     ps(cmd)
-
-    /*
-    cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t -d "${VOLUME_MOUNTPATH}" --non-interactive --force`
-    log(cmd)
-    exec(cmd)
-     */
 
     const adapter = this.app.vault.adapter
 
     for (let i = 0; i <= 10; i++) {
       // @ts-ignore
       const existingFileNames = new Set(await adapter.fsPromises.readdir(`${VOLUME_MOUNTPATH}`))
-
-      dbg('existingFileNames.size ' + existingFileNames.size.toString())
-
       if (existingFileNames.size === 0) {
-        cmd = `echo "${SUDO_PASSWORD}" | sudo -S rm -rf "${VOLUME_MOUNTPATH}"`
+        // cmd = `echo "${SUDO_PASSWORD}" | sudo -S rm -rf "${VOLUME_MOUNTPATH}"`
         cmd = `echo "${SUDO_PASSWORD}" | sudo -S rm "${VOLUME_MOUNTPATH}"`
         dbg(cmd)
         ps(cmd)
         volume.umountTime = Date.now().toString()
         volume.mounted = false
         await this.plugin.saveSettings()
+        await this.plugin.reloadFolder(volume.mountPath)
         return
       } else {
-        log(`"${VOLUME_MOUNTPATH}" is not empty! ${i}`)
+        dbg(`"${VOLUME_MOUNTPATH}" is not empty! try: ${i}`)
         await sleep(333)
       }
     }
@@ -188,24 +215,12 @@ class VolumesManager {
 
     let listed = await this.app.vault.adapter.list(volume.mountPath)
     if (listed.files.length + listed.files.length <= 0) {
-      log(`volumesManager.umount.rmdir: ${volume.mountPath}`)
+      dbg(`volumesManager.umount.rmdir: ${volume.mountPath}`)
       await this.app.vault.adapter.rmdir(volume.mountPath, false)
     }
-    volume.mounted = false
     await this.plugin.saveSettings()
   }
 
-  isMounted(volume: VolumeConfig) {
-    const volumes = this.plugin.volumesList()
-    dbg(`volumesManager.isMounted: ${volume.id}`)
-    volumes.forEach((v) => {
-      // console.log('isMounted: ' + v['mount'])
-      if (volume.mountPath === v['mount']) {
-        return true
-      }
-    })
-    return false
-  }
 }
 
 export { VolumesManager }
