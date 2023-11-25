@@ -27,7 +27,7 @@ export class ConfirmModal extends Modal {
     app: App,
     public head: string = '',
     public text: string = '',
-    public buttons?: { cta: string; secondary: string },
+    public buttons: { cta: string; secondary: string },
   ) {
     super(app)
   }

@@ -130,6 +130,7 @@ class VolumesManager {
     if (await this.plugin.exists(volume.filename)) {
       volume.version = this.plugin.manifest.version
       volume.createdTime = Date.now().toString()
+      volume.enabled = true
       this.plugin.settings.volumes.push(volume)
       await this.plugin.saveSettings()
     }

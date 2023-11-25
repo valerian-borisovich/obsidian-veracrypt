@@ -1,5 +1,8 @@
-import { getVersion } from './hlp'
+//
 import { VolumeConfig } from './volume'
+//
+import { getVersion } from './hlp'
+import { LangTypeAndAuto } from './hlp/i18n'
 
 export interface VeraPluginSettings {
   devID: string
@@ -7,6 +10,8 @@ export interface VeraPluginSettings {
   pluginVersion: string
   pluginLoaded: boolean
   pluginDebug: boolean
+
+  lang: LangTypeAndAuto
   logFilename: string
 
   defaultMountPath: string
@@ -29,6 +34,7 @@ export const DEFAULT_SETTINGS: VeraPluginSettings = {
   pluginVersion: getVersion(),
   pluginLoaded: false,
   pluginDebug: false,
+  lang: "auto",
 
   logFilename: 'vera.log',
 

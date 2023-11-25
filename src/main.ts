@@ -9,8 +9,12 @@ import { PasswordPromt } from './passwordModal'
 import { Vera } from './vera'
 //import { log, dbg, err, warn, machineIdSync, ps, exec, run } from './hlp'
 import { log, dbg, err, warn, machineIdSync } from './hlp'
+import { I18n } from "./hlp/i18n"
+import type { LangType, LangTypeAndAuto, TransItemType } from "./hlp/i18n";
 import { VolumesManager } from './volumesManager'
 import { ADMIN_PASSWORD } from './constant'
+
+
 
 export default class VeraPlugin extends Plugin {
   settings!: VeraPluginSettings
@@ -25,6 +29,14 @@ export default class VeraPlugin extends Plugin {
 
   promts: string[] = []
 
+  /*
+   *
+   */
+  i18n!: I18n
+
+  t = (x: TransItemType, vars?: any) => {
+    return this.i18n.t(x, vars);
+  };
   /*
    *
    */
@@ -87,14 +99,18 @@ export default class VeraPlugin extends Plugin {
    */
   async onload() {
     await this.loadSettings()
-    log(`Loading veracrypt plugin ${this.manifest.version}`)
+    log(`Veracrypt plugin version ${this.manifest.version} loaded.`)
+
+    // lang should be load early, but after settings
+    this.i18n = new I18n(this.settings.lang, async (lang: LangTypeAndAuto) => {
+      this.settings.lang = lang;
+      await this.saveSettings();
+    });
 
     this.vera = new Vera(this.settings)
     this.mng = new VolumesManager(this)
 
     await this.install(true)
-
-    this.settings.pluginLoaded = true
 
     await this.mng.refresh()
 
@@ -187,6 +203,7 @@ export default class VeraPlugin extends Plugin {
 
     this.addStatusBarItem().setText('Veracrypt loaded')
     // DropdownComponent
+    this.settings.pluginLoaded = true
   }
 
   async onunload() {
