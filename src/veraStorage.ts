@@ -16,7 +16,7 @@ class VeraStorage {
       size: 4980736,
     })
 
-    log('VeraStorage loaded')
+    dbg('VeraStorage loaded')
   }
 
   async get(name: string) {

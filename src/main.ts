@@ -42,14 +42,14 @@ export default class VeraPlugin extends Plugin {
    */
   async getPassword(id: string, promt: boolean = true) {
     let pass = await this.vera.getPassword(id)
-    dbg(`VeraPlugin.getPassword: ${id} == ${pass}`)
+    // dbg(`VeraPlugin.getPassword: ${id} == ${pass}`)
     if (pass === '' && promt) {
       if (!this.promts.contains(id)) {
         this.promts.push(id)
         let dlg = new PasswordPromt(this.app, this, id, '')
         dlg.open()
         pass = await this.vera.getPassword(id)
-        dbg(`VeraPlugin.getPassword again: ${id} == ${pass}`)
+        // dbg(`VeraPlugin.getPassword again: ${id} == ${pass}`)
       }
     }
     return pass
@@ -57,7 +57,7 @@ export default class VeraPlugin extends Plugin {
 
   async setPassword(id: string, password: string) {
     await this.vera.setPassword(id, password)
-    dbg(`VeraPlugin.setPassword: ${id} : ${password}`)
+    // dbg(`VeraPlugin.setPassword: ${id} : ${password}`)
   }
   /*
    *
@@ -76,7 +76,7 @@ export default class VeraPlugin extends Plugin {
       return
     }
     if (folder && folder instanceof TFile) {
-      log(`The folder cannot be created because it already exists as a file: ${folderpath}.`)
+      warn(`The folder cannot be created because it already exists as a file: ${folderpath}.`)
     }
 
     // if (!(await this.app.vault.adapter.exists(folderpath))) {
@@ -103,8 +103,8 @@ export default class VeraPlugin extends Plugin {
 
     // lang should be load early, but after settings
     this.i18n = new I18n(this.settings.lang, async (lang: LangTypeAndAuto) => {
-      this.settings.lang = lang;
-      await this.saveSettings();
+      this.settings.lang = lang
+      await this.saveSettings()
     });
 
     this.vera = new Vera(this.settings)
@@ -230,7 +230,7 @@ export default class VeraPlugin extends Plugin {
     let vol: VolumeConfig = DEFAULT_VOLUME_CONFIG
     vol.filename = 'example.vera'
     vol.mountPath = '==example=='
-    await this.mng.create(vol, 'example')
+    //await this.mng.create(vol, 'example')
   }
 
   async loadSettings() {

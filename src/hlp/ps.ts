@@ -37,7 +37,7 @@ const ps = (command: string) => {
  *    require('child_process').execSync(cmd, { encoding: 'utf8', stdio: 'inherit' }).toString()
  */
 
-async function exec(cmd: string) {
+async function exec0(cmd: string) {
   try {
     // return require('child_process').execSync(cmd).toString()
     return require('child_process').execSync(cmd, { encoding: 'utf8', stdio: 'inherit' }).toString()
@@ -98,6 +98,38 @@ function sp(cmd: string) {
   return ''
 }
 */
+
+/*
+ *    child_process.exec(cmd)
+ *
+ */
+// export function run(cmd: string, args?: ReadonlyArray<string>, options?: SpawnOptionsWithoutStdio) {
+function exec(cmd: string) {
+  let result: string = ''
+  const { start } = require('child_process').exec
+  const proc = start(cmd)
+
+  // @ts-ignore
+  proc.stdout.on('data', function (data){
+    console.debug(`exec.output: ${data}`)
+    result = data
+  })
+
+  // @ts-ignore
+  proc.stderr.on('data', function (data) {
+     console.error(`exec.stderr: ${data}`)
+    // console.debug(`run.err: ${data}`)
+    result = data
+  })
+
+  // @ts-ignore
+  proc.on('exit', function (code) {
+    // console.debug(`run.on.exit(${code}): ${result} `)
+    console.log(`exec.exit: ${result} `)
+    return result
+  })
+  return result
+}
 
 /*
  *    child_process.spawn(cmd, args)

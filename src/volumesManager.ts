@@ -1,14 +1,18 @@
 //
 //import { App, PluginManifest, normalizePath, TFile, TFolder } from 'obsidian'
 import { App } from 'obsidian'
-import { ps, log, err, dbg, warn, run } from './hlp'
+import { ps, log, err, dbg, warn, run, exec } from './hlp'
 import VeraPlugin from './main'
 import { VolumeConfig } from './volume'
 import { ADMIN_PASSWORD } from './constant'
+import { VeraEvents } from './vera'
+import { spawn } from 'child_process'
 
 class VolumesManager {
   app!: App
   plugin!: VeraPlugin
+
+  ev!: VeraEvents
 
   mounted: [] = []
   private mountedRefreshStart: string
@@ -18,6 +22,11 @@ class VolumesManager {
   constructor(plugin: VeraPlugin) {
     this.plugin = plugin
     this.app = this.plugin.app
+
+    this.ev = new VeraEvents()
+    this.ev.addListener('onCreated', this.onCreated)
+    this.ev.addListener('onRefreshed', this.onRefreshed)
+
     this.mountedRefreshStart = ''
     this.mountedRefreshedTime = ''
   }
@@ -25,7 +34,7 @@ class VolumesManager {
   /*
    *
    */
-  async refresh() {
+  async refresh1() {
     let a, v
     let l: [] = []
     let nomounted = 'Error: No volumes mounted.'
@@ -50,6 +59,56 @@ class VolumesManager {
       }
     } catch (e) {
       err(`volumesManager.refresh.err: ${e}`)
+    }
+  }
+
+  async refresh() {
+    this.mountedRefreshStart = Date.now().toString()
+    // result = run(`veracrypt`, ['-t', '-l', '--non-interactive'])
+    let spawn = require('child_process').spawn
+    // let proc = spawn(cmd, args, options)
+    let proc = spawn(`veracrypt`, ['-t', '-l', '--non-interactive'])
+    let result: string = ''
+
+    // @ts-ignore
+    proc.stdout.on('data', function (data) {
+      result = data
+    })
+    // @ts-ignore
+    proc.stderr.on('data', function (data) {
+      result = data
+    })
+    // @ts-ignore
+    proc.on('exit', (code) => {
+      dbg(`refresh.exit: ${result} `)
+      this.ev.emit('onRefreshed', result)
+    })
+  }
+
+  async onRefreshed(args: any[]) {
+    dbg(`onRefreshed: ${args}`)
+
+    let a, v
+    let l: [] = []
+    let nomounted = 'Error: No volumes mounted.'
+    let result: string = args.at(1)
+
+    try {
+      if (nomounted === result) {
+        this.mounted = []
+      } else {
+        result.split('\n').forEach((v: string) => {
+          if (v.length) {
+            a = v.split(' ')
+            // @ts-ignore
+            l.push({ filename: a[1], mount: a[3] })
+          }
+        })
+        this.mounted = l
+        this.mountedRefreshedTime = Date.now().toString()
+      }
+    } catch (e) {
+      err(`volumesManager.onRefreshed.error: ${e}`)
     }
   }
 
@@ -101,7 +160,7 @@ class VolumesManager {
    *
    */
 
-  async create(volume: VolumeConfig, password: string = '', keyfile: string = '') {
+  async create1(volume: VolumeConfig, password: string = '', keyfile: string = '') {
     log(`volumeManager.create: ${volume.filename}`)
     let SUDO_PASSWORD = await this.plugin.getPassword(ADMIN_PASSWORD)
     let VOLUME_PASSWORD = password
@@ -113,19 +172,20 @@ class VolumesManager {
     let VOLUME_SIZE = volume.size
     let cmd = ''
 
-    if (await this.plugin.exists(volume.filename)) {
-      err(`volumesManager.create.error: "${volume.filename}" already exists!`)
-      return
-    }
     if (SUDO_PASSWORD == '') {
       err(`volumesManager.create.error: Admin password not exists!`)
       return
     }
     if(VOLUME_PASSWORD==='') VOLUME_PASSWORD = await this.plugin.getPassword(volume.filename)
+    if (await this.plugin.exists(volume.filename)) {
+      err(`volumesManager.create.error: "${volume.filename}" already exists!`)
+      return
+    }
 
     cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt --text --create "${VOLUME_FILE}" --volume-type=normal --pim=0 -k "${VOLUME_KEYFILE}" --quick --encryption="${VOLUME_ENC}" --hash="${VOLUME_HASH}" --filesystem="${VOLUME_FS}" --size="${VOLUME_SIZE}" --password="${VOLUME_PASSWORD}" --random-source=/dev/urandom`
     if(this.plugin.settings.pluginDebug) dbg(cmd)
-    ps(cmd)
+    // ps(cmd)
+    exec(cmd)
 
     if (await this.plugin.exists(volume.filename)) {
       volume.version = this.plugin.manifest.version
@@ -135,6 +195,78 @@ class VolumesManager {
       await this.plugin.saveSettings()
     }
   }
+
+  async create(volume: VolumeConfig, password: string = '', keyfile: string = '') {
+    log(`volumeManager.create: ${volume.filename}`)
+    let SUDO_PASSWORD = await this.plugin.getPassword(ADMIN_PASSWORD)
+    let VOLUME_PASSWORD = password
+    let VOLUME_KEYFILE = keyfile
+    let VOLUME_FILE = this.plugin.getAbsolutePath(volume.filename)
+    let VOLUME_HASH = volume.hash
+    let VOLUME_ENC = volume.encryption
+    let VOLUME_FS = volume.filesystem
+    let VOLUME_SIZE = volume.size
+    let cmd = ''
+    let result = ''
+
+    if (SUDO_PASSWORD == '') {
+      err(`volumesManager.create.error: Admin password not exists!`)
+      return
+    }
+    if(VOLUME_PASSWORD==='') VOLUME_PASSWORD = await this.plugin.getPassword(volume.filename)
+    if (await this.plugin.exists(volume.filename)) {
+      err(`volumesManager.create.error: "${volume.filename}" already exists!`)
+      return
+    }
+
+    cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt --text --create "${VOLUME_FILE}" --volume-type=normal --pim=0 -k "${VOLUME_KEYFILE}" --quick --encryption="${VOLUME_ENC}" --hash="${VOLUME_HASH}" --filesystem="${VOLUME_FS}" --size="${VOLUME_SIZE}" --password="${VOLUME_PASSWORD}" --random-source=/dev/urandom`
+    if(this.plugin.settings.pluginDebug) dbg(cmd)
+    // ps(cmd)
+    // exec(cmd)
+    const { start } = require('child_process').exec
+    const proc = start(cmd)
+
+    // @ts-ignore
+    proc.stdout.on('data', function (data){
+      console.debug(`exec.output: ${data}`)
+      result = data
+    })
+
+    // @ts-ignore
+    proc.stderr.on('data', function (data) {
+      console.error(`exec.stderr: ${data}`)
+      // console.debug(`run.err: ${data}`)
+      result = data
+    })
+
+    // @ts-ignore
+    proc.on('exit', (code) => {
+      // console.debug(`run.on.exit(${code}): ${result} `)
+      console.log(`exec.exit: ${result} `)
+      this.ev.emit('onCreated', result)
+    })
+
+
+  }
+
+  async onCreated(args: any[]) {
+    dbg(`onCreated: ${args}`)
+    const params = args.join(', ')
+    dbg(`onCreated: ${params}`)
+    /*
+    let volume: VolumeConfig = []
+
+    if (await this.plugin.exists(volume.filename)) {
+      volume.version = this.plugin.manifest.version
+      volume.createdTime = Date.now().toString()
+      volume.enabled = true
+      this.plugin.settings.volumes.push(volume)
+      await this.plugin.saveSettings()
+    }
+    */
+
+  }
+
 
   async delete(volume: VolumeConfig, force: boolean = true) {
     log(`volumesManager.delete: ${volume.filename}`)

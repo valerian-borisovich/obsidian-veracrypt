@@ -1,34 +1,142 @@
 //
+import { EventEmitter, errorMonitor } from 'node:events'
+//import { eventbus } from './eventbus'
 import { VeraPluginSettings } from './settings'
 import { VeraStorage } from './veraStorage'
-import { dbg } from './hlp'
+import { dbg, log, err } from './hlp'
 
 interface VeraSettings extends VeraPluginSettings {}
 
+/*
 interface IVera {
   getPassword(id: string): string
   setPassword(id: string, password: string): string
 }
+*/
+
+
+class VeraEvents extends EventEmitter {
+  constructor() {
+    super({ captureRejections: true })
+  }
+
+  /*
+  async vera(event) {
+    console.log(event.type); // Печатает 'foo'
+    console.log(event.a); // Печатает 1
+  }
+
+  on('event', (...args) =>
+  {
+  const parameters = args.join(', ');
+  console.log(`событие с параметрами ${параметры} в третьем слушателе`);
+  });
+ */
+}
+
 
 class Vera {
   settings!: VeraSettings
   storage!: VeraStorage
+  ev!: VeraEvents
 
   constructor(props: any) {
     // super(props);
-    dbg('Loading vera')
+    dbg('Vera loaded')
     this.settings = props
     this.storage = new VeraStorage()
+    let ev = new VeraEvents()
+    this.ev = ev
+    //ev.addListener('vera-proc-started', this.onProcStarted)
+    //ev.addListener('vera-proc-complete', this.onProcComplete)
   }
 
-  async getPassword(id: string) {
+  /*
+  init = () => {
+
+    const unsubscribeOnMapIdle = mapEventChannel.on('onMapIdle', () => {
+      logUserInteraction('on map idle.')
+    })
+
+    const unsubscribeOnMapClick = mapEventChannel.on(
+      'onMapClick',
+      (payload) => {
+        logUserInteraction('on map click.', payload)
+      }
+    )
+    const unsubscribeOnMarkerClick = markerEventChannel.on(
+      'onMarkerClick',
+      (payload) => {
+        logUserInteraction('on marker click.', payload)
+      }
+    )
+
+    // unsubscribe events when unmount
+    return () => {
+      unsubscribeOnMapIdle()
+      unsubscribeOnMapClick()
+      unsubscribeOnMarkerClick()
+    }
+  }
+
+
+  const
+  onIdle = (map: google.maps.Map) => {
+    mapEventChannel.emit('onMapIdle')
+
+    setZoom(map.getZoom()!)
+    const nextCenter = map.getCenter()
+    if (nextCenter) {
+      setCenter(nextCenter.toJSON())
+    }
+  }
+
+  const
+  onClick = (e: google.maps.MapMouseEvent) => {
+    mapEventChannel.emit('onMapClick', e)
+  }
+
+  const
+  onMarkerClick = (marker: MarkerData) => {
+    markerEventChannel.emit('onMarkerClick', marker)
+    setSelectedMarker(marker)
+  }
+
+   */
+
+  /*
+   *
+   */
+
+  private async onProcStarted(args: any[]) {
+    const params = args.join(', ');
+    dbg(`onProcStarted: ${params}`);
+  }
+
+  private async onProcComplete(args: []) {
+    const params = args.join(', ');
+    dbg(`onProcComplete: ${params}`);
+  }
+
+  /*
+   *
+   */
+  async getPassword(name: string) {
     let result: string = ''
-    result = await this.storage.get(id)
+    result = await this.storage.get(name)
     return result
   }
-  async setPassword(id: string, password: string) {
-    return await this.storage.set(id, password)
+  async setPassword(name: string, password: string) {
+    return await this.storage.set(name, password)
   }
+
 }
 
-export { Vera, VeraSettings }
+/*
+ *
+ */
+export { Vera, VeraEvents }
+/*
+ *
+ */
+export type { VeraSettings }
