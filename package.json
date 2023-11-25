@@ -1,7 +1,7 @@
 {
   "name": "obsidian-veracrypt",
   "description": "Veracrypt for obsidian",
-  "version": "0.3.101",
+  "version": "0.3.102",
   "main": "index.js",
   "keywords": [],
   "license": "MIT",
@@ -60,12 +60,14 @@
     "node-machine-id": "latest",
     "obsidian": "latest",
     "obsidian-plugin-cli": "latest",
-    "uuid": "latest"
+    "uuid": "latest",
+    "mustache": "latest"
   },
   "devDependencies": {
     "@types/uuid": "^9.0.6",
     "@typescript-eslint/eslint-plugin": "^6.5.0",
     "@typescript-eslint/parser": "^6.5.0",
+    "@types/mustache": "latest",
     "ansi-colors": "^4.1.3",
     "builtin-modules": "latest",
     "commander": "latest",
