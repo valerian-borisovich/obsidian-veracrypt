@@ -1,7 +1,7 @@
 {
   "name": "obsidian-veracrypt",
   "description": "Veracrypt for obsidian",
-  "version": "0.3.123",
+  "version": "0.3.124",
   "main": "index.js",
   "keywords": [],
   "license": "MIT",
@@ -25,8 +25,8 @@
     "build:dev0": "obsidian-plugin dev --with-stylesheet src/styles.css src/main.ts --vault-path /pub/==vaults==/vera",
     "build:dev": "obsidian-plugin dev src/main.ts -v /pub/==vaults==/vera",
     "test": "jest",
-    "start": "make i && npm run dev",
-    "dev": "npm run bump && npm run build:dev"
+    "start": "npm run dev",
+    "dev": "npm run bump && make i && npm run build:dev"
   },
   "author": {
     "name": "Valerian Borisovich",
