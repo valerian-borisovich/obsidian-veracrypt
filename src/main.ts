@@ -13,7 +13,6 @@ import { VolumesManager } from './volumesManager'
 import { ADMIN_PASSWORD } from './constant'
 
 
-
 export default class VeraPlugin extends Plugin {
   settings!: VeraPluginSettings
   vera!: Vera
@@ -24,14 +23,12 @@ export default class VeraPlugin extends Plugin {
 
   promts: string[] = []
 
-  /*
-   *
-   */
+  /*   lang   */
   i18n!: I18n
-
   t = (x: TransItemType, vars?: any) => {
     return this.i18n.t(x, vars);
   };
+
   /*
    *
    */
@@ -208,7 +205,6 @@ export default class VeraPlugin extends Plugin {
   async onunload() {
     dbg('Unloading veracrypt plugin')
     if (this.settings.umountAtExit) {
-      // this.mng.umountAll().then((r) => {})
       await this.mng.umountAll()
     }
   }
@@ -242,73 +238,6 @@ export default class VeraPlugin extends Plugin {
   async saveSettings() {
     await this.saveData(this.settings)
   }
-
-  /*
-    setupOnEditHandler() {
-      this.log('Setup handler');
-
-      this.registerEvent(
-          this.app.vault.on('modify', (file) => {
-            this.log('TRIGGER FROM MODIFY');
-            return this.handleFileChange(file, 'modify');
-          }),
-      );
-    }
-  */
-
-  /*
-  async toggleFunctionality() {
-    this.settings.pluginLoaded = !this.settings.pluginLoaded
-    // this.ribbonIconButton.ariaLabel = this.settings.pluginLoaded ? 'Mount' : 'Unmount'
-    setIcon(this.ribbonIconButton, this.settings.pluginLoaded ? 'eye' : 'eye-off')
-    // this.statusBarItem.innerHTML = this.settings.pluginLoaded ? 'Loaded' : ''
-    await this.volumesMount()
-  }
-
-   */
-
-  /*
-   *
-   *
-   *
-   *
-
-  async volumesMount0(): Promise<void> {
-    log('volumesMountAll')
-    this.settings.volumes.forEach((volume) => {
-      if (volume.enabled) {
-        if (!this.mng.isMounted(volume)) {
-          this.mng.mount(volume)
-          this.refreshFolder(volume.mountPath)
-        } else {
-          warn(`volumesMount: '${volume.mountPath}' already mounted!`)
-        }
-      }
-    })
-  }
-
-  async volumesUmount0(): Promise<void> {
-    log('volumesUmountAll')
-    this.settings.volumes.forEach((volume) => {
-      if (this.mng.isMounted(volume)) {
-        this.mng.umount(volume)
-        this.refreshFolder(volume.mountPath)
-      } else {
-        warn(`volumesUmount: ${volume.mountPath} already unmounted!`)
-      }
-    })
-  }
-
-  async volumesUmount(): Promise<void> {
-    log('volumesUmountAll')
-    await this.mng.umountAll()
-  }
-
-  async volumesMount(): Promise<void> {
-    log('volumesMountAll')
-    await this.mng.mountAll()
-  }
-  */
 
   async reloadFolder(folderPath: string) {
     try {

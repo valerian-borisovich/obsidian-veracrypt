@@ -19,11 +19,15 @@ __dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # ############################################################################
 #
 # ###
-export VERBOSE=${VERBOSE:-"1"}
-export DEBUG=${DEBUG:-"1"}
-export LOG_FILE=${LOG_FILE:-""}
-#LOG_FILE=${LOG_FILE:-"./vera.log"}
-export LANG=en_US.UTF-8
+#export VERBOSE=${VERBOSE:-"1"}
+#export DEBUG=${DEBUG:-"1"}
+#export LOG_FILE=${LOG_FILE:-""}
+#export LANG=en_US.UTF-8
+VERBOSE=${VERBOSE:-"3"}
+DEBUG=${DEBUG:-"1"}
+LOG_FILE=${LOG_FILE:-"vera.log"}
+LANG=en_US.UTF-8
+VERA_RESULT=""
 
 # ################################################################################################
 # ###
@@ -174,75 +178,91 @@ setenv() {
 # ###
 #
 create() {
-  if [[ -f "${VOLUME_FILE}" ]]; then
-    log "already exists '${VOLUME_FILE}'! skip create..."
+  if [[ -z "$SUDO_PASSWORD" ]]; then
+    _err "create error: SUDO_PASSWORD is empty!"
+    return
+  fi
+
+  if [[ -f "$VOLUME_FILE" ]]; then
+    _err "create error: '$VOLUME_FILE' already exists!"
+    return
   else
-    log "create: '${VOLUME_FILE}'"
-    echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t -c "${VOLUME_FILE}" --volume-type=normal --pim=0 -k "${VOLUME_KEYFILE}" --quick --encryption="$VOLUME_ENC" --hash="$VOLUME_HASH" --filesystem="$VOLUME_FS" --size="$VOLUME_SIZE" --password="$VOLUME_PASSWORD" --random-source=/dev/urandom
-    ret="$?"
+    log "create: '$VOLUME_FILE'"
+    # echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t -c "${VOLUME_FILE}" --volume-type=normal --pim=0 -k "${VOLUME_KEYFILE}" --quick --encryption="$VOLUME_ENC" --hash="$VOLUME_HASH" --filesystem="$VOLUME_FS" --size="$VOLUME_SIZE" --password="$VOLUME_PASSWORD" --random-source=/dev/urandom
+    #result=$(echo "$SUDO_PASSWORD" | sudo -S veracrypt -t -c "$VOLUME_FILE" --volume-type=normal --pim=0 -k "$VOLUME_KEYFILE" --quick --encryption="$VOLUME_ENC" --hash="$VOLUME_HASH" --filesystem="$VOLUME_FS" --size="$VOLUME_SIZE" --password="$VOLUME_PASSWORD" --random-source=/dev/urandom)
+    echo "$SUDO_PASSWORD" | sudo -S veracrypt --text --create "$VOLUME_FILE" --volume-type=normal --pim=0 -k "$VOLUME_KEYFILE" --quick --encryption="$VOLUME_ENC" --hash="$VOLUME_HASH" --filesystem="$VOLUME_FS" --size="$VOLUME_SIZE" --password="$VOLUME_PASSWORD" --random-source=/dev/urandom
+    result="$?"
     sleep 1
-    if [[ ! -z "$ret" ]]; then
-      log "create fail: $ret"
-      return "$ret"
+    if [[ ! -z "$result" ]]; then
+      _err "create error: $result"
+      return "$result"
     fi
+    export VERA_RESULT="$result"
   fi
 }
 
 # ###
 umount() {
-  log "umount at ${VOLUME_MOUNTPATH}"
-  setenv "${VOLUME_MOUNTPATH}/.env" "UMOUNT" "$(_date)"  >/dev/null 2>&1
-  echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t -d "${VOLUME_FILE}" --non-interactive  >/dev/null 2>&1
-  ret="$?"
+  if [[ -z "$SUDO_PASSWORD" ]]; then
+    _err "umount error: SUDO_PASSWORD is empty!"
+    return
+  fi
+
+  log "umount at $VOLUME_MOUNTPATH"
+  #setenv "$VOLUME_MOUNTPATH/.env" "UMOUNT" "$(_date)" >/dev/null 2>&1
+  result=$(echo "$SUDO_PASSWORD" | sudo -S veracrypt -t -d "$VOLUME_FILE" --non-interactive)
+  # result="$?"
   sleep 1
-  echo "${SUDO_PASSWORD}" | sudo -S rm "${VOLUME_MOUNTPATH}" >/dev/null 2>&1
-  return "$ret"
+  echo "$SUDO_PASSWORD" | sudo -S rm "$VOLUME_MOUNTPATH" >/dev/null 2>&1
+  export VERA_RESULT="$result"
 }
 
 # ###
 mount() {
-  if [[ -d "${VOLUME_MOUNTPATH}" ]]; then
-    if [[ -f "${VOLUME_MOUNTPATH}/.env" ]]; then
-    log "already mounted to ${VOLUME_MOUNTPATH}"
-    umount
-    fi
-  else
-    log "mkdir: ${VOLUME_MOUNTPATH}"
-    mkdir -p "${VOLUME_MOUNTPATH}" >/dev/null 2>&1
+  if [[ -z "$SUDO_PASSWORD" ]]; then
+    _err "mount error: SUDO_PASSWORD is empty!"
+    return
   fi
 
-  log "mount '${VOLUME_FILE}' ==> '${VOLUME_MOUNTPATH}'"
-  echo "${SUDO_PASSWORD}" | sudo -S veracrypt --text --password="${VOLUME_PASSWORD}" --protect-hidden=no --pim=0 --keyfiles="${VOLUME_KEYFILE}" "${VOLUME_FILE}" "${VOLUME_MOUNTPATH}" >/dev/null 2>&1
-  ret="$?"
-  sleep 1
-  #echo "${SUDO_PASSWORD}" | sudo -S chown -R "$USER:$USER" "${VOLUME_MOUNTPATH}"
-  echo "${SUDO_PASSWORD}" | sudo -S chown "$USER:$USER" "${VOLUME_MOUNTPATH}"
-  echo "${SUDO_PASSWORD}" | sudo -S chmod 777 "${VOLUME_MOUNTPATH}"
-  #echo "${SUDO_PASSWORD}" | sudo -S chmod -R 600 "${VOLUME_MOUNTPATH}"
-  # setenv "${VOLUME_MOUNTPATH}/.env" "MOUNT" "$(_date)"  >/dev/null 2>&1
-  # echo "${SUDO_PASSWORD}" | rm -rf "${VOLUME_MOUNTPATH}"/lost+found  >/dev/null 2>&1
+  if [[ -d "$VOLUME_MOUNTPATH" ]]; then
+    log "already mounted to $VOLUME_MOUNTPATH"
+    umount
+  else
+    log "mkdir: $VOLUME_MOUNTPATH"
+    mkdir -p "$VOLUME_MOUNTPATH" >/dev/null 2>&1
+  fi
+
+  if [[ -f "$VOLUME_FILE" ]]; then
+    log "mount '$VOLUME_FILE' ==> '$VOLUME_MOUNTPATH'"
+    result=$(echo "$SUDO_PASSWORD" | sudo -S veracrypt --text --password="$VOLUME_PASSWORD" --protect-hidden=no --pim=0 --keyfiles="$VOLUME_KEYFILE" "$VOLUME_FILE" "$VOLUME_MOUNTPATH")
+    #result="$?"
+    sleep 1
+    #echo "${SUDO_PASSWORD}" | sudo -S chown -R "$USER:$USER" "${VOLUME_MOUNTPATH}"
+    echo "$SUDO_PASSWORD" | sudo -S chown "$USER:$USER" "$VOLUME_MOUNTPATH"
+    echo "$SUDO_PASSWORD" | sudo -S chmod 777 "$VOLUME_MOUNTPATH"
+    export VERA_RESULT="$result"
+  fi
 }
 
 # ###   verify mounted
 verify() {
   sleep 1
-  if _contains "$(df -hT "${VOLUME_MOUNTPATH}")" "${VOLUME_MOUNTPATH}"; then
-    log "verify OK ${VOLUME_MOUNTPATH}"
+  if _contains "$(df -hT "$VOLUME_MOUNTPATH")" "$VOLUME_MOUNTPATH"; then
+    log "verify OK $VOLUME_MOUNTPATH"
     return 0
   else
-    log "verify FAIL ${VOLUME_MOUNTPATH}"
+    log "verify FAIL $VOLUME_MOUNTPATH"
     return 1
   fi
 }
 
 # ###
 list() {
-  NOTMOUNTED="Error: No volumes mounted."
+  # NOTMOUNTED="Error: No volumes mounted."
   # log "list mounted:"
+  veracrypt --text --list --non-interactive
   # veracrypt --text --list --non-interactive >/dev/null 2>&1
-  veracrypt -t -l --non-interactive
-  ret="$?"
-  return 0
+  # result=$(veracrypt --text --list --non-interactive)
 }
 
 # ### If you want to identify block devices which are not in-use, you can combine 'lsblk' with option '-T' or '--tree' and 'jq' command. It is used to transform JSON data into a more readable format and display it to the standard output.
@@ -264,10 +284,27 @@ stat() {
   lsblk -f -b -e7
 }
 
+install() {
+  # rm "data.json"
+  ###   check VeraCrypt installed?
+  result=$(veracrypt --text --version --non-interactive)
+  if _startswith "$result" "VeraCrypt "; then
+    ###   VeraCrypt installed!
+    export VERA_VERSION="$result"
+    log "installed: $result"
+  else
+    _err "error: VeraCrypt not installed!"
+    # sudo apt install -y exfat-fuse exfat-utils dmsetup
+    sudo apt install -y veracrypt exfat-fuse dmsetup
+  fi
+}
+
 showhelp() {
   echo -e "Usage:"
   echo -e "$0 command"
   echo -e "Commands list:"
+  echo -e ""
+  echo -e "install"
   echo -e "create"
   echo -e "mount"
   echo -e "umount"
@@ -276,19 +313,23 @@ showhelp() {
 }
 
 testim() {
-create
-mount
-# list
-verify
-stat
-# umount
+  create
+  mount
+  # list
+  verify
+  stat
+  # umount
 }
 
-log "vera.sh started: " "$@"
-env > env.txt
+env >env.txt
+#args=("$@")
+#log "args: ${args[0]}, ${args[1]}, ${args[2]}."
 
 if [ "$#" == 0 ]; then
   showhelp
 else
-  "$@"
+  install
+  if [ "$1" != "install" ]; then
+    "$@";
+  fi
 fi
