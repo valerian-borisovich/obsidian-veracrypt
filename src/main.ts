@@ -3,11 +3,9 @@
 import {Plugin,TFolder,TFile,normalizePath,} from 'obsidian'
 import { VeraPluginSettings, DEFAULT_SETTINGS } from './settings'
 import { VeraSettingTab } from './settingsModal'
-//import { Volume, DEFAULT_VOLUME_CONFIG, VolumeConfig } from './volume'
 import { DEFAULT_VOLUME_CONFIG, VolumeConfig } from './volume'
 import { PasswordPromt } from './passwordModal'
 import { Vera } from './vera'
-//import { log, dbg, err, warn, machineIdSync, ps, exec, run } from './hlp'
 import { log, dbg, err, warn, machineIdSync } from './hlp'
 import { I18n } from "./hlp/i18n"
 import type { LangType, LangTypeAndAuto, TransItemType } from "./hlp/i18n";
@@ -19,11 +17,8 @@ import { ADMIN_PASSWORD } from './constant'
 export default class VeraPlugin extends Plugin {
   settings!: VeraPluginSettings
   vera!: Vera
-
   mng!: VolumesManager
-  // volumes!: VolumesManager
-  // this.manifest = this.plugin.manifest
-
+  //
   ribbonIconButton!: HTMLElement
   statusBarItem!: HTMLElement
 
@@ -40,23 +35,23 @@ export default class VeraPlugin extends Plugin {
   /*
    *
    */
-  async getPassword(id: string, promt: boolean = true) {
-    let pass = await this.vera.getPassword(id)
+  async getPassword(name: string, promt: boolean = true) {
+    let pass = await this.vera.getPassword(name)
     // dbg(`VeraPlugin.getPassword: ${id} == ${pass}`)
     if (pass === '' && promt) {
-      if (!this.promts.contains(id)) {
-        this.promts.push(id)
-        let dlg = new PasswordPromt(this.app, this, id, '')
+      if (!this.promts.contains(name)) {
+        this.promts.push(name)
+        let dlg = new PasswordPromt(this.app, this, name, '')
         dlg.open()
-        pass = await this.vera.getPassword(id)
+        pass = await this.vera.getPassword(name)
         // dbg(`VeraPlugin.getPassword again: ${id} == ${pass}`)
       }
     }
     return pass
   }
 
-  async setPassword(id: string, password: string) {
-    await this.vera.setPassword(id, password)
+  async setPassword(name: string, password: string) {
+    await this.vera.setPassword(name, password)
     // dbg(`VeraPlugin.setPassword: ${id} : ${password}`)
   }
   /*
@@ -64,7 +59,7 @@ export default class VeraPlugin extends Plugin {
    */
   getAbsolutePath(path: String) {
     let root = (this.app.vault.adapter as any).basePath
-    return root + '/' + path
+    return normalizePath(`${root}/${path}`)
   }
 
   async checkFolder(path: string, create: Boolean = true) {
@@ -142,8 +137,12 @@ export default class VeraPlugin extends Plugin {
       await this.mng.umountAll()
     })
 
-    this.addRibbonIcon('refresh', 'Vera refresh', async () => {
+    this.addRibbonIcon('dice', 'Vera refresh', async () => {
       await this.mng.refresh()
+    })
+
+    this.addRibbonIcon('cloud', 'Vera install example', async () => {
+      await this.install_example()
     })
 
     /*
@@ -214,6 +213,14 @@ export default class VeraPlugin extends Plugin {
     }
   }
 
+  async install_example(force: boolean = false) {
+    /*   create exampe volume   */
+    let vol: VolumeConfig = DEFAULT_VOLUME_CONFIG
+    vol.filename = 'example.vera'
+    vol.mountPath = '==example=='
+    await this.mng.create(vol, 'example')
+  }
+
   async install(force: boolean = false) {
     if (this.settings.devID !== '' && !force) return
 
@@ -223,14 +230,9 @@ export default class VeraPlugin extends Plugin {
     this.settings.pluginDebug = true
     log(`${this.manifest.name} install on device ${this.settings.devID}`)
     let pass = await this.getPassword(ADMIN_PASSWORD)
-    if (pass !== '') await this.setPassword(ADMIN_PASSWORD, pass)
+    //if (pass !== '') await this.setPassword(ADMIN_PASSWORD, pass)
     await this.saveSettings()
 
-    /*   create exampe volume   */
-    let vol: VolumeConfig = DEFAULT_VOLUME_CONFIG
-    vol.filename = 'example.vera'
-    vol.mountPath = '==example=='
-    //await this.mng.create(vol, 'example')
   }
 
   async loadSettings() {

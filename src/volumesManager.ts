@@ -1,12 +1,11 @@
 //
 //import { App, PluginManifest, normalizePath, TFile, TFolder } from 'obsidian'
-import { App } from 'obsidian'
+import { App, normalizePath } from 'obsidian'
 import { ps, log, err, dbg, warn, run, exec } from './hlp'
 import VeraPlugin from './main'
 import { VolumeConfig } from './volume'
 import { ADMIN_PASSWORD } from './constant'
 import { VeraEvents } from './vera'
-import { spawn } from 'child_process'
 
 class VolumesManager {
   app!: App
@@ -69,6 +68,10 @@ class VolumesManager {
     // let proc = spawn(cmd, args, options)
     let proc = spawn(`veracrypt`, ['-t', '-l', '--non-interactive'])
     let result: string = ''
+    let timeout = 5000
+
+    //// kill by timeout
+    setTimeout(() => {proc.kill()}, timeout)
 
     // @ts-ignore
     proc.stdout.on('data', function (data) {
@@ -80,7 +83,7 @@ class VolumesManager {
     })
     // @ts-ignore
     proc.on('exit', (code) => {
-      dbg(`refresh.exit: ${result} `)
+      // dbg(`refresh.exit: ${result} `)
       this.ev.emit('onRefreshed', result)
     })
   }
@@ -91,7 +94,7 @@ class VolumesManager {
     let a, v
     let l: [] = []
     let nomounted = 'Error: No volumes mounted.'
-    let result: string = args.at(1)
+    let result: string = args.at(0).toString()
 
     try {
       if (nomounted === result) {
@@ -197,6 +200,7 @@ class VolumesManager {
   }
 
   async create(volume: VolumeConfig, password: string = '', keyfile: string = '') {
+    const { spawn } = require('child_process')
     log(`volumeManager.create: ${volume.filename}`)
     let SUDO_PASSWORD = await this.plugin.getPassword(ADMIN_PASSWORD)
     let VOLUME_PASSWORD = password
@@ -208,6 +212,7 @@ class VolumesManager {
     let VOLUME_SIZE = volume.size
     let cmd = ''
     let result = ''
+    let args = []
 
     if (SUDO_PASSWORD == '') {
       err(`volumesManager.create.error: Admin password not exists!`)
@@ -219,40 +224,70 @@ class VolumesManager {
       return
     }
 
-    cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt --text --create "${VOLUME_FILE}" --volume-type=normal --pim=0 -k "${VOLUME_KEYFILE}" --quick --encryption="${VOLUME_ENC}" --hash="${VOLUME_HASH}" --filesystem="${VOLUME_FS}" --size="${VOLUME_SIZE}" --password="${VOLUME_PASSWORD}" --random-source=/dev/urandom`
-    if(this.plugin.settings.pluginDebug) dbg(cmd)
+    cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt --text --create="${VOLUME_FILE}" --volume-type=normal --pim=0 -k "${VOLUME_KEYFILE}" --quick --encryption="${VOLUME_ENC}" --hash="${VOLUME_HASH}" --filesystem="${VOLUME_FS}" --size="${VOLUME_SIZE}" --password="${VOLUME_PASSWORD}" --random-source=/dev/urandom`
+    cmd = `sudo -S veracrypt --text --create="${VOLUME_FILE}" --volume-type=normal --pim=0 -k "${VOLUME_KEYFILE}" --quick --encryption="${VOLUME_ENC}" --hash="${VOLUME_HASH}" --filesystem="${VOLUME_FS}" --size="${VOLUME_SIZE}" --password="${VOLUME_PASSWORD}" --random-source=/dev/urandom`
     // ps(cmd)
-    // exec(cmd)
-    const { start } = require('child_process').exec
-    const proc = start(cmd)
+    cmd =  this.plugin.getAbsolutePath(`${this.plugin.app.vault.configDir}/plugins/obsidian-veracrypt/vera.sh`)
+    let opt = {
+      env: {
+        LOG_FILE: `vera.log`,
+        SUDO_PASSWORD: `${SUDO_PASSWORD}`,
+        VOLUME_PASSWORD: `${VOLUME_PASSWORD}`,
+        VOLUME_FILE: `${VOLUME_FILE}`,
+        VOLUME_KEYFILE: `${VOLUME_KEYFILE}`,
+        VOLUME_ENC: `${VOLUME_ENC}`,
+        VOLUME_HASH: `${VOLUME_HASH}`,
+        VOLUME_FS: `${VOLUME_FS}`,
+        VOLUME_SIZE: `${VOLUME_SIZE}`,
+      }, shell: true, cwd: this.plugin.getAbsolutePath('') }
+
+    if(this.plugin.settings.pluginDebug) dbg(cmd)
+
+    //  stdio: 'inherit', cwd: this.plugin.app.vault.configDir, shell: true }
+    const proc = spawn(cmd, ['create'], opt)
+    //const proc = spawn(cmd, args, { shell: true })
+    //const proc = spawn(cmd, {stdio: 'inherit', shell: true})
+    //const proc = spawn(cmd, {stdio: 'inherit', shell: true})
+    //proc.stdin.write(`${SUDO_PASSWORD}`)
+    //proc.stdin.end()
+
+    // // kill by timeout
+    // setTimeout(() => {proc.kill()}, 1000)
+
+    // @ts-ignore
+    //proc.stdin.on('data', function (data){
+    //  dbg(`proc.stdin: ${data}`)
+    //  proc.stdin.write(`${SUDO_PASSWORD}`)
+    //  proc.stdin.end()
+    //})
 
     // @ts-ignore
     proc.stdout.on('data', function (data){
-      console.debug(`exec.output: ${data}`)
+      // dbg(`exec.output: ${data}`)
       result = data
     })
 
     // @ts-ignore
     proc.stderr.on('data', function (data) {
-      console.error(`exec.stderr: ${data}`)
-      // console.debug(`run.err: ${data}`)
+      // err(`exec.stderr: ${data}`)
       result = data
     })
 
     // @ts-ignore
     proc.on('exit', (code) => {
-      // console.debug(`run.on.exit(${code}): ${result} `)
-      console.log(`exec.exit: ${result} `)
-      this.ev.emit('onCreated', result)
+      // dbg(`run.on.exit(${code}): ${result} `)
+      // dbg(`exec.exit: ${result} `)
+      this.ev.emit('onCreated', [result, volume])
     })
-
-
   }
 
   async onCreated(args: any[]) {
-    dbg(`onCreated: ${args}`)
-    const params = args.join(', ')
-    dbg(`onCreated: ${params}`)
+    dbg(`onCreated: ${args} len=${args.length} `)
+    let result = args.at(0)
+    let volume = args.at(1)
+
+    dbg(`onCreated( result = ${result}, volume = ${volume} `)
+
     /*
     let volume: VolumeConfig = []
 
