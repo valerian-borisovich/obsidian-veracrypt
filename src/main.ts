@@ -223,7 +223,7 @@ export default class VeraPlugin extends Plugin {
     /*   install plugin   */
     this.settings.devID = machineIdSync(true)
     this.settings.pluginVersion = this.manifest.version
-    this.settings.pluginDebug = true
+    this.settings.debug = true
     log(`${this.manifest.name} install on device ${this.settings.devID}`)
     let pass = await this.getPassword(ADMIN_PASSWORD)
     //if (pass !== '') await this.setPassword(ADMIN_PASSWORD, pass)

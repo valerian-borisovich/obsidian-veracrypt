@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
+#!/bin/bash
 # ############################################################################
+# SUDO_PASSWORD="ceym2lps8" LOG_FILE="vera.log" VOLUME_HASH="SHA-512" VOLUME_ENC="AES" VOLUME_KEYFILE="" VOLUME_FILE="/pub/==vaults==/vera/example.vera" VOLUME_PASSWORD="example" VOLUME_FS="exFAT" VOLUME_SIZE="3M" /bin/sh ./src/vera.sh"
 # ###
 #
 set -o errexit
-set -o pipefail
+#set -o pipefail
 set -o nounset
 
 # ###
 #
-__dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+#__dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 #
 
 # ############################################################################
@@ -23,9 +25,10 @@ __dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 #export DEBUG=${DEBUG:-"1"}
 #export LOG_FILE=${LOG_FILE:-""}
 #export LANG=en_US.UTF-8
-VERBOSE=${VERBOSE:-"3"}
+VERBOSE=${VERBOSE:-"1"}
 DEBUG=${DEBUG:-"1"}
 LOG_FILE=${LOG_FILE:-"vera.log"}
+LOG_LEVEL=${LOG_LEVEL:-"1"}
 LANG=en_US.UTF-8
 VERA_RESULT=""
 
@@ -50,7 +53,7 @@ _log() {
     # echo "$@" >>"$LOG_FILE"
     echo -e "$(_date) > " + "$@" >>"$LOG_FILE"
   fi
-  if [ "$VERBOSE" ] && [ "$VERBOSE" -ge "1" ]; then
+  if [ "$VERBOSE" ] && [ "$VERBOSE" -ge 1 ]; then
     # printf -- "%s \n" "[$(date)] : $@"
     printf -- "%s   " "$@"
   fi
@@ -62,16 +65,15 @@ log() {
   if [ "$LOG_FILE" ]; then
     echo ""
   fi
-  echo ""
 }
 
 _info() {
-  if [ -z "$2" ]; then
+  if [ $# -gt 0 ]; then
     echo "$1"
     _log "[$(_date_u)] $1"
-  else
-    echo "$1"="'$2'"
-    _log "[$(_date_u)] $1"="'$2'"
+  elif [ $# -ge 2 ]; then
+    echo "$1" == "'$2'"
+    _log "[$(_date_u)] $1" == "'$2'"
   fi
 }
 
@@ -84,7 +86,8 @@ _debug() {
   if [ -z "$DEBUG" ]; then
     return
   fi
-  _info "$@" >&2
+  #_info "$@" >&2
+  _log "$@" >&2
   return 0
 }
 
@@ -101,6 +104,21 @@ _debug3() {
   fi
   return
 }
+
+# ###   dbg with '\n' at end
+dbg() {
+  if [ "$DEBUG" ] && [ "$DEBUG" -ge "1" ]; then
+    _debug "$@"
+  fi
+  if [ "$DEBUG" ] && [ "$DEBUG" -ge "2" ]; then
+    _debug2 "$@"
+  fi
+  if [ "$DEBUG" ] && [ "$DEBUG" -ge "3" ]; then
+    _debug3 "$@"
+  fi
+  return
+}
+
 
 # ################################################################################################
 # ###     contains sub in str
@@ -190,13 +208,14 @@ create() {
     log "create: '$VOLUME_FILE'"
     # echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t -c "${VOLUME_FILE}" --volume-type=normal --pim=0 -k "${VOLUME_KEYFILE}" --quick --encryption="$VOLUME_ENC" --hash="$VOLUME_HASH" --filesystem="$VOLUME_FS" --size="$VOLUME_SIZE" --password="$VOLUME_PASSWORD" --random-source=/dev/urandom
     #result=$(echo "$SUDO_PASSWORD" | sudo -S veracrypt -t -c "$VOLUME_FILE" --volume-type=normal --pim=0 -k "$VOLUME_KEYFILE" --quick --encryption="$VOLUME_ENC" --hash="$VOLUME_HASH" --filesystem="$VOLUME_FS" --size="$VOLUME_SIZE" --password="$VOLUME_PASSWORD" --random-source=/dev/urandom)
-    echo "$SUDO_PASSWORD" | sudo -S veracrypt --text --create "$VOLUME_FILE" --volume-type=normal --pim=0 -k "$VOLUME_KEYFILE" --quick --encryption="$VOLUME_ENC" --hash="$VOLUME_HASH" --filesystem="$VOLUME_FS" --size="$VOLUME_SIZE" --password="$VOLUME_PASSWORD" --random-source=/dev/urandom
+    echo "$SUDO_PASSWORD" | sudo -S veracrypt -t -c "$VOLUME_FILE" --volume-type=normal --pim=0 -k "$VOLUME_KEYFILE" --quick --encryption="$VOLUME_ENC" --hash="$VOLUME_HASH" --filesystem="$VOLUME_FS" --size="$VOLUME_SIZE" --password="$VOLUME_PASSWORD" --random-source=/dev/urandom
     result="$?"
     sleep 1
     if [[ ! -z "$result" ]]; then
       _err "create error: $result"
-      return "$result"
+      # return "$result"
     fi
+    echo "$result"
     export VERA_RESULT="$result"
   fi
 }
@@ -214,6 +233,7 @@ umount() {
   # result="$?"
   sleep 1
   echo "$SUDO_PASSWORD" | sudo -S rm "$VOLUME_MOUNTPATH" >/dev/null 2>&1
+  echo "$result"
   export VERA_RESULT="$result"
 }
 
@@ -238,8 +258,9 @@ mount() {
     #result="$?"
     sleep 1
     #echo "${SUDO_PASSWORD}" | sudo -S chown -R "$USER:$USER" "${VOLUME_MOUNTPATH}"
-    echo "$SUDO_PASSWORD" | sudo -S chown "$USER:$USER" "$VOLUME_MOUNTPATH"
-    echo "$SUDO_PASSWORD" | sudo -S chmod 777 "$VOLUME_MOUNTPATH"
+    #echo "$SUDO_PASSWORD" | sudo -S chown "$USER:$USER" "$VOLUME_MOUNTPATH"
+    #echo "$SUDO_PASSWORD" | sudo -S chmod 777 "$VOLUME_MOUNTPATH"
+    echo "$result"
     export VERA_RESULT="$result"
   fi
 }
@@ -260,7 +281,7 @@ verify() {
 list() {
   # NOTMOUNTED="Error: No volumes mounted."
   # log "list mounted:"
-  veracrypt --text --list --non-interactive
+  veracrypt -t -l --non-interactive
   # veracrypt --text --list --non-interactive >/dev/null 2>&1
   # result=$(veracrypt --text --list --non-interactive)
 }
@@ -287,32 +308,33 @@ stat() {
 install() {
   # rm "data.json"
   ###   check VeraCrypt installed?
-  result=$(veracrypt --text --version --non-interactive)
+  result=$(veracrypt -t --version --non-interactive)
   if _startswith "$result" "VeraCrypt "; then
     ###   VeraCrypt installed!
     export VERA_VERSION="$result"
-    log "installed: $result"
+    # log "installed: $result"
   else
-    _err "error: VeraCrypt not installed!"
+    log "error: VeraCrypt not installed!"
     # sudo apt install -y exfat-fuse exfat-utils dmsetup
     sudo apt install -y veracrypt exfat-fuse dmsetup
   fi
 }
 
-showhelp() {
-  echo -e "Usage:"
-  echo -e "$0 command"
-  echo -e "Commands list:"
-  echo -e ""
-  echo -e "install"
-  echo -e "create"
-  echo -e "mount"
-  echo -e "umount"
-  echo -e "list"
-  echo -e "stat"
+help() {
+  echo "Usage:"
+  echo "$0 command args"
+  echo "Commands list:"
+  echo ""
+  echo "install"
+  echo "create"
+  echo "mount"
+  echo "umount"
+  echo "list"
+  echo "stat"
+  echo "help"
 }
 
-testim() {
+test() {
   create
   mount
   # list
@@ -325,11 +347,12 @@ env >env.txt
 #args=("$@")
 #log "args: ${args[0]}, ${args[1]}, ${args[2]}."
 
-if [ "$#" == 0 ]; then
-  showhelp
+if [ $# -eq 0 ]; then
+  help
 else
   install
-  if [ "$1" != "install" ]; then
-    "$@";
+  if [ "$1" == "install" ]; then
+    exit 0
   fi
+  "$@"
 fi

@@ -6,7 +6,6 @@ import VeraPlugin from './main'
 import { VolumeConfig } from './volume'
 import { ADMIN_PASSWORD } from './constant'
 import { VeraEvents } from './vera'
-import { env } from 'node:process'
 
 class VolumesManager {
   app!: App
@@ -189,7 +188,7 @@ class VolumesManager {
     }
 
     cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt --text --create "${VOLUME_FILE}" --volume-type=normal --pim=0 -k "${VOLUME_KEYFILE}" --quick --encryption="${VOLUME_ENC}" --hash="${VOLUME_HASH}" --filesystem="${VOLUME_FS}" --size="${VOLUME_SIZE}" --password="${VOLUME_PASSWORD}" --random-source=/dev/urandom`
-    if (this.plugin.settings.pluginDebug) dbg(cmd)
+    if (this.plugin.settings.debug) dbg(cmd)
     // ps(cmd)
     exec(cmd)
 
@@ -206,10 +205,9 @@ class VolumesManager {
     const { spawn } = require('child_process')
     log(`volumeManager.create: ${volume.filename}`)
     let SUDO_PASSWORD = await this.plugin.getPassword(ADMIN_PASSWORD)
+    let VOLUME_FILE = volume.filename
     let VOLUME_PASSWORD = password
     let VOLUME_KEYFILE = keyfile
-    //let VOLUME_FILE = this.plugin.getAbsolutePath(volume.filename)
-    let VOLUME_FILE = volume.filename
     let VOLUME_HASH = volume.hash
     let VOLUME_ENC = volume.encryption
     let VOLUME_FS = volume.filesystem
@@ -218,43 +216,43 @@ class VolumesManager {
     let result = ''
     let args = []
 
-    if (SUDO_PASSWORD == '') {
+    if (SUDO_PASSWORD === '') {
       err(`volumesManager.create.error: Admin password not exists!`)
       return
     }
     if (VOLUME_PASSWORD === '') VOLUME_PASSWORD = await this.plugin.getPassword(volume.filename)
     if (await this.plugin.exists(volume.filename)) {
-      err(`volumesManager.create.error: "${volume.filename}" already exists!`)
+      err(`volumesManager.create.error: '${volume.filename}' already exists!`)
       return
     }
 
-    cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt --text --create "${VOLUME_FILE}" --volume-type=normal --pim=0 -k "${VOLUME_KEYFILE}" --quick --encryption="${VOLUME_ENC}" --hash="${VOLUME_HASH}" --filesystem="${VOLUME_FS}" --size="${VOLUME_SIZE}" --password="${VOLUME_PASSWORD}" --random-source=/dev/urandom`
-    cmd = `sudo -S veracrypt --text --create "${VOLUME_FILE}" --volume-type=normal --pim=0 -k "${VOLUME_KEYFILE}" --quick --encryption="${VOLUME_ENC}" --hash="${VOLUME_HASH}" --filesystem="${VOLUME_FS}" --size="${VOLUME_SIZE}" --password="${VOLUME_PASSWORD}" --random-source=/dev/urandom`
-    // ps(cmd)
-    cmd = this.plugin.getAbsolutePath(`${this.plugin.app.vault.configDir}/plugins/obsidian-veracrypt/vera.sh`)
-    let opt = {
+    let options = {
       env: {
-        LOG_FILE: `vera.log`,
-        SUDO_PASSWORD: `${SUDO_PASSWORD}`,
-        VOLUME_PASSWORD: `${VOLUME_PASSWORD}`,
-        VOLUME_FILE: `"${VOLUME_FILE}"`,
-        VOLUME_KEYFILE: `${VOLUME_KEYFILE}`,
-        VOLUME_ENC: `${VOLUME_ENC}`,
-        VOLUME_HASH: `${VOLUME_HASH}`,
-        VOLUME_FS: `${VOLUME_FS}`,
-        VOLUME_SIZE: `${VOLUME_SIZE}`
+        DEBUG: this.plugin.settings.debug,
+        VERBOSE: this.plugin.settings.verbose,
+        LOG_FILE: this.plugin.settings.logFilename,
+        LOG_LEVEL: this.plugin.settings.logLevel,
+        SUDO_PASSWORD: SUDO_PASSWORD,
+        VOLUME_FILE: VOLUME_FILE,
+        VOLUME_PASSWORD: VOLUME_PASSWORD,
+        VOLUME_KEYFILE: VOLUME_KEYFILE,
+        VOLUME_ENC: VOLUME_ENC,
+        VOLUME_HASH: VOLUME_HASH,
+        VOLUME_FS: VOLUME_FS,
+        VOLUME_SIZE: VOLUME_SIZE
       }, shell: true, cwd: this.plugin.getAbsolutePath('')
     }
 
-    if (this.plugin.settings.pluginDebug){
-      dbg(`cmd: ${cmd}`)
-      dbg(`opt: ${opt.toString()}`)
+    let vera_sh = this.plugin.getAbsolutePath(`${this.plugin.app.vault.configDir}/plugins/obsidian-veracrypt/vera.sh`)
+
+    if (this.plugin.settings.debug){
+      dbg(`vera.sh: ${vera_sh}`)
+      dbg(`options: ${JSON.stringify(options, null, 2)}`)
     }
 
-    //const proc = spawn(`/${cmd}`, ['create'], opt)
-    const proc = spawn(cmd, ['create'], opt)
+    const proc = spawn('bash', ['-c', vera_sh, 'create'], options)
     if (!proc){
-      err(`create error: proc not started`)
+      err(`create error: proc '${vera_sh}' not started`)
       return
     }
     //const proc = spawn(cmd, args, { shell: true })
@@ -288,28 +286,28 @@ class VolumesManager {
     // @ts-ignore
     proc.on('exit', (code) => {
       // dbg(`run.on.exit(${code}): ${result} `)
-      // dbg(`exec.exit: ${result} `)
-      this.ev.emit('onCreated', [result, volume])
+      dbg(`create.onCreated.exit: ${result} `)
+      this.ev.emit('onCreated', [result, volume, this])
     })
   }
 
   async onCreated(args: any[]) {
     if (args.length !== 0) {
-      let result: string = args.at(0)
-      let volume: VolumeConfig = args.at(1)
-      dbg(`onCreated( result = ${result.toString()}, volume = ${volume.toString()} `)
+      let result: string = args.at(1)
+      let volume: VolumeConfig = args.at(2)
+      let self: VolumesManager = args.at(3)
+      dbg(`onCreated( result = ${result.toString()}, volume = ${JSON.stringify(volume, null, 2)}, self = ${self.toString()} `)
 
-      const { env } = require('node:process')
-      result = env.VERA_RESULT ?? ""
-      dbg(`env.VERA_RESULT: ${result}`)
+      //const { env } = require('node:process')
+      //result = env.VERA_RESULT ?? ""
+      //dbg(`env.VERA_RESULT: ${env.VERA_RESULT}`)
+      //dbg(`env.VERA_RESULT: ${result}`)
 
-      if (await this.plugin.exists(volume.filename)) {
-        volume.version = this.plugin.manifest.version
-        volume.createdTime = Date.now().toString()
-        volume.enabled = true
-        this.plugin.settings.volumes.push(volume)
-        await this.plugin.saveSettings()
-      }
+      volume.version = self.plugin.manifest.version
+      volume.createdTime = Date.now().toString()
+      volume.enabled = true
+      self.plugin.settings.volumes.push(volume)
+      await self.plugin.saveSettings()
     }else{
       warn(`onCreated is empty! `)
     }

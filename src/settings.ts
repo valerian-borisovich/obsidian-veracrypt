@@ -9,10 +9,13 @@ export interface VeraPluginSettings {
 
   pluginVersion: string
   pluginLoaded: boolean
-  pluginDebug: boolean
 
   lang: LangTypeAndAuto
+
   logFilename: string
+  logLevel: string
+  verbose: string
+  debug: string
 
   defaultMountPath: string
   defaultVolumefileExtention: string
@@ -33,14 +36,16 @@ export const DEFAULT_SETTINGS: VeraPluginSettings = {
 
   pluginVersion: getVersion(),
   pluginLoaded: false,
-  pluginDebug: false,
+
   lang: "auto",
 
   logFilename: 'vera.log',
+  logLevel: '1',
+  verbose: '1',
+  debug: '',
 
-  defaultMountPath: '==vera==',
   defaultVolumefileExtention: 'vera',
-
+  defaultMountPath: '==vera==',
   mountAtStart: true,
   umountAtExit: true,
 
