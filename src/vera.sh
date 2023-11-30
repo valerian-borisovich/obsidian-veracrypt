@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
-#!/bin/bash
 # ############################################################################
 # SUDO_PASSWORD="ceym2lps8" LOG_FILE="vera.log" VOLUME_HASH="SHA-512" VOLUME_ENC="AES" VOLUME_KEYFILE="" VOLUME_FILE="/pub/==vaults==/vera/example.vera" VOLUME_PASSWORD="example" VOLUME_FS="exFAT" VOLUME_SIZE="3M" /bin/sh ./src/vera.sh"
 # ###
 #
 set -o errexit
-#set -o pipefail
+set -o pipefail
 set -o nounset
 
 # ###
@@ -51,7 +50,7 @@ _date() {
 _log() {
   if [ "$LOG_FILE" ]; then
     # echo "$@" >>"$LOG_FILE"
-    echo -e "$(_date) > " + "$@" >>"$LOG_FILE"
+    echo -e "$(_date) > " "$@" >>"$LOG_FILE"
   fi
   if [ "$VERBOSE" ] && [ "$VERBOSE" -ge 1 ]; then
     # printf -- "%s \n" "[$(date)] : $@"
@@ -196,7 +195,7 @@ setenv() {
 # ###
 #
 create() {
-  if [[ -z "$SUDO_PASSWORD" ]]; then
+  if [[ -z "${SUDO_PASSWORD-}" ]]; then
     _err "create error: SUDO_PASSWORD is empty!"
     return
   fi
@@ -222,7 +221,7 @@ create() {
 
 # ###
 umount() {
-  if [[ -z "$SUDO_PASSWORD" ]]; then
+  if [[ -z "${SUDO_PASSWORD-}" ]]; then
     _err "umount error: SUDO_PASSWORD is empty!"
     return
   fi
@@ -239,7 +238,7 @@ umount() {
 
 # ###
 mount() {
-  if [[ -z "$SUDO_PASSWORD" ]]; then
+  if [[ -z "${SUDO_PASSWORD-}" ]]; then
     _err "mount error: SUDO_PASSWORD is empty!"
     return
   fi
@@ -312,7 +311,7 @@ install() {
   if _startswith "$result" "VeraCrypt "; then
     ###   VeraCrypt installed!
     export VERA_VERSION="$result"
-    # log "installed: $result"
+    log "installed: $result"
   else
     log "error: VeraCrypt not installed!"
     # sudo apt install -y exfat-fuse exfat-utils dmsetup
@@ -320,7 +319,7 @@ install() {
   fi
 }
 
-help() {
+showhelp() {
   echo "Usage:"
   echo "$0 command args"
   echo "Commands list:"
@@ -331,10 +330,9 @@ help() {
   echo "umount"
   echo "list"
   echo "stat"
-  echo "help"
 }
 
-test() {
+testim() {
   create
   mount
   # list
@@ -343,16 +341,25 @@ test() {
   # umount
 }
 
-env >env.txt
 #args=("$@")
 #log "args: ${args[0]}, ${args[1]}, ${args[2]}."
+#echo "$@"
+#echo -e "args count: " "$#"
+#env >env.txt
 
-if [ $# -eq 0 ]; then
-  help
+if [ $# == 0 ]; then
+  showhelp
+  exit
 else
   install
   if [ "$1" == "install" ]; then
-    exit 0
+    echo "$@"
+    exit
+  fi
+  if [ "${VOLUME_COMMAND-}" != "" ]; then
+    echo "VOLUME_COMMAND: " "$VOLUME_COMMAND"
+    "$VOLUME_COMMAND"
+    exit
   fi
   "$@"
 fi

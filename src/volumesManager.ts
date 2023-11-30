@@ -212,9 +212,9 @@ class VolumesManager {
     let VOLUME_ENC = volume.encryption
     let VOLUME_FS = volume.filesystem
     let VOLUME_SIZE = volume.size
-    let cmd = ''
+    let VOLUME_COMMAND = 'create'
+
     let result = ''
-    let args = []
 
     if (SUDO_PASSWORD === '') {
       err(`volumesManager.create.error: Admin password not exists!`)
@@ -233,6 +233,7 @@ class VolumesManager {
         LOG_FILE: this.plugin.settings.logFilename,
         LOG_LEVEL: this.plugin.settings.logLevel,
         SUDO_PASSWORD: SUDO_PASSWORD,
+        VOLUME_COMMAND: VOLUME_COMMAND,
         VOLUME_FILE: VOLUME_FILE,
         VOLUME_PASSWORD: VOLUME_PASSWORD,
         VOLUME_KEYFILE: VOLUME_KEYFILE,
@@ -240,36 +241,24 @@ class VolumesManager {
         VOLUME_HASH: VOLUME_HASH,
         VOLUME_FS: VOLUME_FS,
         VOLUME_SIZE: VOLUME_SIZE
-      }, shell: true, cwd: this.plugin.getAbsolutePath('')
+      }, shell: true, cwd: '/'+this.plugin.getAbsolutePath('')
     }
 
-    let vera_sh = this.plugin.getAbsolutePath(`${this.plugin.app.vault.configDir}/plugins/obsidian-veracrypt/vera.sh`)
+    let vera_sh = '/'+this.plugin.getAbsolutePath(`${this.plugin.app.vault.configDir}/plugins/obsidian-veracrypt/vera.sh`)
 
+    /*
     if (this.plugin.settings.debug){
       dbg(`vera.sh: ${vera_sh}`)
       dbg(`options: ${JSON.stringify(options, null, 2)}`)
     }
+    */
 
-    const proc = spawn('bash', ['-c', vera_sh, 'create'], options)
+    //const proc = spawn('bash', ['-c', vera_sh, VOLUME_COMMAND], options)
+    const proc = spawn('bash', [ vera_sh, VOLUME_COMMAND], options)
     if (!proc){
-      err(`create error: proc '${vera_sh}' not started`)
+      err(`create proc error: '${vera_sh}' not started`)
       return
     }
-    //const proc = spawn(cmd, args, { shell: true })
-    //const proc = spawn(cmd, {stdio: 'inherit', shell: true})
-    //const proc = spawn(cmd, {stdio: 'inherit', shell: true})
-    //proc.stdin.write(`${SUDO_PASSWORD}`)
-    //proc.stdin.end()
-
-    // // kill by timeout
-    // setTimeout(() => {proc.kill()}, 1000)
-
-    // @ts-ignore
-    //proc.stdin.on('data', function (data){
-    //  dbg(`proc.stdin: ${data}`)
-    //  proc.stdin.write(`${SUDO_PASSWORD}`)
-    //  proc.stdin.end()
-    //})
 
     // @ts-ignore
     proc.stdout.on('data', function(data) {
@@ -293,10 +282,10 @@ class VolumesManager {
 
   async onCreated(args: any[]) {
     if (args.length !== 0) {
-      let result: string = args.at(1)
-      let volume: VolumeConfig = args.at(2)
-      let self: VolumesManager = args.at(3)
-      dbg(`onCreated( result = ${result.toString()}, volume = ${JSON.stringify(volume, null, 2)}, self = ${self.toString()} `)
+      let result: string = args.at(0)
+      let volume: VolumeConfig = args.at(1)
+      let self: VolumesManager = args.at(2)
+      // dbg(`onCreated( result = ${result.toString()}, volume = ${JSON.stringify(volume, null, 2)}, self = ${self.toString()} `)
 
       //const { env } = require('node:process')
       //result = env.VERA_RESULT ?? ""
