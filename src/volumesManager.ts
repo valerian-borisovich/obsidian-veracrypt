@@ -154,8 +154,8 @@ class VolumesManager {
     log('volumesManager.umountAll')
     let result: string = ''
     let cmd: string = ''
-    let SUDO_PASSWORD = await this.plugin.getPassword(ADMIN_PASSWORD)
-    cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t -d --non-interactive`
+    let OS_PASSWORD = await this.plugin.getPassword(ADMIN_PASSWORD)
+    cmd = `echo "${OS_PASSWORD}" | sudo -S veracrypt -t -d --non-interactive`
     if (force) cmd = cmd + ' --force'
     dbg(`volumesManager.umountAll.cmd: ${cmd}`)
     result = run(cmd)
@@ -167,7 +167,7 @@ class VolumesManager {
 
   async create1(volume: VolumeConfig, password: string = '', keyfile: string = '') {
     log(`volumeManager.create: ${volume.filename}`)
-    let SUDO_PASSWORD = await this.plugin.getPassword(ADMIN_PASSWORD)
+    let OS_PASSWORD = await this.plugin.getPassword(ADMIN_PASSWORD)
     let VOLUME_PASSWORD = password
     let VOLUME_KEYFILE = keyfile
     let VOLUME_FILE = this.plugin.getAbsolutePath(volume.filename)
@@ -177,7 +177,7 @@ class VolumesManager {
     let VOLUME_SIZE = volume.size
     let cmd = ''
 
-    if (SUDO_PASSWORD == '') {
+    if (OS_PASSWORD == '') {
       err(`volumesManager.create.error: Admin password not exists!`)
       return
     }
@@ -187,7 +187,7 @@ class VolumesManager {
       return
     }
 
-    cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt --text --create "${VOLUME_FILE}" --volume-type=normal --pim=0 -k "${VOLUME_KEYFILE}" --quick --encryption="${VOLUME_ENC}" --hash="${VOLUME_HASH}" --filesystem="${VOLUME_FS}" --size="${VOLUME_SIZE}" --password="${VOLUME_PASSWORD}" --random-source=/dev/urandom`
+    cmd = `echo "${OS_PASSWORD}" | sudo -S veracrypt --text --create "${VOLUME_FILE}" --volume-type=normal --pim=0 -k "${VOLUME_KEYFILE}" --quick --encryption="${VOLUME_ENC}" --hash="${VOLUME_HASH}" --filesystem="${VOLUME_FS}" --size="${VOLUME_SIZE}" --password="${VOLUME_PASSWORD}" --random-source=/dev/urandom`
     if (this.plugin.settings.debug) dbg(cmd)
     // ps(cmd)
     exec(cmd)
@@ -204,7 +204,7 @@ class VolumesManager {
   async create(volume: VolumeConfig, password: string = '', keyfile: string = '') {
     const { spawn } = require('child_process')
     log(`volumeManager.create: ${volume.filename}`)
-    let SUDO_PASSWORD = await this.plugin.getPassword(ADMIN_PASSWORD)
+    let OS_PASSWORD = await this.plugin.getPassword(ADMIN_PASSWORD)
     let VOLUME_FILE = volume.filename
     let VOLUME_PASSWORD = password
     let VOLUME_KEYFILE = keyfile
@@ -216,7 +216,7 @@ class VolumesManager {
 
     let result = ''
 
-    if (SUDO_PASSWORD === '') {
+    if (OS_PASSWORD === '') {
       err(`volumesManager.create.error: Admin password not exists!`)
       return
     }
@@ -232,7 +232,7 @@ class VolumesManager {
         VERBOSE: this.plugin.settings.verbose,
         LOG_FILE: this.plugin.settings.logFilename,
         LOG_LEVEL: this.plugin.settings.logLevel,
-        SUDO_PASSWORD: SUDO_PASSWORD,
+        OS_PASSWORD: OS_PASSWORD,
         VOLUME_COMMAND: VOLUME_COMMAND,
         VOLUME_FILE: VOLUME_FILE,
         VOLUME_PASSWORD: VOLUME_PASSWORD,
@@ -319,14 +319,14 @@ class VolumesManager {
 
   async mount(volume: VolumeConfig, force: boolean = false) {
     log(`volumesManager.mount: ${volume.filename} to: ${volume.mountPath}`)
-    let SUDO_PASSWORD = await this.plugin.getPassword(ADMIN_PASSWORD)
+    let OS_PASSWORD = await this.plugin.getPassword(ADMIN_PASSWORD)
     let VOLUME_PASSWORD = await this.plugin.getPassword(volume.filename)
     let VOLUME_KEYFILE = ''
     let VOLUME_FILE = this.plugin.getAbsolutePath(volume.filename)
     let VOLUME_MOUNTPATH = this.plugin.getAbsolutePath(volume.mountPath)
-    let cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t --non-interactive --password="${VOLUME_PASSWORD}" --protect-hidden=no --pim=0 --keyfiles="${VOLUME_KEYFILE}" "${VOLUME_FILE}" "${VOLUME_MOUNTPATH}"`
+    let cmd = `echo "${OS_PASSWORD}" | sudo -S veracrypt -t --non-interactive --password="${VOLUME_PASSWORD}" --protect-hidden=no --pim=0 --keyfiles="${VOLUME_KEYFILE}" "${VOLUME_FILE}" "${VOLUME_MOUNTPATH}"`
     //dbg(cmd)
-    if (SUDO_PASSWORD == '') {
+    if (OS_PASSWORD == '') {
       err(`volumesManager.mount.error: Admin password not exists!`)
       return
     }
@@ -347,12 +347,12 @@ class VolumesManager {
 
   async umount(volume: VolumeConfig, force: boolean = false) {
     log(`volumesManager.umount: ${volume.filename} from: ${volume.mountPath}`)
-    let SUDO_PASSWORD = await this.plugin.getPassword(ADMIN_PASSWORD)
+    let OS_PASSWORD = await this.plugin.getPassword(ADMIN_PASSWORD)
     let VOLUME_FILE = this.plugin.getAbsolutePath(volume.filename)
     let VOLUME_MOUNTPATH = this.plugin.getAbsolutePath(volume.mountPath)
-    let cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t -d "${VOLUME_FILE}" --non-interactive`
+    let cmd = `echo "${OS_PASSWORD}" | sudo -S veracrypt -t -d "${VOLUME_FILE}" --non-interactive`
 
-    if (SUDO_PASSWORD == '') {
+    if (OS_PASSWORD == '') {
       err(`volumesManager.umount.error: Admin password not exists!`)
       return
     }
@@ -365,8 +365,8 @@ class VolumesManager {
       // @ts-ignore
       const existingFileNames = new Set(await adapter.fsPromises.readdir(`${VOLUME_MOUNTPATH}`))
       if (existingFileNames.size === 0) {
-        // cmd = `echo "${SUDO_PASSWORD}" | sudo -S rm -rf "${VOLUME_MOUNTPATH}"`
-        cmd = `echo "${SUDO_PASSWORD}" | sudo -S rm "${VOLUME_MOUNTPATH}"`
+        // cmd = `echo "${OS_PASSWORD}" | sudo -S rm -rf "${VOLUME_MOUNTPATH}"`
+        cmd = `echo "${OS_PASSWORD}" | sudo -S rm "${VOLUME_MOUNTPATH}"`
         dbg(cmd)
         ps(cmd)
         volume.umountTime = Date.now().toString()

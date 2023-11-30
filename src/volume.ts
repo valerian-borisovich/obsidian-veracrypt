@@ -114,7 +114,7 @@ class Volume {
 
   /*
   async create() {
-    let SUDO_PASSWORD = await this.plugin.getPassword(ADMIN_PASSWORD)
+    let OS_PASSWORD = await this.plugin.getPassword(ADMIN_PASSWORD)
     // let VOLUME_PASSWORD = this.volume.password
     let VOLUME_PASSWORD = await this.plugin.getPassword(this.volume.id)
     let VOLUME_KEYFILE = ''
@@ -125,7 +125,7 @@ class Volume {
     let VOLUME_FS = this.volume.filesystem
     let VOLUME_SIZE = this.volume.size
 
-    let cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt --text --create "${VOLUME_FILE}" --volume-type=normal --pim=0 -k "${VOLUME_KEYFILE}" --quick --encryption="${VOLUME_ENC}" --hash="${VOLUME_HASH}" --filesystem="${VOLUME_FS}" --size="${VOLUME_SIZE}" --password="${VOLUME_PASSWORD}" --random-source=/dev/urandom`
+    let cmd = `echo "${OS_PASSWORD}" | sudo -S veracrypt --text --create "${VOLUME_FILE}" --volume-type=normal --pim=0 -k "${VOLUME_KEYFILE}" --quick --encryption="${VOLUME_ENC}" --hash="${VOLUME_HASH}" --filesystem="${VOLUME_FS}" --size="${VOLUME_SIZE}" --password="${VOLUME_PASSWORD}" --random-source=/dev/urandom`
     log(cmd)
     let o = ps(cmd)
 
@@ -153,13 +153,13 @@ class Volume {
   async _mount() {
     await this.checkFolder()
 
-    let SUDO_PASSWORD = await this.plugin.getPassword(ADMIN_PASSWORD)
+    let OS_PASSWORD = await this.plugin.getPassword(ADMIN_PASSWORD)
     // let VOLUME_PASSWORD = this.volume.password
     let VOLUME_PASSWORD = await this.plugin.getPassword(this.volume.id)
     let VOLUME_KEYFILE = ''
     let VOLUME_FILE = this.getAbsolutePath(this.volume.filename)
     let VOLUME_MOUNTPATH = this.getAbsolutePath(this.volume.mountPath)
-    let cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t --non-interactive --force --password="${VOLUME_PASSWORD}" --protect-hidden=no --pim=0 --keyfiles="${VOLUME_KEYFILE}" "${VOLUME_FILE}" "${VOLUME_MOUNTPATH}"`
+    let cmd = `echo "${OS_PASSWORD}" | sudo -S veracrypt -t --non-interactive --force --password="${VOLUME_PASSWORD}" --protect-hidden=no --pim=0 --keyfiles="${VOLUME_KEYFILE}" "${VOLUME_FILE}" "${VOLUME_MOUNTPATH}"`
     //dbg(cmd)
     ps(cmd)
     this.volume.mountTime = Date.now().toString()
@@ -178,10 +178,10 @@ class Volume {
   }
 
   async _umount() {
-    let SUDO_PASSWORD = await this.plugin.getPassword(ADMIN_PASSWORD)
+    let OS_PASSWORD = await this.plugin.getPassword(ADMIN_PASSWORD)
     let VOLUME_FILE = this.getAbsolutePath(this.volume.filename)
     let VOLUME_MOUNTPATH = this.getAbsolutePath(this.volume.mountPath)
-    let cmd = `echo "${SUDO_PASSWORD}" | sudo -S veracrypt -t -d "${VOLUME_FILE}" --non-interactive --force`
+    let cmd = `echo "${OS_PASSWORD}" | sudo -S veracrypt -t -d "${VOLUME_FILE}" --non-interactive --force`
     dbg(cmd)
     ps(cmd)
 
@@ -194,8 +194,8 @@ class Volume {
       dbg('existingFileNames.size ' + existingFileNames.size.toString())
 
       if (existingFileNames.size === 0) {
-        cmd = `echo "${SUDO_PASSWORD}" | sudo -S rm -rf "${VOLUME_MOUNTPATH}"`
-        cmd = `echo "${SUDO_PASSWORD}" | sudo -S rm "${VOLUME_MOUNTPATH}"`
+        cmd = `echo "${OS_PASSWORD}" | sudo -S rm -rf "${VOLUME_MOUNTPATH}"`
+        cmd = `echo "${OS_PASSWORD}" | sudo -S rm "${VOLUME_MOUNTPATH}"`
         dbg(cmd)
         ps(cmd)
         this.volume.umountTime = Date.now().toString()
