@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# ############################################################################
-#!/usr/bin/env bash
 # #####################################################################################################################
 # ### Full path of the current script
 THIS=$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || echo $0)
@@ -20,7 +18,7 @@ set -o pipefail
 set -o nounset
 # ###
 #
-# ############################################################################
+# #####################################################################################################################
 # ###   Load up config file
 #
 VERA_CONFIG_FILE="conf.toml"
@@ -31,7 +29,7 @@ set -o allexport
 [[ -f "${DIR}/${VERA_CONFIG_FILE}" ]] && source "${DIR}/${VERA_CONFIG_FILE}"
 set +o allexport
 #
-# ############################################################################
+# #####################################################################################################################
 #
 #LANG=en_US.UTF-8
 LANG=${VERA_LANG:-en_US.UTF-8}
@@ -47,9 +45,9 @@ LOG_LEVEL=${LOG_LEVEL:-"1"}
 VERA_FORCE=${VERA_FORCE:-""}
 VERA_RESULT=${VERA_RESULT:-""}
 
-# ################################################################################################
+# #####################################################################################################################
 if [ "$VERA_FORCE" ]; then VERA_FORCE="--force"; fi
-# ################################################################################################
+# #####################################################################################################################
 # ###
 #
 _date_u() {
@@ -62,7 +60,7 @@ _date() {
   date -u '+%s'
 }
 
-# ################################################################################################
+# #####################################################################################################################
 # ###   log without '\n' at end
 #
 #color_normal="\e[m"
@@ -140,7 +138,7 @@ dbg() {
 }
 
 
-# ################################################################################################
+# #####################################################################################################################
 # ###     contains sub in str
 #
 _contains() {
@@ -156,7 +154,7 @@ _startswith() {
   echo "$_str" | grep -- "^$_sub" >/dev/null 2>&1
 }
 
-# ################################################################################################
+# #####################################################################################################################
 # ###     options file
 #
 _sed_i() {
@@ -212,7 +210,7 @@ setenv() {
   _setopt "$1" "$2" "=" "$3" ""
 }
 
-# ############################################################################
+# #####################################################################################################################
 # ###
 #
 create() {
@@ -246,10 +244,8 @@ umount() {
   fi
 
   log "umount $VOLUME_FILE from $VOLUME_MOUNTPATH"
-
   echo -e "umount: $(_date)">$VOLUME_MOUNTPATH/$VOLUME_INFO
 
-  #setenv "$VOLUME_MOUNTPATH/.env" "UMOUNT" "$(_date)" >/dev/null 2>&1
   echo "$OS_PASSWORD" | sudo -S veracrypt -t -d "$VOLUME_FILE" --non-interactive
   # result=$(echo "$OS_PASSWORD" | sudo -S veracrypt -t -d "$VOLUME_FILE" --non-interactive)
   # result="$?"
@@ -262,7 +258,6 @@ umount() {
       break
     else
       echo "$OS_PASSWORD" | sudo -S rm -d "$VOLUME_MOUNTPATH" >/dev/null 2>&1
-      # echo "$OS_PASSWORD" | sudo -S rm -d "$VOLUME_MOUNTPATH"
     fi
 
     if [[ $VERBOSE -ge 2 ]]; then
@@ -297,8 +292,6 @@ mount() {
     #echo "${OS_PASSWORD}" | sudo -S chown -R "$USER:$USER" "${VOLUME_MOUNTPATH}"
     #echo "$OS_PASSWORD" | sudo -S chown "$USER:$USER" "$VOLUME_MOUNTPATH"
     #echo "$OS_PASSWORD" | sudo -S chmod 777 "$VOLUME_MOUNTPATH"
-    #echo "$result"
-    #export VERA_RESULT="$result"
 
     echo -e "mount: $(_date)">$VOLUME_MOUNTPATH/$VOLUME_INFO
   fi
@@ -319,12 +312,8 @@ ismounted() {
 list() {
   # NOTMOUNTED="Error: No volumes mounted."
   # veracrypt --text --list --non-interactive >/dev/null 2>&1
-  # veracrypt -t -l --non-interactive
   result="$(veracrypt -t -l --non-interactive)"
   echo "result: ${result}"
-  #if _contains "$result" "No volumes mounted"; then
-  #  echo "$result"
-  #fi
 }
 
 # ### If you want to identify block devices which are not in-use, you can combine 'lsblk' with option '-T' or '--tree' and 'jq' command. It is used to transform JSON data into a more readable format and display it to the standard output.
@@ -363,6 +352,8 @@ install() {
   fi
 }
 
+# #####################################################################################################################
+
 showhelp() {
   echo "Usage:"
   echo "$0 command args"
@@ -385,11 +376,9 @@ testim() {
   umount
 }
 
-#args=("$@")
-#log "args: ${args[0]}, ${args[1]}, ${args[2]}."
-#echo "$@"
-#echo -e "args count: " "$#"
-#env >env.txt
+# #####################################################################################################################
+# ###
+#
 
 if [ $# == 0 ]; then
   showhelp
@@ -397,7 +386,6 @@ if [ $# == 0 ]; then
 else
   install
   if [ "$1" == "install" ]; then
-    # echo "$@"
     exit
   fi
   if [ "${VOLUME_COMMAND-}" != "" ]; then

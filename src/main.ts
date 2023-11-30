@@ -228,7 +228,6 @@ export default class VeraPlugin extends Plugin {
     let pass = await this.getPassword(ADMIN_PASSWORD)
     //if (pass !== '') await this.setPassword(ADMIN_PASSWORD, pass)
     await this.saveSettings()
-
   }
 
   async loadSettings() {

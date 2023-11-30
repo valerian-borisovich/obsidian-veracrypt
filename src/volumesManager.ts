@@ -1,7 +1,7 @@
 //
 //import { App, PluginManifest, normalizePath, TFile, TFolder } from 'obsidian'
 import { App, normalizePath } from 'obsidian'
-import { ps, log, err, dbg, warn, run, exec } from './hlp'
+import { ps, log, err, dbg, warn, run } from './hlp'
 import VeraPlugin from './main'
 import { VolumeConfig } from './volume'
 import { ADMIN_PASSWORD } from './constant'
@@ -30,40 +30,8 @@ class VolumesManager {
     this.mountedRefreshedTime = ''
   }
 
-  /*
-   *
-   */
-  async refresh1() {
-    let a, v
-    let l: [] = []
-    let nomounted = 'Error: No volumes mounted.'
-    let result: string = ''
-
-    try {
-      this.mountedRefreshStart = Date.now().toString()
-      result = run(`veracrypt`, ['-t', '-l', '--non-interactive'])
-      dbg(`volumesManager.refresh.result: ${result}`)
-      if (nomounted === result) {
-        this.mounted = []
-      } else {
-        result.split('\n').forEach((v: string) => {
-          if (v.length) {
-            a = v.split(' ')
-            // @ts-ignore
-            l.push({ filename: a[1], mount: a[3] })
-          }
-        })
-        this.mounted = l
-        this.mountedRefreshedTime = Date.now().toString()
-      }
-    } catch (e) {
-      err(`volumesManager.refresh.err: ${e}`)
-    }
-  }
-
   async refresh() {
     this.mountedRefreshStart = Date.now().toString()
-    // result = run(`veracrypt`, ['-t', '-l', '--non-interactive'])
     let spawn = require('child_process').spawn
     // let proc = spawn(cmd, args, options)
     let proc = spawn(`veracrypt`, ['-t', '-l', '--non-interactive'])
@@ -164,43 +132,6 @@ class VolumesManager {
   /*
    *
    */
-
-  async create1(volume: VolumeConfig, password: string = '', keyfile: string = '') {
-    log(`volumeManager.create: ${volume.filename}`)
-    let OS_PASSWORD = await this.plugin.getPassword(ADMIN_PASSWORD)
-    let VOLUME_PASSWORD = password
-    let VOLUME_KEYFILE = keyfile
-    let VOLUME_FILE = this.plugin.getAbsolutePath(volume.filename)
-    let VOLUME_HASH = volume.hash
-    let VOLUME_ENC = volume.encryption
-    let VOLUME_FS = volume.filesystem
-    let VOLUME_SIZE = volume.size
-    let cmd = ''
-
-    if (OS_PASSWORD == '') {
-      err(`volumesManager.create.error: Admin password not exists!`)
-      return
-    }
-    if (VOLUME_PASSWORD === '') VOLUME_PASSWORD = await this.plugin.getPassword(volume.filename)
-    if (await this.plugin.exists(volume.filename)) {
-      err(`volumesManager.create.error: "${volume.filename}" already exists!`)
-      return
-    }
-
-    cmd = `echo "${OS_PASSWORD}" | sudo -S veracrypt --text --create "${VOLUME_FILE}" --volume-type=normal --pim=0 -k "${VOLUME_KEYFILE}" --quick --encryption="${VOLUME_ENC}" --hash="${VOLUME_HASH}" --filesystem="${VOLUME_FS}" --size="${VOLUME_SIZE}" --password="${VOLUME_PASSWORD}" --random-source=/dev/urandom`
-    if (this.plugin.settings.debug) dbg(cmd)
-    // ps(cmd)
-    exec(cmd)
-
-    if (await this.plugin.exists(volume.filename)) {
-      volume.version = this.plugin.manifest.version
-      volume.createdTime = Date.now().toString()
-      volume.enabled = true
-      this.plugin.settings.volumes.push(volume)
-      await this.plugin.saveSettings()
-    }
-  }
-
   async create(volume: VolumeConfig, password: string = '', keyfile: string = '') {
     const { spawn } = require('child_process')
     log(`volumeManager.create: ${volume.filename}`)
@@ -365,9 +296,8 @@ class VolumesManager {
       // @ts-ignore
       const existingFileNames = new Set(await adapter.fsPromises.readdir(`${VOLUME_MOUNTPATH}`))
       if (existingFileNames.size === 0) {
-        // cmd = `echo "${OS_PASSWORD}" | sudo -S rm -rf "${VOLUME_MOUNTPATH}"`
-        cmd = `echo "${OS_PASSWORD}" | sudo -S rm "${VOLUME_MOUNTPATH}"`
-        dbg(cmd)
+        cmd = `echo "${OS_PASSWORD}" | sudo -S rm -d "${VOLUME_MOUNTPATH}"`
+        //dbg(cmd)
         ps(cmd)
         volume.umountTime = Date.now().toString()
         volume.mounted = false
