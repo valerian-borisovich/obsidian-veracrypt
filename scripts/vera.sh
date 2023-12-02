@@ -21,7 +21,7 @@ set -o nounset
 # #####################################################################################################################
 # ###   Load up config file
 #
-VERA_CONFIG_FILE="conf.toml"
+VERA_CONFIG_FILE=".config.md"
 VERA_UNMOUNT_TIMEOUT=7
 #
 set -o allexport

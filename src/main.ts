@@ -257,14 +257,14 @@ export default class VeraPlugin extends Plugin {
       for (const fileName of obsidianFileNames) {
         if (!existingFileNames.has(fileName)) {
           const path = `${folderPath}/${fileName}`
-          dbg(`refreshFolder.onDeleting: ${path}`)
+          //dbg(`refreshFolder.onDeleting: ${path}`)
           // @ts-ignore
           await adapter.reconcileFile('', path)
         }
       }
 
       async function reload(path: string) {
-        dbg(`reconcileFile: ${path}`)
+        //dbg(`reconcileFile: ${path}`)
         // @ts-ignore
         await adapter.reconcileFile(path, path)
       }
