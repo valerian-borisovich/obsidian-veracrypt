@@ -1,13 +1,13 @@
 //
 // import {Notice,Plugin,setIcon,TFolder,TFile,TAbstractFile,debounce,DropdownComponent,normalizePath,} from 'obsidian'
-import { Plugin, Menu, TFolder, TFile, TAbstractFile, normalizePath,} from 'obsidian'
+import { Plugin, Menu, TFolder, TFile, TAbstractFile, normalizePath } from 'obsidian'
 import * as fsPromises from 'fs/promises'
 import { I18n, log, dbg, err, warn, machineIdSync } from './hlp'
 import type { LangType, LangTypeAndAuto, TransItemType } from './hlp'
 //
 import { Vera } from './vera'
-import { VeraSettingTab } from './settingsModal'
 import { VeraPluginSettings, DEFAULT_SETTINGS } from './settings'
+import { VeraSettingTab } from './settingsModal'
 import { PasswordPromt } from './passwordModal'
 import { DEFAULT_VOLUME_CONFIG, VolumeConfig } from './volume'
 import { VolumesManager } from './volumesManager'
@@ -25,14 +25,18 @@ export default class VeraPlugin extends Plugin {
 
   promts: string[] = []
 
-  /*   lang   */
-  i18n!: I18n
-  t = (x: TransItemType, vars?: any) => {
-    return this.i18n.t(x, vars);
-  };
+  private _fsPromises!: typeof fsPromises
 
   /*
-   *
+              Lang
+  */
+  i18n!: I18n
+  t = (x: TransItemType, vars?: any) => {
+    return this.i18n.t(x, vars)
+  }
+
+  /*
+   *          Password
    */
   async getPassword(name: string, promt: boolean = true) {
     let pass = await this.vera.getPassword(name)
@@ -53,8 +57,9 @@ export default class VeraPlugin extends Plugin {
     await this.vera.setPassword(name, password)
     // dbg(`VeraPlugin.setPassword: ${id} : ${password}`)
   }
+
   /*
-   *
+   *            Filesystem
    */
   getAbsolutePath(path: String) {
     let root = (this.app.vault.adapter as any).basePath
@@ -89,32 +94,32 @@ export default class VeraPlugin extends Plugin {
   }
 
   /*
-   *
+   *                reloadFolder
    */
-  private _fsPromises!: typeof fsPromises
-
-    private async reloadFileExplorer(): Promise<void> {
+  //private async reloadFileExplorer(): Promise<void> {
+  async reloadFileExplorer(): Promise<void> {
     await this.reloadFolder(ROOT_PATH, true)
   }
 
-  public async reloadFolder(directoryPath: string, isRecursive: boolean): Promise<void> {
+  public async reloadFolder(directoryPath: string, isRecursive: boolean = false): Promise<void> {
     const isRoot = directoryPath === ROOT_PATH
     const adapter = this.app.vault.adapter
-    console.debug(`Reloading directory ${directoryPath}`)
+    dbg(`Reloading directory ${directoryPath}`)
     await adapter.reconcileFolderCreation(directoryPath, directoryPath)
     const absolutePath = isRoot ? adapter.basePath : `${adapter.basePath}/${directoryPath}`
 
-    const existingFileItems = (await this._fsPromises.readdir(absolutePath, { withFileTypes: true }))
-      .filter(f => !f.name.startsWith('.'))
-    const existingFileNames = new Set(existingFileItems.map(f => f.name))
+    const existingFileItems = (await this._fsPromises.readdir(absolutePath, { withFileTypes: true })).filter(
+      (f) => !f.name.startsWith('.'),
+    )
+    const existingFileNames = new Set(existingFileItems.map((f) => f.name))
 
     const dir = this.app.vault.getAbstractFileByPath(directoryPath) as TFolder
-    const obsidianFileNames = new Set(dir.children.map(child => child.name).filter(name => name))
+    const obsidianFileNames = new Set(dir.children.map((child) => child.name).filter((name) => name))
 
     for (const fileName of existingFileNames) {
       if (!obsidianFileNames.has(fileName)) {
         const path = this.combinePath(directoryPath, fileName)
-        console.debug(`Adding new file ${path}`)
+        dbg(`Adding new file ${path}`)
         await adapter.reconcileFile(path, path, false)
       }
     }
@@ -122,7 +127,7 @@ export default class VeraPlugin extends Plugin {
     for (const fileName of obsidianFileNames) {
       if (!existingFileNames.has(fileName)) {
         const path = this.combinePath(directoryPath, fileName)
-        console.debug(`Deleting inexistent ${path}`)
+        dbg(`Deleting inexistent ${path}`)
         await adapter.reconcileFile('', path, false)
       }
     }
@@ -142,11 +147,51 @@ export default class VeraPlugin extends Plugin {
     return isRoot ? fileName : `${directoryPath}/${fileName}`
   }
 
+  /*
+                    handleFileMenu
+   */
   private handleFileMenu(menu: Menu, file: TAbstractFile) {
-    if (!(file instanceof TFolder)) {
-      return
+    let name=this.getAbsolutePath(file.path)
+    let volume = this.mng.__get(name)
+    if (volume !== null)  dbg(`handleFileMenu volume: ${volume}`)
+    if (volume === null)  dbg(`handleFileMenu volume not found!`)
+    //if ((file instanceof TFile) && (file.extension === this.settings.defaultVolumefileExtention)) {
+    if (file instanceof TFile) {
+      dbg(`handleFileMenu TFile ${name}`)
+      //if (volume !== null && !this.mng.__is_mounted(name)) {
+      if (!this.mng.__is_mounted(name)) {
+        menu.addItem((item) => {
+          item
+            .setTitle('Mount Volume')
+            .setIcon('vera-mount')
+            .onClick(() => this.mng.__mount(name))
+        })
+      }
+      //if (volume !== null && this.mng.__is_mounted(name)) {
+      if (this.mng.__is_mounted(name)) {
+        menu.addItem((item) => {
+          item
+            .setTitle('Unmount Volume')
+            .setIcon('vera-umount')
+            .onClick(() => this.mng.__umount(name))
+        })
+      }
     }
 
+    if (file instanceof TFolder) {
+      dbg(`handleFileMenu TFolder: ${name}`)
+      // if (volume !== null && this.mng.__is_mounted(name)) {
+      if (this.mng.__is_mounted(name)) {
+        menu.addItem((item) => {
+          item
+            .setTitle('Unmount')
+            .setIcon('vera-umount')
+            .onClick(() => this.mng.__umount(name))
+        })
+      }
+    }
+
+    //////
     menu.addItem((item) => {
       item
         .setTitle('Reload Folder')
@@ -161,11 +206,14 @@ export default class VeraPlugin extends Plugin {
         .onClick(() => this.reloadFolder(file.path, true))
     })
   }
+
   /*
-   *
+   *          onload
    */
-  async  onload() {
-    if (!this.app.vault.adapter.fsPromises) {throw new Error('app.vault.adapter.fsPromises is not initialized')}
+  async onload() {
+    if (!this.app.vault.adapter.fsPromises) {
+      throw new Error('app.vault.adapter.fsPromises is not initialized')
+    }
 
     this._fsPromises = this.app.vault.adapter.fsPromises
 
@@ -176,14 +224,19 @@ export default class VeraPlugin extends Plugin {
     this.i18n = new I18n(this.settings.lang, async (lang: LangTypeAndAuto) => {
       this.settings.lang = lang
       await this.saveSettings()
-    });
+    })
 
     this.vera = new Vera(this.settings)
     this.mng = new VolumesManager(this)
 
     await this.install(true)
+    //await this.install()
 
     await this.mng.refresh()
+
+    /*
+     *         Add ribbon Buttons
+  ` */
 
     /*
     // This creates an icon in the left ribbon.
@@ -222,6 +275,41 @@ export default class VeraPlugin extends Plugin {
     })
 
     /*
+     *     Add commands
+     */
+    this.addCommand({
+      id: 'vera-mount',
+      name: 'Mount Volume',
+      callback: () => {
+        this.mng.__mount('')
+      },
+    })
+
+    this.addCommand({
+      id: 'vera-umount',
+      name: 'Unmount Volume',
+      callback: () => {
+        this.mng.__umount('')
+      },
+    })
+
+    this.addCommand({
+      id: 'vera-umount-all',
+      name: 'Unmount All Volume',
+      callback: () => {
+        this.mng.umountAll()
+      },
+    })
+
+    this.addCommand({
+      id: 'reload-file-explorer',
+      name: 'Reload File Explorer',
+      callback: this.reloadFileExplorer.bind(this),
+    })
+
+    this.registerEvent(this.app.workspace.on('file-menu', this.handleFileMenu.bind(this)))
+
+    /*
     this.addCommand({
       id: 'open-vera-modal',
       name: 'Open Veracrypt Modal',
@@ -240,35 +328,36 @@ export default class VeraPlugin extends Plugin {
       },
     })
     */
-    this.addCommand({
-      id: 'veracrypt-umount-all',
-      name: 'Veracrypt Unmount All',
-      callback: () => {
-        log('Veracrypt Unmount Callback')
-      },
-      checkCallback: (checking: boolean) => {
-        if (!checking) {
-          log('Veracrypt checkCallback checking')
-        }
-        this.mng.umountAll()
-      },
-    })
 
+    /*
+     *       addSettingTab
+     */
     this.addSettingTab(new VeraSettingTab(this.app, this))
 
+    /*
+     *       Register Events
+     */
     // this.registerDomEvent(document, 'click', (evt: MouseEvent) => { log('click', evt) })
-
     // this.registerInterval(window.setInterval(() => log('setInterval'), 5 * 60 * 1000))
 
     /*
+     *       Register timers
+     */
     this.registerInterval(
       window.setInterval(() => {
-        log('listVolumes')
-        this.volumesList()
-      }, 2 * 1000),
+        // dbg('mng.refresh()')
+        this.mng.refresh()
+      }, this.settings.refreshInterval),
     )
-    */
 
+    /*
+     *       Add StatusBar Items
+     */
+    this.addStatusBarItem().setText('Veracrypt loaded')
+
+    /*
+     *        onLayoutReady
+     */
     this.app.workspace.onLayoutReady(async () => {
       if (this.settings.mountAtStart) {
         dbg(`onLayoutReady : mountAtStart`)
@@ -276,17 +365,7 @@ export default class VeraPlugin extends Plugin {
       }
     })
 
-    this.addCommand({
-      id: 'reload-file-explorer',
-      name: 'Reload File Explorer',
-      callback: this.reloadFileExplorer.bind(this),
-    })
-
-    this.registerEvent(this.app.workspace.on('file-menu', this.handleFileMenu.bind(this)))
-
-    this.addStatusBarItem().setText('Veracrypt loaded')
-    // DropdownComponent
-    this.settings.pluginLoaded = true
+    this.settings.pluginLoaded = Date.now().toString()
   }
 
   async onunload() {
@@ -305,13 +384,13 @@ export default class VeraPlugin extends Plugin {
   }
 
   async install(force: boolean = false) {
-    if (this.settings.devID !== '' && !force) return
+    if (this.settings.deviceID !== '' && !force) return
 
     /*   install plugin   */
-    this.settings.devID = machineIdSync(true)
+    this.settings.deviceID = machineIdSync(true)
     this.settings.pluginVersion = this.manifest.version
     this.settings.debug = '1'
-    log(`${this.manifest.name} install on device ${this.settings.devID}`)
+    log(`${this.manifest.name} install on device ${this.settings.deviceID}`)
     let pass = await this.getPassword(ADMIN_PASSWORD)
     //if (pass !== '') await this.setPassword(ADMIN_PASSWORD, pass)
     await this.saveSettings()

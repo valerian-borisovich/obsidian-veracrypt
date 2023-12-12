@@ -1,11 +1,11 @@
 //
 //import { App, PluginManifest, normalizePath, TFile, TFolder } from 'obsidian'
-import { App, normalizePath } from 'obsidian'
+import { App, normalizePath, TFolder } from 'obsidian'
 import { ps, log, err, dbg, warn, run } from './hlp'
-import VeraPlugin from './main'
+import VeraPlugin from './veraPlugin'
+import { VeraEvents } from './vera'
 import { VolumeConfig } from './volume'
 import { ADMIN_PASSWORD } from './constant'
-import { VeraEvents } from './vera'
 
 class VolumesManager {
   app!: App
@@ -14,8 +14,8 @@ class VolumesManager {
   ev!: VeraEvents
 
   mounted: [] = []
-  private mountedRefreshStart: string
-  private mountedRefreshedTime: string
+
+  private lastRefreshed: number
 
 
   constructor(plugin: VeraPlugin) {
@@ -25,23 +25,29 @@ class VolumesManager {
     this.ev = new VeraEvents()
     this.ev.addListener('onCreated', this.onCreated)
     this.ev.addListener('onRefreshed', this.onRefreshed)
+    this.ev.addListener('reloadFileExplorer', this.plugin.reloadFileExplorer)
+    this.ev.addListener('reloadFolder', this.plugin.reloadFolder)
 
-    this.mountedRefreshStart = ''
-    this.mountedRefreshedTime = ''
+    this.lastRefreshed=Date.now()
   }
 
   async refresh() {
-    this.mountedRefreshStart = Date.now().toString()
+    // if(Date.now()-this.plugin.settings.refreshInterval <= this.lastRefreshed) {
+    if(Date.now()-this.plugin.settings.refreshInterval-this.plugin.settings.refreshTimeout <= this.lastRefreshed) {
+      dbg(`refresh.skip.last: ${this.lastRefreshed}`)
+      return
+    }
+    this.lastRefreshed=Date.now()
+
     let spawn = require('child_process').spawn
     // let proc = spawn(cmd, args, options)
     let proc = spawn(`veracrypt`, ['-t', '-l', '--non-interactive'])
     let result: string = ''
-    let timeout = 5000
 
     //// kill by timeout
     setTimeout(() => {
       proc.kill()
-    }, timeout)
+    }, this.plugin.settings.refreshTimeout)
 
     // @ts-ignore
     proc.stdout.on('data', function(data) {
@@ -59,7 +65,7 @@ class VolumesManager {
   }
 
   async onRefreshed(args: any[]) {
-    dbg(`onRefreshed: ${args}`)
+    dbg(`onRefreshed.args: ${args}`)
 
     let a, v
     let l: [] = []
@@ -78,27 +84,12 @@ class VolumesManager {
           }
         })
         this.mounted = l
-        this.mountedRefreshedTime = Date.now().toString()
+        this.lastRefreshed = Date.now()
+        // this.plugin.settings.lastRefreshed = Date.now()
       }
     } catch (e) {
       err(`volumesManager.onRefreshed.error: ${e}`)
     }
-  }
-
-  isMounted(volume: VolumeConfig, wait = 1000) {
-    dbg(`volumesManager.isMounted: ${volume.filename}`)
-    const sleep_interval = 333
-    for (let i = 1, w = 1; w < wait; i++, w = w + sleep_interval) {
-      this.mounted.forEach((vol) => {
-        if (volume.filename === vol['filename']) {
-          return true
-        }
-      })
-      dbg(`volumesManager.isMounted: ${volume.filename} try: ${i}`)
-      sleep(sleep_interval).then(r => {
-      })
-    }
-    return false
   }
 
   /*
@@ -119,6 +110,14 @@ class VolumesManager {
   }
 
   async umountAll(force: boolean = false): Promise<void> {
+    log('volumesManager.umountAll')
+    this.mounted.forEach((v) => {
+      dbg(`volumesManager.umountAll.volume: ${v}`)
+      this.umount(v, force)
+    })
+  }
+
+  async umountAll0(force: boolean = false): Promise<void> {
     log('volumesManager.umountAll')
     let result: string = ''
     let cmd: string = ''
@@ -184,7 +183,6 @@ class VolumesManager {
     }
     */
 
-    //const proc = spawn('bash', ['-c', vera_sh, VOLUME_COMMAND], options)
     const proc = spawn('bash', [ vera_sh, VOLUME_COMMAND], options)
     if (!proc){
       err(`create proc error: '${vera_sh}' not started`)
@@ -216,8 +214,8 @@ class VolumesManager {
       let result: string = args.at(0)
       let volume: VolumeConfig = args.at(1)
       let self: VolumesManager = args.at(2)
-      // dbg(`onCreated( result = ${result.toString()}, volume = ${JSON.stringify(volume, null, 2)}, self = ${self.toString()} `)
 
+      // dbg(`onCreated( result = ${result.toString()}, volume = ${JSON.stringify(volume, null, 2)}, self = ${self.toString()} `)
       //const { env } = require('node:process')
       //result = env.VERA_RESULT ?? ""
       //dbg(`env.VERA_RESULT: ${env.VERA_RESULT}`)
@@ -228,6 +226,7 @@ class VolumesManager {
       volume.enabled = true
       self.plugin.settings.volumes.push(volume)
       await self.plugin.saveSettings()
+      this.ev.emit('reloadFolder', volume.mountPath)
     }else{
       warn(`onCreated is empty! `)
     }
@@ -273,6 +272,8 @@ class VolumesManager {
       volume.mountTime = Date.now().toString()
       await this.plugin.saveSettings()
       await this.plugin.reloadFolder(volume.mountPath)
+      //this.ev.emit('reloadFileExplorer')
+      this.ev.emit('reloadFolder', volume.mountPath)
     }
   }
 
@@ -302,7 +303,8 @@ class VolumesManager {
         volume.umountTime = Date.now().toString()
         volume.mounted = false
         await this.plugin.saveSettings()
-        await this.plugin.reloadFolder(volume.mountPath)
+        // await this.plugin.reloadFolder(volume.mountPath)
+        this.ev.emit('reloadFolder', volume.mountPath)
         return
       } else {
         dbg(`"${VOLUME_MOUNTPATH}" is not empty! try: ${i}`)
@@ -317,6 +319,88 @@ class VolumesManager {
       await this.app.vault.adapter.rmdir(volume.mountPath, false)
     }
     await this.plugin.saveSettings()
+  }
+
+  // async __mount(name: string): Promise<void> {
+  __mount(name: string) {
+    dbg(`volumesManager.__mount ${name}`)
+    let vol = this.__get(name)
+    if (vol !== null) {
+      this.mount(vol).then((value)=>{})
+    }
+  }
+
+  __umount(name: string) {
+    dbg(`volumesManager.__umount ${name}`)
+    let vol = this.__get(name)
+    if (vol !== null) {
+      this.umount(vol).then((value)=>{})
+    }
+  }
+
+  // async __is_mounted(filename: any): Promise<void> {
+  __is_mounted(name: string) {
+    this.is_mounted(name).then((value) => {
+      return value
+    })
+    return false
+  }
+
+  async is_mounted(name: string) {
+    dbg(`volumesManager.is_mounted ${name}`)
+    try {
+      let vol = await this.get(name)
+      if (vol !== null) {
+        this.mounted.forEach((v) => {
+          let filename = v['filename']
+          let mount = v['mount']
+          // @ts-ignore
+          if (vol.filename.endsWith(filename) || vol.mountPath.endsWith(mount)) {
+            return true
+          }
+        })
+      }
+    }catch (e) {
+
+    }
+    return false
+  }
+
+  isMounted(volume: VolumeConfig, wait = 1000) {
+    return this.__is_mounted(volume.filename)
+  }
+
+  isMounted0(volume: VolumeConfig, wait = 1000) {
+    dbg(`volumesManager.isMounted: ${volume.filename}`)
+    const sleep_interval = 333
+    for (let i = 1, w = 1; w < wait; i++, w = w + sleep_interval) {
+      this.mounted.forEach((vol) => {
+        if (volume.filename === vol['filename']) {
+          return true
+        }
+      })
+      dbg(`volumesManager.isMounted: ${volume.filename} try: ${i}`)
+      sleep(sleep_interval).then(r => {
+      })
+    }
+    return false
+  }
+
+  async get(name: string) {
+    dbg(`volumesManager.get ${name}`)
+    this.plugin.settings.volumes.forEach(v => {
+      if (v.filename.endsWith(name)) {return v}
+      if (v.mountPath.endsWith(name)) {return v}
+      if (v.id.endsWith(name)) {return v}
+    })
+    return null
+  }
+
+  __get(name: string) {
+    this.get(name).then((value) => {
+      return value
+    })
+    return null
   }
 
 }

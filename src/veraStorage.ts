@@ -49,19 +49,19 @@ export { VeraStorage }
 /*
 _load_from_settings(){
 
-  this.store.getItem('devID', function (err, deviceID) {
-    log('devID: ' + deviceID)
+  this.store.getItem('deviceID', function (err, deviceID) {
+    log('deviceID: ' + deviceID)
     if (deviceID === null) {
       deviceID = getID()
-      this.store.setItem('devID', deviceID, (err, value) => {})
-      log('devID: ' + deviceID)
+      this.store.setItem('deviceID', deviceID, (err, value) => {})
+      log('deviceID: ' + deviceID)
       for (let [key, value] of Object.entries(settings)) {
         log('settings: ' + key + ' == ' + value)
         this.store.setItem(key, value, (err, value) => {})
         // this.store.setItem(key, value)
         // key + ' : ' + value
       }
-      // this.store.setItem('devID', getMachineId(), (error, value) => {})
+      // this.store.setItem('deviceID', getMachineId(), (error, value) => {})
     }
   })
 }

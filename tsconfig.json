@@ -19,7 +19,8 @@
     "jsx": "react-jsx",
     "forceConsistentCasingInFileNames": true,
     "paths": {
-      "~/*": ["./app/*"]
+      "~/*": ["./src/*"],
+      "@/*": ["./src/*"]
     },
     "lib": [
       "DOM", "DOM.Iterable", "ES2019",
@@ -27,6 +28,6 @@
     ]
   },
   "exclude": ["node_modules", "dist", "build", "tmp",],
-  "include": ["**/*.ts", "**/*.tsx", "**/*.d.ts", "**/*.js"],
+  "include": ["src/**/*", "**/*.ts", "**/*.tsx", "**/*.d.ts", "**/*.js"],
 }
 

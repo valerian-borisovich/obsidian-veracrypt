@@ -2,13 +2,13 @@
 import { VolumeConfig } from './volume'
 //
 import { getVersion } from './hlp'
-import { LangTypeAndAuto } from './hlp/i18n'
+import { LangTypeAndAuto } from './hlp'
 
 export interface VeraPluginSettings {
-  devID: string
+  deviceID: string
 
   pluginVersion: string
-  pluginLoaded: boolean
+  pluginLoaded: string
 
   lang: LangTypeAndAuto
 
@@ -22,6 +22,9 @@ export interface VeraPluginSettings {
   mountAtStart: boolean
   umountAtExit: boolean
 
+  refreshInterval: number
+  refreshTimeout: number
+
   savePassword: boolean
 
   vaultName: string
@@ -32,10 +35,10 @@ export interface VeraPluginSettings {
 }
 
 export const DEFAULT_SETTINGS: VeraPluginSettings = {
-  devID: '',
+  deviceID: '',
 
   pluginVersion: getVersion(),
-  pluginLoaded: false,
+  pluginLoaded: '',
 
   lang: "auto",
 
@@ -48,6 +51,9 @@ export const DEFAULT_SETTINGS: VeraPluginSettings = {
   defaultMountPath: '==vera==',
   mountAtStart: true,
   umountAtExit: true,
+
+  refreshInterval: 5 * 1000,
+  refreshTimeout: 7 * 1000,
 
   savePassword: true,
 

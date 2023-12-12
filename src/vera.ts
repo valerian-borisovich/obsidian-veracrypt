@@ -45,8 +45,7 @@ class Vera {
     dbg('Vera loaded')
     this.settings = props
     this.storage = new VeraStorage()
-    let ev = new VeraEvents()
-    this.ev = ev
+    this.ev = new VeraEvents()
     //ev.addListener('vera-proc-started', this.onProcStarted)
     //ev.addListener('vera-proc-complete', this.onProcComplete)
   }
