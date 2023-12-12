@@ -14,19 +14,20 @@ root = true
 # ###
 [*]
 charset = utf-8
-indent_style = space
-indent_size = 4
 end_of_line = lf
+max_line_length = 120
 trim_trailing_whitespace = true
 insert_final_newline = true
-max_line_length = 120
+indent_style = space
+indent_size = 2
+tab_width = 2
 
 # ###   Python
-[*.py]
+[*.{py,ipynb}]
 indent_size = 4
 
 # ###   JavaScipt
-[*.{ts,tsx,js,jsx,mjs,cjs}]
+[*.{json,ts,tsx,js,jsx,mjs,cjs}]
 indent_size = 2
 # quote_type = single
 
@@ -56,7 +57,7 @@ insert_final_newline = false
 
 # ###   .env | .config | *.ini | *.rst
 [{*.{rst,ini},.env,.config}]
-indent_size = 4
+indent_size = 3
 
 # ###   *.gql | *.graphql | *.sql
 [*.{gql,graphql,sql}]

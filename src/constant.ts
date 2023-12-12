@@ -42,12 +42,6 @@ type PluginStatus = ['unloading', 'unloaded', 'loading', 'loaded', 'ready']
 //
 const ADMIN_PASSWORD = 'ROOT_PASSWORD'
 
-export {
-  ADMIN_PASSWORD,
-  encryptionAlgorithm,
-  hashAlgorithm,
-  filesystemType,
-  MountStatus,
-  ConnectionStatus,
-  PluginStatus,
-}
+export { ADMIN_PASSWORD, encryptionAlgorithm, hashAlgorithm, filesystemType, MountStatus, }
+
+export type { ConnectionStatus, PluginStatus, }
