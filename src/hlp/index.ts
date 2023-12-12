@@ -29,7 +29,9 @@ import { filesystemType, encryptionAlgorithm, hashAlgorithm } from '../constant'
 import { proxyList, proxyGet, proxySet, proxyCheck } from './proxies'
 import { ps, exec, run } from './ps'
 import { v4 } from 'uuid'
-
+//
+import { I18n } from "./i18n"
+import type { LangType, LangTypeAndAuto, TransItemType } from "./i18n"
 /*
  *    exports
  */
@@ -40,3 +42,5 @@ export { ps, exec, run }
 export { getVersionAsync, getVersion }
 export { filesystemType, encryptionAlgorithm, hashAlgorithm }
 export { proxyList, proxyGet, proxySet, proxyCheck }
+export { I18n }
+export type { LangType, LangTypeAndAuto, TransItemType }

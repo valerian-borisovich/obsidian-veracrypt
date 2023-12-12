@@ -2,14 +2,14 @@
 // import {Notice,Plugin,setIcon,TFolder,TFile,TAbstractFile,debounce,DropdownComponent,normalizePath,} from 'obsidian'
 import { Plugin, Menu, TFolder, TFile, TAbstractFile, normalizePath,} from 'obsidian'
 import * as fsPromises from 'fs/promises'
-import { log, dbg, err, warn, machineIdSync } from './hlp'
-import { I18n } from "./hlp/i18n"
-import type { LangType, LangTypeAndAuto, TransItemType } from "./hlp/i18n";
-import { VeraPluginSettings, DEFAULT_SETTINGS } from './settings'
+import { I18n, log, dbg, err, warn, machineIdSync } from './hlp'
+import type { LangType, LangTypeAndAuto, TransItemType } from './hlp'
+//
+import { Vera } from './vera'
 import { VeraSettingTab } from './settingsModal'
+import { VeraPluginSettings, DEFAULT_SETTINGS } from './settings'
 import { PasswordPromt } from './passwordModal'
 import { DEFAULT_VOLUME_CONFIG, VolumeConfig } from './volume'
-import { Vera } from './vera'
 import { VolumesManager } from './volumesManager'
 import { ADMIN_PASSWORD } from './constant'
 
