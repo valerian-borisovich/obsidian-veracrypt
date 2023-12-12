@@ -1,7 +1,7 @@
 {
   "name": "obsidian-veracrypt",
   "description": "Veracrypt for obsidian",
-  "version": "0.3.169",
+  "version": "0.3.170",
   "main": "index.js",
   "keywords": [],
   "license": "MIT",
@@ -28,6 +28,7 @@
     "start": "npm run dev",
     "dev": "npm run bump && make i && npm run build:dev"
   },
+  "homepage": "https://github.com/valerian-borisovich/obsidian-veracrypt#readme",
   "author": {
     "name": "Valerian Borisovich",
     "email": "Valerian.Borisovich@gmail.com",
