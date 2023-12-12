@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.151](https://valerian-borisovich.github.io///compare/v0.3.150...v0.3.151) (2023-12-12)
+
 ### [0.3.150](https://valerian-borisovich.github.io///compare/v0.3.149...v0.3.150) (2023-11-30)
 
 ### [0.3.149](https://valerian-borisovich.github.io///compare/v0.3.148...v0.3.149) (2023-11-30)

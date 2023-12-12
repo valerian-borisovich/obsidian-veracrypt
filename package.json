@@ -1,7 +1,7 @@
 {
   "name": "obsidian-veracrypt",
   "description": "Veracrypt for obsidian",
-  "version": "0.3.150",
+  "version": "0.3.151",
   "main": "index.js",
   "keywords": [],
   "license": "MIT",
@@ -115,6 +115,7 @@
     "obsidian": "obsidianmd/obsidian-api",
     "obsidian-dataview": "latest",
     "obsidian-undocumented": "latest",
+    "@types/obsidian-typings": "github:Fevol/obsidian-typings",
     "postcss": "^8.4.14",
     "prettier": "latest",
     "rimraf": "latest",
