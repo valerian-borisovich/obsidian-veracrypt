@@ -63,7 +63,7 @@ export default class VeraPlugin extends Plugin {
    */
   getAbsolutePath(path: String) {
     let root = (this.app.vault.adapter as any).basePath
-    return normalizePath(`${root}/${path}`)
+    return '/'+normalizePath(`${root}/${path}`)
   }
 
   async checkFolder(path: string, create: Boolean = true) {
@@ -94,7 +94,7 @@ export default class VeraPlugin extends Plugin {
   }
 
   /*
-   *                reloadFolder
+   *                reloadFolder  &  reloadFileExplorer
    */
   //private async reloadFileExplorer(): Promise<void> {
   async reloadFileExplorer(): Promise<void> {
@@ -152,43 +152,44 @@ export default class VeraPlugin extends Plugin {
    */
   private handleFileMenu(menu: Menu, file: TAbstractFile) {
     let name= normalizePath(file.path)
-    let volume = this.mng.__get(name)
-    if (volume !== null)  dbg(`handleFileMenu volume: ${volume}`)
-    if (volume === null)  dbg(`handleFileMenu volume not found!`)
-    //if ((file instanceof TFile) && (file.extension === this.settings.defaultVolumefileExtention)) {
-    if (file instanceof TFile) {
+
+    //this.mng.get(name).then((volume) => {
+    //if (volume !== null)  dbg(`handleFileMenu volume: ${volume}`)
+    //if (volume === null) dbg(`handleFileMenu volume not found!`)
+
+    if ((file instanceof TFile) && (file.extension === this.settings.defaultVolumefileExtention)) {
       dbg(`handleFileMenu TFile ${name}`)
-      //if (volume !== null && !this.mng.__is_mounted(name)) {
-      if (!this.mng.__is_mounted(name)) {
-        menu.addItem((item) => {
-          item
-            .setTitle('Mount Volume')
-            .setIcon('vera-mount')
-            .onClick(() => this.mng.__mount(name))
-        })
-      }
-      //if (volume !== null && this.mng.__is_mounted(name)) {
-      if (this.mng.__is_mounted(name)) {
-        menu.addItem((item) => {
-          item
-            .setTitle('Unmount Volume')
-            .setIcon('vera-umount')
-            .onClick(() => this.mng.__umount(name))
-        })
-      }
+      this.mng.is_mounted(name).then((volume) => {
+        if (volume === null) {
+          menu.addItem((item) => {
+            item
+              .setTitle('Mount Volume')
+              .setIcon('vera-mount')
+              .onClick(() => this.mng.mount(name))
+          })
+        } else {
+          menu.addItem((item) => {
+            item
+              .setTitle('Unmount Volume')
+              .setIcon('vera-umount')
+              .onClick(() => this.mng.umount(name))
+          })
+        }
+      })
     }
 
     if (file instanceof TFolder) {
-      dbg(`handleFileMenu TFolder: ${name}`)
-      // if (volume !== null && this.mng.__is_mounted(name)) {
-      if (this.mng.__is_mounted(name)) {
+      // dbg(`handleFileMenu TFolder: ${name}`)
+      // if (volume !== null && this.mng.is_mounted(name)) {
+      this.mng.is_mounted(name).then((volume) => {
+        dbg(`handleFileMenu TFolder volume: ${volume} name: ${name}`)
         menu.addItem((item) => {
           item
             .setTitle('Unmount')
             .setIcon('vera-umount')
-            .onClick(() => this.mng.__umount(name))
+            .onClick(() => this.mng.umount(name))
         })
-      }
+      })
     }
 
     //////
@@ -281,7 +282,7 @@ export default class VeraPlugin extends Plugin {
       id: 'vera-mount',
       name: 'Mount Volume',
       callback: () => {
-        this.mng.__mount('')
+        this.mng.mount('')
       },
     })
 
@@ -289,7 +290,7 @@ export default class VeraPlugin extends Plugin {
       id: 'vera-umount',
       name: 'Unmount Volume',
       callback: () => {
-        this.mng.__umount('')
+        this.mng.umount('')
       },
     })
 

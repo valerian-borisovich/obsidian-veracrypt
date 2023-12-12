@@ -22,11 +22,10 @@ export type ValueOf<T> = T[keyof T]
 //
 import { getVersion, getVersionAsync } from './ver'
 import { log, dbg, debug, err, error, warn, warning } from './log'
-// import { machineId, machineIdSync } from './machine-id'
 import { machineId, machineIdSync, getID, getMachineId } from './machine-id'
-
+//
 import { filesystemType, encryptionAlgorithm, hashAlgorithm } from '../constant'
-import { proxyList, proxyGet, proxySet, proxyCheck } from './proxies'
+//import { proxyList, proxyGet, proxySet, proxyCheck } from './proxies'
 import { ps, exec, run } from './ps'
 import { v4 } from 'uuid'
 //
@@ -41,6 +40,6 @@ export { v4 }
 export { ps, exec, run }
 export { getVersionAsync, getVersion }
 export { filesystemType, encryptionAlgorithm, hashAlgorithm }
-export { proxyList, proxyGet, proxySet, proxyCheck }
+// export { proxyList, proxyGet, proxySet, proxyCheck }
 export { I18n }
 export type { LangType, LangTypeAndAuto, TransItemType }
