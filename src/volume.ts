@@ -4,7 +4,7 @@
 //import { getVersion, ps, v4, log, dbg, err } from './hlp'
 import { getVersion, v4, log, dbg, err } from './hlp'
 
-//import VeraPlugin from './main'
+//import VeraPlugin from './veraPlugin'
 // import { ADMIN_PASSWORD } from './constant'
 
 interface VolumeConfig {

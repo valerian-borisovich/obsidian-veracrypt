@@ -1,8 +1,7 @@
 //
 import { VolumeConfig } from './volume'
 //
-import { getVersion } from './hlp'
-import { LangTypeAndAuto } from './hlp'
+import { getVersion, LangTypeAndAuto } from './hlp'
 
 export interface VeraPluginSettings {
   deviceID: string

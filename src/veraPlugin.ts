@@ -151,7 +151,7 @@ export default class VeraPlugin extends Plugin {
                     handleFileMenu
    */
   private handleFileMenu(menu: Menu, file: TAbstractFile) {
-    let name=this.getAbsolutePath(file.path)
+    let name= normalizePath(file.path)
     let volume = this.mng.__get(name)
     if (volume !== null)  dbg(`handleFileMenu volume: ${volume}`)
     if (volume === null)  dbg(`handleFileMenu volume not found!`)
@@ -337,6 +337,7 @@ export default class VeraPlugin extends Plugin {
     /*
      *       Register Events
      */
+
     // this.registerDomEvent(document, 'click', (evt: MouseEvent) => { log('click', evt) })
     // this.registerInterval(window.setInterval(() => log('setInterval'), 5 * 60 * 1000))
 

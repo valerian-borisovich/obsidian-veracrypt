@@ -3,7 +3,7 @@ import { VolumeConfig } from './volume'
 
 import { ConfirmModal, confirmWithModal } from './confirm'
 import { encryptionAlgorithm, filesystemType, hashAlgorithm } from './hlp'
-import VeraPlugin from './main'
+import VeraPlugin from './veraPlugin'
 
 export class VolumeModal extends Modal {
   plugin!: VeraPlugin

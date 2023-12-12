@@ -1,5 +1,5 @@
 import { App, ButtonComponent, Modal, Notice, Setting } from 'obsidian'
-import VeraPlugin from './main'
+import VeraPlugin from './veraPlugin'
 import { log, dbg, err } from './hlp'
 import { ADMIN_PASSWORD } from './constant'
 
