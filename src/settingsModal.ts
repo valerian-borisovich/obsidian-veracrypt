@@ -73,7 +73,7 @@ export class VeraSettingTab extends PluginSettingTab {
 
         .addButton((button) => {
           button.setButtonText('Config').onClick(() => {
-            new VolumeModal(this.app, this.plugin, volume).open()
+            new VolumeModal(this.app, this.plugin, volume, true).open()
           })
         })
 

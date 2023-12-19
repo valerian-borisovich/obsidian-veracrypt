@@ -7,11 +7,13 @@ import VolumeConfig from './volume'
 export class VolumeModal extends Modal {
   plugin!: VeraPlugin
   volume!: VolumeConfig
+  create: boolean
 
-  constructor(app: App, plugin: VeraPlugin, volume: VolumeConfig) {
+  constructor(app: App, plugin: VeraPlugin, volume: VolumeConfig, create: boolean=false) {
     super(app)
     this.plugin = plugin
     this.volume = volume
+    this.create = create
   }
 
   async onOpen() {
@@ -34,6 +36,8 @@ export class VolumeModal extends Modal {
     let containerEl = contentEl.createDiv('volume')
     let name = volume.filename.replace('.vera', '')
     containerEl.createEl('h1', { text: '' + name })
+
+    containerEl.createEl('hr')
 
     new Setting(containerEl)
       .setClass('enable')
@@ -91,8 +95,8 @@ export class VolumeModal extends Modal {
 
     new Setting(containerEl)
       .setClass('mount')
-      .setName('Mount to')
-      .setDesc('folder to mount')
+      .setName('Mount')
+      .setDesc('folder to mount ')
       .addText((text) =>
         text
           .setPlaceholder('mount path')
@@ -102,12 +106,14 @@ export class VolumeModal extends Modal {
               value.length > 2
                 ? value
                 : volume.filename.substring(
-                    volume.filename.lastIndexOf('/') ? 0 : volume.filename.lastIndexOf('/'),
-                    volume.filename.lastIndexOf('.'),
-                  )
+                  volume.filename.lastIndexOf('/') ? 0 : volume.filename.lastIndexOf('/'),
+                  volume.filename.lastIndexOf('.'),
+                )
             await this.plugin.saveSettings()
           }),
       )
+
+    if (this.create) {
 
     containerEl.createEl('br')
 
@@ -213,12 +219,13 @@ export class VolumeModal extends Modal {
             await this.plugin.saveSettings()
           })
       })
-
+    }
     containerEl.createEl('hr')
     containerEl.createEl('br')
 
     const buttonEl = containerEl.createDiv('confirm-buttons')
-    if (volume.createdTime === '') {
+
+    if (this.create) {
       // create volume
       new ButtonComponent(buttonEl).setButtonText(' Create ').onClick(() => {
         this.plugin.settings.volumes.push(volume)
@@ -226,7 +233,10 @@ export class VolumeModal extends Modal {
         this.close()
         this.plugin.mng.create(volume)
         this.plugin.saveSettings()
-        //this.plugin.app.workspace.activeLeaf.rebuildView()
+      })
+      new ButtonComponent(buttonEl).setButtonText(' Cancel ').onClick(() => {
+        this.plugin.saveSettings()
+        this.close()
       })
     } else {
       new ButtonComponent(buttonEl).setButtonText(' Save ').onClick(() => {
@@ -242,10 +252,13 @@ export class VolumeModal extends Modal {
               this.plugin.mng.delete(volume)
             }
           })
-
           this.plugin.saveSettings()
           this.close()
         })
+      new ButtonComponent(buttonEl).setButtonText(' Cancel ').onClick(() => {
+        this.plugin.saveSettings()
+        this.close()
+      })
     }
   }
 }

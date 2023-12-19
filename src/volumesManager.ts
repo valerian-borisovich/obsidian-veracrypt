@@ -105,7 +105,7 @@ class VolumesManager {
   }
 
   async umountAll(force: boolean = false): Promise<void> {
-    log(`volumesManager.umountAll`)
+    log(`volumesManager.umountAll: ${this.mounted}`)
     try {
       this.mounted.forEach((v) => {
         dbg(`volumesManager.umountAll.volume: ${v}`)

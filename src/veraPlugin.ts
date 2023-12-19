@@ -253,7 +253,7 @@ export default class VeraPlugin extends Plugin {
       id: 'vera-create',
       name: this.t('vera-create'),
       callback: () => {
-        new VolumeModal(this.app, this, DEFAULT_VOLUME_CONFIG).open()
+        new VolumeModal(this.app, this, DEFAULT_VOLUME_CONFIG, true).open()
       },
     })
 
@@ -296,26 +296,6 @@ export default class VeraPlugin extends Plugin {
     })
 
     this.registerEvent(this.app.workspace.on('file-menu', this.handleFileMenu.bind(this)))
-
-    /*
-    this.addCommand({
-      id: 'open-vera-modal',
-      name: 'Open Veracrypt Modal',
-      // callback: () => {
-      // 	log('Veracrypt Modal Callback');
-      // },
-      checkCallback: (checking: boolean) => {
-        let leaf = this.app.workspace.activeLeaf
-        if (leaf) {
-          if (!checking) {
-            new VolumeModal(this.app, this, ).open()
-          }
-          return true
-        }
-        return false
-      },
-    })
-    */
 
     /*
      *       addSettingTab
