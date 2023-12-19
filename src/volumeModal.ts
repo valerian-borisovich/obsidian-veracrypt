@@ -1,9 +1,8 @@
 import { App, ButtonComponent, Modal, Setting } from 'obsidian'
-import { VolumeConfig } from './volume'
-
-import { ConfirmModal, confirmWithModal } from './confirm'
+import { ConfirmModal, confirmWithModal } from './confirmUI'
 import { encryptionAlgorithm, filesystemType, hashAlgorithm } from './hlp'
 import VeraPlugin from './veraPlugin'
+import VolumeConfig from './volume'
 
 export class VolumeModal extends Modal {
   plugin!: VeraPlugin
@@ -15,13 +14,13 @@ export class VolumeModal extends Modal {
     this.volume = volume
   }
 
-  onOpen() {
-    this.display()
+  async onOpen() {
+    await this.display()
   }
 
-  onClose() {
+  async onClose() {
     let { contentEl } = this
-    this.plugin.saveSettings()
+    await this.plugin.saveSettings()
     contentEl.empty()
   }
 

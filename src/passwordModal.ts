@@ -1,8 +1,9 @@
 import { App, ButtonComponent, Modal, Notice, Setting } from 'obsidian'
 import VeraPlugin from './veraPlugin'
-import { log, dbg, err } from './hlp'
+import { log, dbg, err, TransItemType } from './hlp'
 import { ADMIN_PASSWORD } from './constant'
 
+/*
 class PasswordModal extends Modal {
   plugin: VeraPlugin
   name: string
@@ -18,11 +19,8 @@ class PasswordModal extends Modal {
   onOpen() {
     let { contentEl } = this
 
-    // const t = (x: TransItemType, vars?: any) => {
-    const t = (x: string, vars?: any) => {
-      return x
-      // return this.plugin.i18n.t(x, vars)
-    }
+    // const t = (x: TransItemType, vars?: any) => {return this.plugin.i18n.t(x, vars)}
+    // const t = (x: string, vars?: any) => {return x}
 
     // contentEl.setText("Add Or change password.");
     contentEl.createEl('h2', { text: t('modal_password_title') })
@@ -76,6 +74,7 @@ class PasswordModal extends Modal {
     contentEl.empty()
   }
 }
+*/
 
 class PasswordPromt extends Modal {
   plugin: VeraPlugin
@@ -104,11 +103,8 @@ class PasswordPromt extends Modal {
   async display0() {
     let { contentEl } = this
 
-    // const t = (x: TransItemType, vars?: any) => {
-    const t = (x: string, vars?: any) => {
-      return x
-      // return this.plugin.i18n.t(x, vars)
-    }
+    //const t = (x: TransItemType, vars?: any) => {
+    //  return this.plugin.i18n.t(x, vars)}
 
     if (this.newPassword === '') {
       this.plugin.vera.getPassword(this.name).then((v) => {
@@ -148,13 +144,13 @@ class PasswordPromt extends Modal {
 
     new Setting(contentEl)
       .addButton((button) => {
-        button.setButtonText(t('Cancel'))
+        button.setButtonText(this.plugin.t('cancel'))
         button.onClick(() => {
           this.close()
         })
       })
       .addButton((button) => {
-        button.setButtonText(t('OK'))
+        button.setButtonText(this.plugin.t('ok'))
         button.setCta()
         button.setClass('password-confirm')
         button.onClick(async () => {
@@ -223,4 +219,5 @@ class PasswordPromt extends Modal {
   }
 }
 
-export { PasswordModal, PasswordPromt }
+// export { PasswordModal, }
+export { PasswordPromt }

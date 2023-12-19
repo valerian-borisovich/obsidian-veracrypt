@@ -1,6 +1,6 @@
 import { App, PluginSettingTab, Setting } from 'obsidian'
 import VeraPlugin from './veraPlugin'
-import { VolumeConfig, DEFAULT_VOLUME_CONFIG } from './volume'
+import VolumeConfig, { DEFAULT_VOLUME_CONFIG } from './volume'
 import { VolumeModal } from './volumeModal'
 
 export class VeraSettingTab extends PluginSettingTab {
@@ -54,7 +54,7 @@ export class VeraSettingTab extends PluginSettingTab {
       )
 
     new Setting(containerEl).addButton((button) => {
-      button.setButtonText('New').onClick(() => {
+      button.setButtonText('Create New').onClick(() => {
         new VolumeModal(this.app, this.plugin, DEFAULT_VOLUME_CONFIG).open()
       })
     })
@@ -78,8 +78,8 @@ export class VeraSettingTab extends PluginSettingTab {
         })
 
         .addToggle((toggle) => {
-          toggle.setValue(this.plugin.mng.isMounted(volume)).onChange(async (value) => {
-            if (this.plugin.mng.isMounted(volume)) {
+          toggle.setValue(volume.mounted).onChange(async (value) => {
+            if (await this.plugin.mng.is_mounted(volume)!==null) {
               await this.plugin.mng.umount(volume)
             } else {
               await this.plugin.mng.mount(volume)

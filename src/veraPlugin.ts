@@ -2,16 +2,15 @@
 // import {Notice,Plugin,setIcon,TFolder,TFile,TAbstractFile,debounce,DropdownComponent,normalizePath,} from 'obsidian'
 import { Plugin, Menu, TFolder, TFile, TAbstractFile, normalizePath } from 'obsidian'
 import * as fsPromises from 'fs/promises'
-import { I18n, log, dbg, err, warn, machineIdSync } from './hlp'
+import { I18n, log, dbg, err, warn, getDeviceId, } from './hlp'
 import type { LangType, LangTypeAndAuto, TransItemType } from './hlp'
 //
-import { Vera } from './vera'
 import { VeraPluginSettings, DEFAULT_SETTINGS } from './settings'
 import { VeraSettingTab } from './settingsModal'
 import { PasswordPromt } from './passwordModal'
-import VolumeConfig, { DEFAULT_VOLUME_CONFIG, } from './volume'
-import { VolumesManager } from './volumesManager'
-import { ADMIN_PASSWORD } from './constant'
+import { VolumeModal } from '~/volumeModal'
+import { Vera, VolumeConfig, VolumesManager, DEFAULT_VOLUME_CONFIG, ADMIN_PASSWORD } from './vera'
+
 
 const ROOT_PATH = '/'
 
@@ -20,23 +19,20 @@ export default class VeraPlugin extends Plugin {
   vera!: Vera
   mng!: VolumesManager
   //
-  ribbonIconButton!: HTMLElement
-  statusBarItem!: HTMLElement
-
   promts: string[] = []
   private _fsPromises!: typeof fsPromises
 
-  /*
-              Lang
-  */
+  /*             Lang          */
   i18n!: I18n
-  t = (x: TransItemType, vars?: any) => {
-    return this.i18n.t(x, vars)
-  }
+  t = (x: TransItemType, vars?: any) => { return this.i18n.t(x, vars) }
 
-  /*
-   *          Password
-   */
+  //
+  ribbonIconButton!: HTMLElement
+  statusBarItem!: HTMLElement
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /*          Password            */
   async getPassword(name: string, promt: boolean = true) {
     let pass = await this.vera.getPassword(name)
     // dbg(`VeraPlugin.getPassword: ${id} == ${pass}`)
@@ -57,9 +53,7 @@ export default class VeraPlugin extends Plugin {
     // dbg(`VeraPlugin.setPassword: ${id} : ${password}`)
   }
 
-  /*
-   *            Filesystem
-   */
+  /*            Filesystem        */
   getAbsolutePath(path: String) {
     let root = (this.app.vault.adapter as any).basePath
     let result = '/'+normalizePath(`${root}/${path}`)
@@ -162,14 +156,14 @@ export default class VeraPlugin extends Plugin {
         if (volume === null) {
           menu.addItem((item) => {
             item
-              .setTitle('Mount Volume')
+              .setTitle(this.t('vera-mount'))
               .setIcon('vera-mount')
               .onClick(() => this.mng.mount(name))
           })
         } else {
           menu.addItem((item) => {
             item
-              .setTitle('Unmount Volume')
+              .setTitle(this.t('vera-umount'))
               .setIcon('vera-umount')
               .onClick(() => this.mng.umount(name))
           })
@@ -184,7 +178,7 @@ export default class VeraPlugin extends Plugin {
         dbg(`handleFileMenu TFolder volume: ${volume} name: ${name}`)
         menu.addItem((item) => {
           item
-            .setTitle('Unmount')
+            .setTitle(this.t('vera-umount'))
             .setIcon('vera-umount')
             .onClick(() => this.mng.umount(name))
         })
@@ -229,40 +223,18 @@ export default class VeraPlugin extends Plugin {
     this.vera = new Vera(this.settings)
     this.mng = new VolumesManager(this)
 
-    await this.install(true)
-    //await this.install()
+    //await this.install(true)
+    await this.install()
 
     await this.mng.refresh()
 
-    /*
-     *         Add ribbon Buttons
-  ` */
+    /*         Add ribbon Buttons               */
 
-    /*
-    // This creates an icon in the left ribbon.
-    this.ribbonIconButton = this.addRibbonIcon(
-      this.settings.pluginLoaded ? 'eye' : 'eye-off',
-      this.settings.pluginLoaded ? 'Mount all' : 'Unmount all',
-      () => {
-        this.toggleFunctionality()
-      },
-    )
-    */
-
-    /*
-    this.addRibbonIcon('dice', 'Vera', async () => {
-      // new Notice('is a veracrypt notice!')
-      //
-      let d = '/'
-      await this.refreshFolder(d)
-    })
-    */
-
-    this.addRibbonIcon('eye', 'Vera mount all', async () => {
+    this.addRibbonIcon('eye', this.t('vera-mount-all'), async () => {
       await this.mng.mountAll()
     })
 
-    this.addRibbonIcon('trash', 'Vera umount all', async () => {
+    this.addRibbonIcon('trash', this.t('vera-umount-all'), async () => {
       await this.mng.umountAll()
     })
 
@@ -278,8 +250,16 @@ export default class VeraPlugin extends Plugin {
      *     Add commands
      */
     this.addCommand({
+      id: 'vera-create',
+      name: this.t('vera-create'),
+      callback: () => {
+        new VolumeModal(this.app, this, DEFAULT_VOLUME_CONFIG).open()
+      },
+    })
+
+    this.addCommand({
       id: 'vera-mount',
-      name: 'Mount Volume',
+      name: this.t('vera-mount'),
       callback: () => {
         this.mng.mount('')
       },
@@ -287,15 +267,23 @@ export default class VeraPlugin extends Plugin {
 
     this.addCommand({
       id: 'vera-umount',
-      name: 'Unmount Volume',
+      name: this.t('vera-umount'),
       callback: () => {
         this.mng.umount('')
       },
     })
 
     this.addCommand({
+      id: 'vera-mount-all',
+      name: this.t('vera-mount-all'),
+      callback: () => {
+        this.mng.mountAll()
+      },
+    })
+
+    this.addCommand({
       id: 'vera-umount-all',
-      name: 'Unmount All Volume',
+      name: this.t('vera-umount-all'),
       callback: () => {
         this.mng.umountAll()
       },
@@ -386,9 +374,8 @@ export default class VeraPlugin extends Plugin {
 
   async install(force: boolean = false) {
     if (this.settings.deviceID !== '' && !force) return
-
     /*   install plugin   */
-    this.settings.deviceID = machineIdSync(true)
+    this.settings.deviceID = getDeviceId()
     this.settings.pluginVersion = this.manifest.version
     this.settings.debug = '1'
     log(`${this.manifest.name} install on device ${this.settings.deviceID}`)

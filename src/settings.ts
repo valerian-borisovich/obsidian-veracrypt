@@ -1,7 +1,7 @@
 //
-import { VolumeConfig } from './volume'
+import VolumeConfig from './volume'
 //
-import { getVersion, LangTypeAndAuto } from './hlp'
+import { getDeviceId, getVersion, LangTypeAndAuto } from './hlp'
 
 export interface VeraPluginSettings {
   deviceID: string
@@ -34,7 +34,7 @@ export interface VeraPluginSettings {
 }
 
 export const DEFAULT_SETTINGS: VeraPluginSettings = {
-  deviceID: '',
+  deviceID: getDeviceId(),
 
   pluginVersion: getVersion(),
   pluginLoaded: '',

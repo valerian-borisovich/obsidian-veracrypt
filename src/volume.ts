@@ -1,13 +1,8 @@
 //
-//
-//import { App, PluginManifest, normalizePath, TFile, TFolder } from 'obsidian'
-//import { getVersion, ps, v4, log, dbg, err } from './hlp'
-import { getVersion, v4, log, dbg, err } from './hlp'
-
-//import VeraPlugin from './veraPlugin'
-// import { ADMIN_PASSWORD } from './constant'
+import { getVersion, getId, getDeviceId, } from '~/hlp'
 
 export default interface VolumeConfig {
+  device: string
   id: string
   version: string
 
@@ -36,7 +31,8 @@ export default interface VolumeConfig {
 }
 
 const DEFAULT_VOLUME_CONFIG: VolumeConfig = {
-  id: v4(),
+  device: getDeviceId(),
+  id: getId(),
   version: getVersion(),
 
   enabled: false,
@@ -62,11 +58,5 @@ const DEFAULT_VOLUME_CONFIG: VolumeConfig = {
   hash: 'SHA-512',
 }
 
-//
-//
-//
-// export { Volume, VolumeConfig, DEFAULT_VOLUME_CONFIG }
 export { DEFAULT_VOLUME_CONFIG }
-// export type { VolumeConfig }
-//export const VolumeConfig: VolumeConfig
 

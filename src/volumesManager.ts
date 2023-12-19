@@ -1,28 +1,27 @@
 //
 //import { App, PluginManifest, normalizePath, TFile, TFolder } from 'obsidian'
 import { App, Notice } from 'obsidian'
-import { ps, log, err, dbg, warn, run } from './hlp'
+import { ps, log, err, dbg, warn } from './hlp'
 import VeraPlugin from './veraPlugin'
-import { VeraEvents } from './vera'
-// import { VolumeConfig } from './volume'
-import VolumeConfig from './volume'
-import { ADMIN_PASSWORD } from './constant'
+//
+//import { VeraEvents } from './vera'
+//import VolumeConfig from './volume'
+//import { ADMIN_PASSWORD } from './constant'
+import { VolumeConfig, VeraEvents, ADMIN_PASSWORD } from './vera'
 
 class VolumesManager {
   app!: App
   plugin!: VeraPlugin
-
   ev!: VeraEvents
 
   mounted: [] = []
-
   private lastRefreshed: number
 
   constructor(plugin: VeraPlugin) {
     this.plugin = plugin
     this.app = this.plugin.app
-
-    this.ev = new VeraEvents()
+    // this.ev = new VeraEvents()
+    this.ev = this.plugin.vera.ev
     this.ev.addListener('onCreated', this.onCreated)
     this.ev.addListener('onRefreshed', this.onRefreshed)
     this.ev.addListener('reloadFolder', this.plugin.reloadFolder)
@@ -90,18 +89,16 @@ class VolumesManager {
   }
 
   /*
-   *          mountAll
+   *                    mountAll    umountAll
    */
   async mountAll(): Promise<void> {
     log(`volumesManager.mountAll`)
     this.plugin.settings.volumes.forEach((volume) => {
-      if (volume.enabled) {
-        if (!this.is_mounted(volume)) {
+        if ((volume.enabled) && (!this.is_mounted(volume))) {
           this.mount(volume)
         } else {
           warn(`volumesManager.mountAll: ${volume.mountPath} already mounted!`)
         }
-      }
     })
     await this.plugin.saveSettings()
     // this.ev.emit('reloadFileExplorer')
@@ -343,7 +340,7 @@ class VolumesManager {
         name = v.filename
       }
     }
-    dbg(`is_mounted.name: ${name}`)
+    //
     try {
       // @ts-ignore
       volume = await this.get(name)
@@ -352,13 +349,11 @@ class VolumesManager {
         let mount_abs = this.plugin.getAbsolutePath(volume.mountPath)
 
         this.mounted.forEach((v) => {
-          let filename = v['filename']
-          let mount = v['mount']
+          let vfilename = this.plugin.getAbsolutePath(v['filename'])
+          let vmount = this.plugin.getAbsolutePath(v['mount'])
+          dbg(`is_mounted.forEach: ${vfilename} ${filename_abs} ${vmount} ${mount_abs}`)
           // @ts-ignore
-          if ((volume.filename === filename_abs) || (volume.mountPath === mount_abs)) {
-            return volume
-          }
-          if ((volume.filename.includes(filename)) || (volume.mountPath.includes(mount))) {
+          if ((vfilename === filename_abs) || (vmount === mount_abs)) {
             return volume
           }
         })

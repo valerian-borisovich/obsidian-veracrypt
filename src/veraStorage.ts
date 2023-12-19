@@ -1,6 +1,5 @@
 import localforage from 'localforage'
 import { log, dbg, err } from './hlp'
-import { ADMIN_PASSWORD } from './constant'
 
 class VeraStorage {
   store!: LocalForage

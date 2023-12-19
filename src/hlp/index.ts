@@ -22,24 +22,24 @@ export type ValueOf<T> = T[keyof T]
 //
 import { getVersion, getVersionAsync } from './ver'
 import { log, dbg, debug, err, error, warn, warning } from './log'
-import { machineId, machineIdSync, getID, getMachineId } from './machine-id'
-//
-import { filesystemType, encryptionAlgorithm, hashAlgorithm } from '../constant'
-//import { proxyList, proxyGet, proxySet, proxyCheck } from './proxies'
 import { ps, exec, run } from './ps'
-import { v4 } from 'uuid'
+import { getId, getDeviceId } from './ident'
+//
+import { filesystemType, encryptionAlgorithm, hashAlgorithm } from '~/constant'
 //
 import { I18n } from "./i18n"
 import type { LangType, LangTypeAndAuto, TransItemType } from "./i18n"
+
+
 /*
  *    exports
  */
 export { log, dbg, debug, err, error, warn, warning }
-export { machineId, machineIdSync, getID, getMachineId }
-export { v4 }
+export { getId, getDeviceId }
 export { ps, exec, run }
 export { getVersionAsync, getVersion }
+//
 export { filesystemType, encryptionAlgorithm, hashAlgorithm }
-// export { proxyList, proxyGet, proxySet, proxyCheck }
+//
 export { I18n }
 export type { LangType, LangTypeAndAuto, TransItemType }

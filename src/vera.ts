@@ -1,11 +1,18 @@
 //
 import { EventEmitter, errorMonitor } from 'node:events'
 //import { eventbus } from './eventbus'
-import { VeraPluginSettings } from './settings'
-import { VeraStorage } from './veraStorage'
 import { dbg, log, err } from './hlp'
-
+//
+import { VeraPluginSettings, DEFAULT_SETTINGS } from './settings'
+import { VeraSettingTab } from './settingsModal'
+import { PasswordPromt } from './passwordModal'
+//
 interface VeraSettings extends VeraPluginSettings {}
+//
+import { VeraStorage } from './veraStorage'
+import VolumeConfig, { DEFAULT_VOLUME_CONFIG, } from './volume'
+import { VolumesManager } from './volumesManager'
+import { ADMIN_PASSWORD } from './constant'
 
 /*
 interface IVera {
@@ -132,10 +139,13 @@ class Vera {
 }
 
 /*
- *
+ *                      exports
  */
 export { Vera, VeraEvents }
+export { VolumesManager, DEFAULT_VOLUME_CONFIG, }
+export { ADMIN_PASSWORD, }
 /*
  *
  */
+export type { VolumeConfig }
 export type { VeraSettings }

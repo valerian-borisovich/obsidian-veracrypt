@@ -3,5 +3,13 @@
   "cancel": "Cancel",
   "open": "Lock",
 
-  "enter_password_for": "Enter password for"
+  "enter_password_for": "Enter password for",
+  "place_holder_enter_password": "Enter password for",
+
+  "vera-create": "Create New Volume",
+  "vera-umount": "Unmount Volume",
+  "vera-mount": "Mount Volume",
+  "vera-umount-all": "Unmount All Volumes",
+  "vera-mount-all": "Mount All Volumes"
+
 }
