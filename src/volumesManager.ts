@@ -1,10 +1,11 @@
 //
 //import { App, PluginManifest, normalizePath, TFile, TFolder } from 'obsidian'
-import { App, Notice, normalizePath, TFolder } from 'obsidian'
+import { App, Notice } from 'obsidian'
 import { ps, log, err, dbg, warn, run } from './hlp'
 import VeraPlugin from './veraPlugin'
 import { VeraEvents } from './vera'
-import { VolumeConfig } from './volume'
+// import { VolumeConfig } from './volume'
+import VolumeConfig from './volume'
 import { ADMIN_PASSWORD } from './constant'
 
 class VolumesManager {
@@ -28,15 +29,15 @@ class VolumesManager {
     // this.ev.addListener('reloadFileExplorer', this.plugin.reloadFileExplorer)
     // this.ev.addListener('volumeAdd', this.add)
 
-    this.lastRefreshed=Date.now()
+    this.lastRefreshed = Date.now()
   }
 
   async refresh() {
-    if(Date.now()-this.plugin.settings.refreshInterval-this.plugin.settings.refreshTimeout <= this.lastRefreshed) {
+    if (Date.now() - this.plugin.settings.refreshInterval - this.plugin.settings.refreshTimeout <= this.lastRefreshed) {
       // dbg(`refresh.skip.last: ${this.lastRefreshed}`)
       return
     }
-    this.lastRefreshed=Date.now()
+    this.lastRefreshed = Date.now()
 
     let spawn = require('child_process').spawn
     // let proc = spawn(cmd, args, options)
@@ -49,11 +50,11 @@ class VolumesManager {
     }, this.plugin.settings.refreshTimeout)
 
     // @ts-ignore
-    proc.stdout.on('data', function(data) {
+    proc.stdout.on('data', function (data) {
       result = data
     })
     // @ts-ignore
-    proc.stderr.on('data', function(data) {
+    proc.stderr.on('data', function (data) {
       result = data
     })
     // @ts-ignore
@@ -108,11 +109,11 @@ class VolumesManager {
 
   async umountAll(force: boolean = false): Promise<void> {
     log(`volumesManager.umountAll`)
-    try{
-    this.mounted.forEach((v) => {
-      dbg(`volumesManager.umountAll.volume: ${v}`)
-      this.umount(v, force)
-    })
+    try {
+      this.mounted.forEach((v) => {
+        dbg(`volumesManager.umountAll.volume: ${v}`)
+        this.umount(v, force)
+      })
     } catch (e) {
       err(`volumesManager.umountAll: ${e}`)
     }
@@ -124,7 +125,7 @@ class VolumesManager {
    */
   async create(volume: VolumeConfig, password: string = '', keyfile: string = '') {
     const { spawn } = require('child_process')
-    log(`volumeManager.create: ${volume.filename}`)
+    log(`create: ${volume.filename}`)
     let OS_PASSWORD = await this.plugin.getPassword(ADMIN_PASSWORD)
     let VOLUME_FILE = volume.filename
     let VOLUME_PASSWORD = password
@@ -137,12 +138,12 @@ class VolumesManager {
     let result = ''
 
     if (OS_PASSWORD === '') {
-      err(`volumesManager.create.error: Admin password not exists!`)
+      err(`create.error: Admin password not exists!`)
       return
     }
     if (VOLUME_PASSWORD === '') VOLUME_PASSWORD = await this.plugin.getPassword(volume.filename)
     if (await this.plugin.exists(volume.filename)) {
-      err(`volumesManager.create: '${volume.filename}' already exists!`)
+      err(`create.error: '${volume.filename}' already exists!`)
       return
     }
 
@@ -160,25 +161,28 @@ class VolumesManager {
         VOLUME_ENC: VOLUME_ENC,
         VOLUME_HASH: VOLUME_HASH,
         VOLUME_FS: VOLUME_FS,
-        VOLUME_SIZE: VOLUME_SIZE
-      }, shell: true, cwd: this.plugin.getAbsolutePath('')
+        VOLUME_SIZE: VOLUME_SIZE,
+      },
+      shell: true,
+      cwd: this.plugin.getAbsolutePath(''),
     }
 
-    let vera_sh = this.plugin.getAbsolutePath(`${this.plugin.app.vault.configDir}/plugins/${this.plugin.name}/vera.sh`)
-    // dbg(`options: ${JSON.stringify(options, null, 2)}`)
-
-    const proc = spawn('bash', [ vera_sh, VOLUME_COMMAND], options)
-    if (!proc){
-      err(`create proc error: '${vera_sh}' not started`)
+    //let vera_sh = this.plugin.getAbsolutePath(`${this.plugin.app.vault.configDir}/plugins/${this.plugin.name}/vera.sh`)
+    let vera_sh = this.plugin.getAbsolutePath(`${this.plugin.app.vault.configDir}/plugins/obsidian-veracrypt/vera.sh`)
+    dbg(`vera_sh: ${vera_sh}`)
+    dbg(`options: ${JSON.stringify(options, null, 2)}`)
+    const proc = spawn('bash', [vera_sh, VOLUME_COMMAND], options)
+    if (!proc) {
+      err(`create.proc.error: '${vera_sh}' not started`)
       return
     }
     // @ts-ignore
-    proc.stdout.on('data', function(data) {
+    proc.stdout.on('data', function (data) {
       // dbg(`exec.output: ${data}`)
       result = data
     })
     // @ts-ignore
-    proc.stderr.on('data', function(data) {
+    proc.stderr.on('data', function (data) {
       // err(`exec.stderr: ${data}`)
       result = data
     })
@@ -196,7 +200,7 @@ class VolumesManager {
       let self: VolumesManager = args.at(2)
       await self.add(volume)
       new Notice(`created ${volume.filename}`)
-    }else{
+    } else {
       warn(`onCreated is empty! `)
     }
   }
@@ -219,7 +223,7 @@ class VolumesManager {
       return
     }
     await this.app.vault.adapter.remove(volume.filename)
-    if (!await this.plugin.exists(volume.filename)) {
+    if (!(await this.plugin.exists(volume.filename))) {
       this.plugin.settings.volumes.remove(volume)
       await this.plugin.saveSettings()
     }
@@ -235,9 +239,11 @@ class VolumesManager {
         err(`mount.volume ${volume} not exist !`)
         return
       }
-    }else{volume = v}
+    } else {
+      volume = v
+    }
 
-    log(`volumesManager.mount: ${volume.filename} to: ${volume.mountPath}`)
+    log(`mount: ${volume.filename} to: ${volume.mountPath}`)
     let OS_PASSWORD = await this.plugin.getPassword(ADMIN_PASSWORD)
     let VOLUME_PASSWORD = await this.plugin.getPassword(volume.filename)
     let VOLUME_KEYFILE = ''
@@ -246,12 +252,12 @@ class VolumesManager {
     let cmd = `echo "${OS_PASSWORD}" | sudo -S veracrypt -t --non-interactive --password="${VOLUME_PASSWORD}" --protect-hidden=no --pim=0 --keyfiles="${VOLUME_KEYFILE}" "${VOLUME_FILE}" "${VOLUME_MOUNTPATH}"`
     dbg(cmd)
     if (OS_PASSWORD == '') {
-      err(`volumesManager.mount.error: Admin password not exists!`)
+      err(`mount.error: Admin password not exists!`)
       return
     }
     if (force) cmd = cmd + ' --force'
-    if (!await this.plugin.exists(volume.filename)) {
-      err(`volumesManager.mount.error: "${volume.filename}" not exists!`)
+    if (!(await this.plugin.exists(volume.filename))) {
+      err(`mount.error: "${volume.filename}" not exists!`)
       return
     }
     await this.plugin.checkFolder(volume.mountPath, true)
@@ -274,16 +280,18 @@ class VolumesManager {
         err(`umount.volume ${volume} not exist !`)
         return
       }
-    }else{volume = v}
+    } else {
+      volume = v
+    }
 
-    log(`volumesManager.umount: ${volume.filename} from: ${volume.mountPath}`)
+    log(`umount: ${volume.filename} from ${volume.mountPath}`)
     let OS_PASSWORD = await this.plugin.getPassword(ADMIN_PASSWORD)
     let VOLUME_FILE = this.plugin.getAbsolutePath(volume.filename)
     let VOLUME_MOUNTPATH = this.plugin.getAbsolutePath(volume.mountPath)
     let cmd = `echo "${OS_PASSWORD}" | sudo -S veracrypt -t -d "${VOLUME_FILE}" --non-interactive`
 
     if (OS_PASSWORD == '') {
-      err(`volumesManager.umount.error: Admin password not exists!`)
+      err(`umount.error: Admin password not exists!`)
       return
     }
     if (force) cmd = cmd + ' --force'
@@ -313,7 +321,7 @@ class VolumesManager {
 
     let listed = await this.app.vault.adapter.list(volume.mountPath)
     if (listed.files.length + listed.files.length <= 0) {
-      dbg(`volumesManager.umount.rmdir: ${volume.mountPath}`)
+      dbg(`umount.rmdir: ${volume.mountPath}`)
       await this.app.vault.adapter.rmdir(volume.mountPath, false)
     }
     await this.plugin.saveSettings()
@@ -326,49 +334,64 @@ class VolumesManager {
       // @ts-ignore
       volume = await this.get(v)
       if (volume === null) {
-        err(`volumesManager.is_mounted.volume ${v} not exist !`)
-        return
+        warn(`is_mounted.volume '${v}' not exist !`)
+      }else {
+        name = volume.filename
       }
-      name = volume.filename
-    }else{name = v.filename}
-
-    dbg(`volumesManager.is_mounted ${name}`)
-
+    } else {
+      if (v !== null) {
+        name = v.filename
+      }
+    }
+    dbg(`is_mounted.name: ${name}`)
     try {
       // @ts-ignore
       volume = await this.get(name)
       if (volume !== null) {
-      let filename_abs = this.plugin.getAbsolutePath(volume.filename)
-      let mount_abs = this.plugin.getAbsolutePath(volume.mountPath)
+        let filename_abs = this.plugin.getAbsolutePath(volume.filename)
+        let mount_abs = this.plugin.getAbsolutePath(volume.mountPath)
 
-      this.mounted.forEach((v) => {
+        this.mounted.forEach((v) => {
           let filename = v['filename']
           let mount = v['mount']
           // @ts-ignore
-          if (volume.filename.includes(filename) || volume.mountPath.includes(mount)) {
+          if ((volume.filename === filename_abs) || (volume.mountPath === mount_abs)) {
+            return volume
+          }
+          if ((volume.filename.includes(filename)) || (volume.mountPath.includes(mount))) {
             return volume
           }
         })
       }
-    }catch (e) {}
+    } catch (e) {
+      dbg(`is_mounted.err: ${e}`)
+    }
     return null
   }
 
   async get(name: string) {
-    // dbg(`volumesManager.get ${name}`)
     let name_abs = this.plugin.getAbsolutePath(name)
-    dbg(`volumesManager.get name: ${name} name_abs: ${name_abs}`)
-    this.plugin.settings.volumes.forEach(vol => {
-      dbg(`volumesManager.get ${name} == ${vol.filename}`)
-      if (vol.filename.includes(name_abs)) {return vol}
-      if (vol.mountPath.includes(name_abs)) {return vol}
-      if (vol.filename.includes(name)) {return vol}
-      if (vol.mountPath.includes(name)) {return vol}
-      if (vol.id.includes(name)) {return vol}
+    dbg(`get name: ${name} name_abs: ${name_abs}`)
+    this.plugin.settings.volumes.forEach((vol) => {
+      dbg(`get ${name} == ${vol.filename}`)
+      if (vol.filename.includes(name_abs)) {
+        return vol
+      }
+      if (vol.mountPath.includes(name_abs)) {
+        return vol
+      }
+      if (vol.filename.includes(name)) {
+        return vol
+      }
+      if (vol.mountPath.includes(name)) {
+        return vol
+      }
+      if (vol.id.includes(name)) {
+        return vol
+      }
     })
     return null
   }
-
 }
 
 export { VolumesManager }

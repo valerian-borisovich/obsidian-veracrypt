@@ -7,7 +7,7 @@ import { getVersion, v4, log, dbg, err } from './hlp'
 //import VeraPlugin from './veraPlugin'
 // import { ADMIN_PASSWORD } from './constant'
 
-interface VolumeConfig {
+export default interface VolumeConfig {
   id: string
   version: string
 
@@ -67,5 +67,6 @@ const DEFAULT_VOLUME_CONFIG: VolumeConfig = {
 //
 // export { Volume, VolumeConfig, DEFAULT_VOLUME_CONFIG }
 export { DEFAULT_VOLUME_CONFIG }
-export type { VolumeConfig }
+// export type { VolumeConfig }
+//export const VolumeConfig: VolumeConfig
 

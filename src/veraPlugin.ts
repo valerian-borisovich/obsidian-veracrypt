@@ -9,7 +9,7 @@ import { Vera } from './vera'
 import { VeraPluginSettings, DEFAULT_SETTINGS } from './settings'
 import { VeraSettingTab } from './settingsModal'
 import { PasswordPromt } from './passwordModal'
-import { DEFAULT_VOLUME_CONFIG, VolumeConfig } from './volume'
+import VolumeConfig, { DEFAULT_VOLUME_CONFIG, } from './volume'
 import { VolumesManager } from './volumesManager'
 import { ADMIN_PASSWORD } from './constant'
 
@@ -24,7 +24,6 @@ export default class VeraPlugin extends Plugin {
   statusBarItem!: HTMLElement
 
   promts: string[] = []
-
   private _fsPromises!: typeof fsPromises
 
   /*
@@ -63,7 +62,9 @@ export default class VeraPlugin extends Plugin {
    */
   getAbsolutePath(path: String) {
     let root = (this.app.vault.adapter as any).basePath
-    return '/'+normalizePath(`${root}/${path}`)
+    let result = '/'+normalizePath(`${root}/${path}`)
+    if(result.endsWith('/')){result = result.slice(0, -1)}
+    return result
   }
 
   async checkFolder(path: string, create: Boolean = true) {
@@ -107,12 +108,10 @@ export default class VeraPlugin extends Plugin {
     dbg(`Reloading directory ${directoryPath}`)
     await adapter.reconcileFolderCreation(directoryPath, directoryPath)
     const absolutePath = isRoot ? adapter.basePath : `${adapter.basePath}/${directoryPath}`
-
     const existingFileItems = (await this._fsPromises.readdir(absolutePath, { withFileTypes: true })).filter(
       (f) => !f.name.startsWith('.'),
     )
     const existingFileNames = new Set(existingFileItems.map((f) => f.name))
-
     const dir = this.app.vault.getAbstractFileByPath(directoryPath) as TFolder
     const obsidianFileNames = new Set(dir.children.map((child) => child.name).filter((name) => name))
 
