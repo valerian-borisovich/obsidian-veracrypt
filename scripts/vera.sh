@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 # #####################################################################################################################
+# ###
+#
+#
 # ### Full path of the current script
 THIS=$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || echo $0)
 #SCRIPT_PATH="$(dirname "$(realpath "${BASH_SOURCE:-$0}")")"
@@ -8,7 +11,6 @@ THIS=$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || echo $0)
 DIR=$(dirname "${THIS}")
 #
 # ### 'Dot' means 'source', i.e. 'include':
-#. "$DIR/compile.sh"
 # . "$DIR/common/console.sh"
 
 # ###
@@ -24,10 +26,12 @@ set -o nounset
 VERA_CONFIG_FILE=".config.md"
 VERA_UNMOUNT_TIMEOUT=7
 #
-set -o allexport
+# #####################################################################################################################
+#
+#set -o allexport
 # shellcheck disable=SC1090
-[[ -f "${DIR}/${VERA_CONFIG_FILE}" ]] && source "${DIR}/${VERA_CONFIG_FILE}"
-set +o allexport
+#[[ -f "${DIR}/${VERA_CONFIG_FILE}" ]] && source "${DIR}/${VERA_CONFIG_FILE}"
+#set +o allexport
 #
 # #####################################################################################################################
 #
@@ -214,18 +218,19 @@ setenv() {
 # ###
 #
 create() {
-  if [[ -z "${OS_PASSWORD-}" ]]; then
-    _err "create error: OS_PASSWORD is empty!"
-    return 1
-  fi
+  #if [[ -z "${OS_PASSWORD-}" ]]; then
+  #  _err "vera create error: OS_PASSWORD is empty!"
+  #  return 1
+  #fi
 
   if [[ -f "$VOLUME_FILE" ]]; then
-    _err "create error: '$VOLUME_FILE' already exists!"
+    _err "vera create error: '$VOLUME_FILE' already exists!"
     return 1
   fi
 
-  log "create: '$VOLUME_FILE'"
-  echo "$OS_PASSWORD" | sudo -S veracrypt -t -c "$VOLUME_FILE" --volume-type=normal --pim=0 -k "$VOLUME_KEYFILE" --quick --encryption="$VOLUME_ENC" --hash="$VOLUME_HASH" --filesystem="$VOLUME_FS" --size="$VOLUME_SIZE" --password="$VOLUME_PASSWORD" --random-source=/dev/urandom
+  log "vera create: '$VOLUME_FILE'"
+  # echo "$OS_PASSWORD" | sudo -S veracrypt -t -c "$VOLUME_FILE" --volume-type=normal --pim=0 -k "$VOLUME_KEYFILE" --quick --encryption="$VOLUME_ENC" --hash="$VOLUME_HASH" --filesystem="$VOLUME_FS" --size="$VOLUME_SIZE" --password="$VOLUME_PASSWORD" --random-source=/dev/urandom
+  veracrypt -t -c "$VOLUME_FILE" --volume-type=normal --pim=0 -k "$VOLUME_KEYFILE" --quick --encryption="$VOLUME_ENC" --hash="$VOLUME_HASH" --filesystem="$VOLUME_FS" --size="$VOLUME_SIZE" --password="$VOLUME_PASSWORD" --random-source=/dev/urandom
   # result="$?"
   sleep 1
 
@@ -238,31 +243,31 @@ umount() {
     return 1
   fi
 
-  if [[ ! -d "${VOLUME_MOUNTPATH}" ]]; then
-    _err "error: ${VOLUME_MOUNTPATH} not mounted !"
-    return 1
-  fi
+  #if [[ ! -d "${VOLUME_MOUNTPATH-}" && ! -f "${VOLUME_FILE-}" ]]; then
+  #  _err "umount: ${VOLUME_FILE-} not mounted !"
+  #  return 1
+  #fi
 
-  log "umount $VOLUME_FILE from $VOLUME_MOUNTPATH"
-  echo -e "umount: $(_date)">$VOLUME_MOUNTPATH/$VOLUME_INFO
+  log "vera umount '${VOLUME_FILE-}' from '${VOLUME_MOUNTPATH-}'"
+  # echo -e "umount: $(_date)">$VOLUME_MOUNTPATH/$VOLUME_INFO
 
-  echo "$OS_PASSWORD" | sudo -S veracrypt -t -d "$VOLUME_FILE" --non-interactive
+  echo "$OS_PASSWORD" | sudo -S veracrypt -t -d "${VOLUME_FILE-}" --non-interactive
   # result=$(echo "$OS_PASSWORD" | sudo -S veracrypt -t -d "$VOLUME_FILE" --non-interactive)
   # result="$?"
 
   timeout=$VERA_UNMOUNT_TIMEOUT
-  until (( $timeout == 0 ))
+  until (( $(timeout) == 0 ))
   do
     sleep 1
-    if [[ ! -d "${VOLUME_MOUNTPATH}" ]]; then
+    if [[ ! -d "${VOLUME_MOUNTPATH-}" ]]; then
       break
     else
-      echo "$OS_PASSWORD" | sudo -S rm -d "$VOLUME_MOUNTPATH" >/dev/null 2>&1
+      echo "$OS_PASSWORD" | sudo -S rm -d "${VOLUME_MOUNTPATH-}" >/dev/null 2>&1
     fi
 
     if [[ $VERBOSE -ge 2 ]]; then
       # shellcheck disable=SC2027
-      echo "remove "$VOLUME_MOUNTPATH" try $timeout"
+      echo "vera remove '${VOLUME_MOUNTPATH-}' try $timeout"
     fi
     (( timeout-- ))
   done
@@ -271,20 +276,20 @@ umount() {
 # ###
 mount() {
   if [[ -z "${OS_PASSWORD-}" ]]; then
-    _err "mount error: OS_PASSWORD is empty!"
+    _err "vera mount error: OS_PASSWORD is empty!"
     return 1
   fi
 
   if [[ -d "$VOLUME_MOUNTPATH" ]]; then
-    log "already mounted to $VOLUME_MOUNTPATH"
+    log "vera already mounted to $VOLUME_MOUNTPATH"
     umount
   else
-    log "mkdir: $VOLUME_MOUNTPATH"
+    log "vera mkdir: $VOLUME_MOUNTPATH"
     mkdir -p "$VOLUME_MOUNTPATH" >/dev/null 2>&1
   fi
 
   if [[ -f "$VOLUME_FILE" ]]; then
-    log "mount '$VOLUME_FILE' ==> '$VOLUME_MOUNTPATH'"
+    log "vera mount '$VOLUME_FILE' ==> '$VOLUME_MOUNTPATH'"
     echo "$OS_PASSWORD" | sudo -S veracrypt -t --password="$VOLUME_PASSWORD" --protect-hidden=no --pim=0 --keyfiles="$VOLUME_KEYFILE" "$VOLUME_FILE" "$VOLUME_MOUNTPATH"
     # result=$(echo "$OS_PASSWORD" | sudo -S veracrypt --text --password="$VOLUME_PASSWORD" --protect-hidden=no --pim=0 --keyfiles="$VOLUME_KEYFILE" "$VOLUME_FILE" "$VOLUME_MOUNTPATH")
     # result="$?"
@@ -293,7 +298,7 @@ mount() {
     #echo "$OS_PASSWORD" | sudo -S chown "$USER:$USER" "$VOLUME_MOUNTPATH"
     #echo "$OS_PASSWORD" | sudo -S chmod 777 "$VOLUME_MOUNTPATH"
 
-    echo -e "mount: $(_date)">$VOLUME_MOUNTPATH/$VOLUME_INFO
+    echo -e "vera mount: $(_date)">$VOLUME_MOUNTPATH/$VOLUME_INFO
   fi
 }
 
@@ -301,10 +306,10 @@ mount() {
 ismounted() {
   sleep 1
   if _contains "$(df -hT "$VOLUME_MOUNTPATH")" "$VOLUME_MOUNTPATH"; then
-    log "$VOLUME_MOUNTPATH ismounted "
-    echo "$VOLUME_MOUNTPATH"
+    log "vera $VOLUME_MOUNTPATH ismounted "
+    echo "vera $VOLUME_MOUNTPATH"
   else
-    log "$VOLUME_MOUNTPATH not mounted "
+    log "vera $VOLUME_MOUNTPATH not mounted "
   fi
 }
 
@@ -346,7 +351,7 @@ install() {
       log "$result"
     fi
   else
-    log "error: VeraCrypt not installed!"
+    log "vera error: VeraCrypt not installed!"
     # sudo apt install -y exfat-fuse exfat-utils dmsetup
     sudo apt install -y veracrypt exfat-fuse dmsetup
   fi
@@ -357,7 +362,7 @@ install() {
 showhelp() {
   echo "Usage:"
   echo "$0 command args"
-  echo "Commands list:"
+  echo "Command list:"
   echo ""
   echo "install"
   echo "create"

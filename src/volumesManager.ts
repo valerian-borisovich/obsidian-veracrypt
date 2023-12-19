@@ -14,13 +14,13 @@ class VolumesManager {
   plugin!: VeraPlugin
   ev!: VeraEvents
 
-  mounted: [] = []
+  mounted!: Map<string,string>
   private lastRefreshed: number
 
   constructor(plugin: VeraPlugin) {
     this.plugin = plugin
     this.app = this.plugin.app
-    // this.ev = new VeraEvents()
+    this.mounted = new Map()
     this.ev = this.plugin.vera.ev
     this.ev.addListener('onCreated', this.onCreated)
     this.ev.addListener('onRefreshed', this.onRefreshed)
@@ -64,15 +64,17 @@ class VolumesManager {
   }
 
   async onRefreshed(args: any[]) {
-    //dbg(`onRefreshed.args: ${args}`)
+    dbg(`onRefreshed.args: ${args}`)
     let a, v
-    let l: [] = []
-    let nomounted = 'Error: No volumes mounted.'
+    // let l = new Array({})
+    let l = new Map()
+    // let nomounted = 'Error: No volumes mounted.'
+    let nomounted = 'No volumes mounted'
     // let result: string = args.at(0).toString()
     let result: string = args.toString()
     try {
-      if (nomounted === result) {
-        this.mounted = []
+      if (result.contains(nomounted)) {
+        this.mounted.clear()
       } else {
         //dbg(`onRefreshed.result: ${result} `)
         result.split('\n').forEach((v: string) => {
@@ -81,12 +83,18 @@ class VolumesManager {
             let vfilename=a[1]
             let vmount=a[3]
             if ((typeof vfilename === 'string') && (typeof vmount === 'string')){
-              dbg(`onRefreshed.push: ${vfilename}  ${vmount}`)
+              dbg(`onRefreshed.ADD: ${vfilename}  ${vmount}`)
               // @ts-ignore
-              l.push({ filename: vfilename, mount: vmount })
+              // l.push({ "filename": vfilename, "mount": vmount })
+              l.set(vfilename, vmount)
             }
           }
         })
+        // Logging map object to console
+        l.forEach((keys, values)=>{
+          console.log(keys, values)
+        })
+        //dbg(`onRefreshed.l: ${l.entries()}`)
         this.mounted = l
         this.lastRefreshed = Date.now()
       }
@@ -222,7 +230,7 @@ class VolumesManager {
     log(`volumesManager.delete: ${volume.filename}`)
     let old_filename = volume.filename
     await this.umount(volume, force)
-    if (await this.is_mounted(volume.filename)===true) {
+    if (await this.is_mounted(volume.filename)) {
       err(`volumesManager.delete.error: ${volume.filename} not unmount from ${volume.mountPath}!`)
       return
     }
@@ -331,52 +339,14 @@ class VolumesManager {
     await this.plugin.saveSettings()
   }
 
-  async is_mounted0(v: VolumeConfig | string, wait = 1000) {
-    let volume: VolumeConfig
-    let name: string = ''
-    if (typeof v === 'string') {
-      // @ts-ignore
-      volume = await this.get(v)
-      if (volume === null) {
-        warn(`is_mounted.volume '${v}' not exist !`)
-      }else {
-        name = volume.filename
-      }
-    } else {
-      if (v !== null) {
-        name = v.filename
-      }
-    }
-    //
-    try {
-      // @ts-ignore
-      volume = await this.get(name)
-      if (volume !== null) {
-        let filename_abs = this.plugin.getAbsolutePath(volume.filename)
-        let mount_abs = this.plugin.getAbsolutePath(volume.mountPath)
-
-        this.mounted.forEach((v) => {
-          let vfilename = this.plugin.getAbsolutePath(v['filename'])
-          let vmount = this.plugin.getAbsolutePath(v['mount'])
-          dbg(`is_mounted.forEach: ${vfilename} ${filename_abs} ${vmount} ${mount_abs}`)
-          // @ts-ignore
-          if ((vfilename === filename_abs) || (vmount === mount_abs)) {
-            return volume
-          }
-        })
-      }
-    } catch (e) {
-      dbg(`is_mounted.err: ${e}`)
-    }
-    return null
-  }
-
   async is_mounted(name: string, wait = 1000) {
     try {
         let name_abs = this.plugin.getAbsolutePath(name)
-        this.mounted.forEach((v) => {
-          let vfilename = this.plugin.getAbsolutePath(v['filename'])
-          let vmount = this.plugin.getAbsolutePath(v['mount'])
+        this.mounted.forEach((k,v) => {
+          // let vfilename = this.plugin.getAbsolutePath(v['filename'])
+          // let vmount = this.plugin.getAbsolutePath(v['mount'])
+          let vfilename = this.plugin.getAbsolutePath(k)
+          let vmount = this.plugin.getAbsolutePath(v)
           dbg(`is_mounted.forEach: ${vfilename} ${vmount} ${name_abs}`)
           // @ts-ignore
           if ((vfilename === name_abs) || (vmount === name_abs)) {

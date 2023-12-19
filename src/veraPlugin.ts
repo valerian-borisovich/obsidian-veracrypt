@@ -56,9 +56,9 @@ export default class VeraPlugin extends Plugin {
   /*                       Filesystem               */
   getAbsolutePath(path: String) {
     let root = (this.app.vault.adapter as any).basePath
-    //let result = '/'+normalizePath(`${root}/${path}`)
-    let result = normalizePath(`${root}/${path}`)
-    // if(result.endsWith('/')){result = result.slice(0, -1)}
+    let result = '/'+normalizePath(`${root}/${path}`)
+    //let result = normalizePath(`${root}/${path}`)
+    if(result.endsWith('/')){result = result.slice(0, -1)}
     return result
   }
 
@@ -145,21 +145,22 @@ export default class VeraPlugin extends Plugin {
   private handleFileMenu(menu: Menu, file: TAbstractFile) {
 
     if ((file instanceof TFile) && (file.extension === this.settings.defaultVolumefileExtention)) {
-      // dbg(`handleFileMenu TFile ${name}`)
-      this.mng.is_mounted(file.path).then((volume) => {
-        if (volume === null) {
+      dbg(`handleFileMenu mounted: ${this.mng.mounted}`)
+      dbg(`handleFileMenu TFile.name: ${file.name}`)
+      this.mng.is_mounted(file.name).then((mounted) => {
+        if (mounted) {
           menu.addItem((item) => {
             item
               .setTitle(this.t('vera-mount'))
               .setIcon('vera-mount')
-              .onClick(() => this.mng.mount(file.path))
+              .onClick(() => this.mng.mount(file.name))
           })
         } else {
           menu.addItem((item) => {
             item
               .setTitle(this.t('vera-umount'))
               .setIcon('vera-umount')
-              .onClick(() => this.mng.umount(file.path))
+              .onClick(() => this.mng.umount(file.name))
           })
         }
       })
@@ -167,19 +168,19 @@ export default class VeraPlugin extends Plugin {
 
     if (file instanceof TFolder) {
       // name = this.getAbsolutePath(file.path)
-      dbg(`handleFileMenu TFolder: ${file.path} ${file.name}`)
+      dbg(`handleFileMenu TFolder: ${file.path}`)
 
-      this.mng.get(file.name).then((volume) => {
+      this.mng.get(file.path).then((volume) => {
         dbg(`handleFileMenu TFolder.volume: ${volume}`)
       })
 
-      this.mng.is_mounted(file.name).then((volume) => {
-        dbg(`handleFileMenu TFolder volume: ${volume} name: ${file.name}`)
+      this.mng.is_mounted(file.path).then((mounted) => {
+        dbg(`handleFileMenu TFolder mounted: ${mounted} name: ${file.path}`)
         menu.addItem((item) => {
           item
             .setTitle(this.t('vera-umount'))
             .setIcon('vera-umount')
-            .onClick(() => this.mng.umount(file.name))
+            .onClick(() => this.mng.umount(file.path))
         })
       })
     }
@@ -329,6 +330,7 @@ export default class VeraPlugin extends Plugin {
     this.app.workspace.onLayoutReady(async () => {
       if (this.settings.mountAtStart) {
         dbg(`onLayoutReady : mountAtStart`)
+        await this.mng.refresh()
         await this.mng.mountAll()
       }
     })
