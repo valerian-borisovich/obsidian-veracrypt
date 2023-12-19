@@ -54,8 +54,8 @@ export class VeraSettingTab extends PluginSettingTab {
       )
 
     new Setting(containerEl).addButton((button) => {
-      button.setButtonText('Create New').onClick(() => {
-        new VolumeModal(this.app, this.plugin, DEFAULT_VOLUME_CONFIG).open()
+      button.setButtonText('Create New Volume').onClick(() => {
+        new VolumeModal(this.app, this.plugin, DEFAULT_VOLUME_CONFIG,true).open()
       })
     })
 
@@ -70,10 +70,9 @@ export class VeraSettingTab extends PluginSettingTab {
       new Setting(containerEl)
         .setName(name)
         .setDesc(volume.mountPath)
-
         .addButton((button) => {
           button.setButtonText('Config').onClick(() => {
-            new VolumeModal(this.app, this.plugin, volume, true).open()
+            new VolumeModal(this.app, this.plugin, volume, false).open()
           })
         })
 

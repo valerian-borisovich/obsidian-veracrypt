@@ -5,8 +5,7 @@ class VeraStorage {
   store!: LocalForage
 
   constructor() {
-    dbg('VeraStorage loading')
-
+    // dbg('VeraStorage loading')
     this.store = localforage.createInstance({
       name: 'vera',
       storeName: 'vera',
@@ -14,8 +13,7 @@ class VeraStorage {
       version: 1.0,
       size: 4980736,
     })
-
-    dbg('VeraStorage loaded')
+    // dbg('VeraStorage loaded')
   }
 
   async get(name: string) {

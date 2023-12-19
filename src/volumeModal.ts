@@ -31,7 +31,12 @@ export class VolumeModal extends Modal {
     let { contentEl } = this
     contentEl.empty()
     contentEl.addClasses(['veracrypt', 'modals', 'volume', 'add', 'confirm-modal'])
-    this.titleEl.setText('Volume')
+
+    if(this.create) {
+      this.titleEl.setText('Create New Volume')
+    } else {
+      this.titleEl.setText('Volume')
+    }
 
     let containerEl = contentEl.createDiv('volume')
     let name = volume.filename.replace('.vera', '')
@@ -120,7 +125,7 @@ export class VolumeModal extends Modal {
     new Setting(containerEl)
       .setClass('password')
       .setName('Password')
-      .setDesc('password for open volume')
+      .setDesc('password for volume')
       .addText((text) =>
         text
           .setPlaceholder('enter password')

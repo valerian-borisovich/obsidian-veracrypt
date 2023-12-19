@@ -53,17 +53,17 @@ export default class VeraPlugin extends Plugin {
     // dbg(`VeraPlugin.setPassword: ${id} : ${password}`)
   }
 
-  /*            Filesystem        */
+  /*                       Filesystem               */
   getAbsolutePath(path: String) {
     let root = (this.app.vault.adapter as any).basePath
-    let result = '/'+normalizePath(`${root}/${path}`)
-    if(result.endsWith('/')){result = result.slice(0, -1)}
+    //let result = '/'+normalizePath(`${root}/${path}`)
+    let result = normalizePath(`${root}/${path}`)
+    // if(result.endsWith('/')){result = result.slice(0, -1)}
     return result
   }
 
   async checkFolder(path: string, create: Boolean = true) {
     let folderpath = normalizePath(path)
-
     //@ts-ignore
     const folder = this.app.vault.getAbstractFileByPathInsensitive(folderpath)
     if (folder && folder instanceof TFolder) {
@@ -72,7 +72,6 @@ export default class VeraPlugin extends Plugin {
     if (folder && folder instanceof TFile) {
       warn(`The folder cannot be created because it already exists as a file: ${folderpath}.`)
     }
-
     // if (!(await this.app.vault.adapter.exists(folderpath))) {
     if (create) {
       await this.app.vault.createFolder(folderpath)
@@ -144,43 +143,43 @@ export default class VeraPlugin extends Plugin {
                     handleFileMenu
    */
   private handleFileMenu(menu: Menu, file: TAbstractFile) {
-    let name= normalizePath(file.path)
-
-    //this.mng.get(name).then((volume) => {
-    //if (volume !== null)  dbg(`handleFileMenu volume: ${volume}`)
-    //if (volume === null) dbg(`handleFileMenu volume not found!`)
 
     if ((file instanceof TFile) && (file.extension === this.settings.defaultVolumefileExtention)) {
-      dbg(`handleFileMenu TFile ${name}`)
-      this.mng.is_mounted(name).then((volume) => {
+      // dbg(`handleFileMenu TFile ${name}`)
+      this.mng.is_mounted(file.path).then((volume) => {
         if (volume === null) {
           menu.addItem((item) => {
             item
               .setTitle(this.t('vera-mount'))
               .setIcon('vera-mount')
-              .onClick(() => this.mng.mount(name))
+              .onClick(() => this.mng.mount(file.path))
           })
         } else {
           menu.addItem((item) => {
             item
               .setTitle(this.t('vera-umount'))
               .setIcon('vera-umount')
-              .onClick(() => this.mng.umount(name))
+              .onClick(() => this.mng.umount(file.path))
           })
         }
       })
     }
 
     if (file instanceof TFolder) {
-      // dbg(`handleFileMenu TFolder: ${name}`)
-      // if (volume !== null && this.mng.is_mounted(name)) {
-      this.mng.is_mounted(name).then((volume) => {
-        dbg(`handleFileMenu TFolder volume: ${volume} name: ${name}`)
+      // name = this.getAbsolutePath(file.path)
+      dbg(`handleFileMenu TFolder: ${file.path} ${file.name}`)
+
+      this.mng.get(file.name).then((volume) => {
+        dbg(`handleFileMenu TFolder.volume: ${volume}`)
+      })
+
+      this.mng.is_mounted(file.name).then((volume) => {
+        dbg(`handleFileMenu TFolder volume: ${volume} name: ${file.name}`)
         menu.addItem((item) => {
           item
             .setTitle(this.t('vera-umount'))
             .setIcon('vera-umount')
-            .onClick(() => this.mng.umount(name))
+            .onClick(() => this.mng.umount(file.name))
         })
       })
     }

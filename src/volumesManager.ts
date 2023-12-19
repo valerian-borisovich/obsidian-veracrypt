@@ -64,27 +64,34 @@ class VolumesManager {
   }
 
   async onRefreshed(args: any[]) {
-    // dbg(`onRefreshed.args: ${args}`)
+    //dbg(`onRefreshed.args: ${args}`)
     let a, v
     let l: [] = []
     let nomounted = 'Error: No volumes mounted.'
-    let result: string = args.at(0).toString()
+    // let result: string = args.at(0).toString()
+    let result: string = args.toString()
     try {
       if (nomounted === result) {
         this.mounted = []
       } else {
+        //dbg(`onRefreshed.result: ${result} `)
         result.split('\n').forEach((v: string) => {
-          if (v.length) {
+          if (v) {
             a = v.split(' ')
-            // @ts-ignore
-            l.push({ filename: a[1], mount: a[3] })
+            let vfilename=a[1]
+            let vmount=a[3]
+            if ((typeof vfilename === 'string') && (typeof vmount === 'string')){
+              dbg(`onRefreshed.push: ${vfilename}  ${vmount}`)
+              // @ts-ignore
+              l.push({ filename: vfilename, mount: vmount })
+            }
           }
         })
         this.mounted = l
         this.lastRefreshed = Date.now()
       }
     } catch (e) {
-      err(`volumesManager.onRefreshed: ${e}`)
+      err(`onRefreshed.error: ${e}`)
     }
   }
 
@@ -94,7 +101,7 @@ class VolumesManager {
   async mountAll(): Promise<void> {
     log(`volumesManager.mountAll`)
     this.plugin.settings.volumes.forEach((volume) => {
-        if ((volume.enabled) && (!this.is_mounted(volume))) {
+        if ((volume.enabled) && (!this.is_mounted(volume.filename))) {
           this.mount(volume)
         } else {
           warn(`volumesManager.mountAll: ${volume.mountPath} already mounted!`)
@@ -215,7 +222,7 @@ class VolumesManager {
     log(`volumesManager.delete: ${volume.filename}`)
     let old_filename = volume.filename
     await this.umount(volume, force)
-    if (await this.is_mounted(volume)) {
+    if (await this.is_mounted(volume.filename)===true) {
       err(`volumesManager.delete.error: ${volume.filename} not unmount from ${volume.mountPath}!`)
       return
     }
@@ -259,7 +266,7 @@ class VolumesManager {
     }
     await this.plugin.checkFolder(volume.mountPath, true)
     ps(cmd)
-    if (await this.is_mounted(volume)) {
+    if (await this.is_mounted(volume.filename)) {
       volume.mounted = true
       volume.mountTime = Date.now().toString()
       await this.plugin.saveSettings()
@@ -324,7 +331,7 @@ class VolumesManager {
     await this.plugin.saveSettings()
   }
 
-  async is_mounted(v: VolumeConfig | string, wait = 1000) {
+  async is_mounted0(v: VolumeConfig | string, wait = 1000) {
     let volume: VolumeConfig
     let name: string = ''
     if (typeof v === 'string') {
@@ -364,26 +371,34 @@ class VolumesManager {
     return null
   }
 
+  async is_mounted(name: string, wait = 1000) {
+    try {
+        let name_abs = this.plugin.getAbsolutePath(name)
+        this.mounted.forEach((v) => {
+          let vfilename = this.plugin.getAbsolutePath(v['filename'])
+          let vmount = this.plugin.getAbsolutePath(v['mount'])
+          dbg(`is_mounted.forEach: ${vfilename} ${vmount} ${name_abs}`)
+          // @ts-ignore
+          if ((vfilename === name_abs) || (vmount === name_abs)) {
+            return true
+          }
+        })
+    } catch (e) {
+      dbg(`is_mounted.err: ${e}`)
+    }
+    return false
+  }
+
   async get(name: string) {
-    let name_abs = this.plugin.getAbsolutePath(name)
-    dbg(`get name: ${name} name_abs: ${name_abs}`)
-    this.plugin.settings.volumes.forEach((vol) => {
-      dbg(`get ${name} == ${vol.filename}`)
-      if (vol.filename.includes(name_abs)) {
-        return vol
-      }
-      if (vol.mountPath.includes(name_abs)) {
-        return vol
-      }
-      if (vol.filename.includes(name)) {
-        return vol
-      }
-      if (vol.mountPath.includes(name)) {
-        return vol
-      }
-      if (vol.id.includes(name)) {
-        return vol
-      }
+    this.plugin.settings.volumes.forEach((volume) => {
+      dbg(`mng.get: ${this.plugin.getAbsolutePath(name)}  ${this.plugin.getAbsolutePath(volume.mountPath)}`)
+      dbg(`mng.get: ${this.plugin.getAbsolutePath(name)}  ${this.plugin.getAbsolutePath(volume.filename)}`)
+      if (this.plugin.getAbsolutePath(volume.mountPath)===this.plugin.getAbsolutePath(name)) {return volume}
+      if (this.plugin.getAbsolutePath(volume.filename)===this.plugin.getAbsolutePath(name)) {return volume}
+      if (volume.filename===name) {return volume}
+      if (volume.mountPath===name) {return volume}
+      // if (vol.mountPath.includes(name)) {return vol}
+      if (volume.id===name) {return volume}
     })
     return null
   }
