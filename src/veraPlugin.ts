@@ -2,15 +2,14 @@
 // import {Notice,Plugin,setIcon,TFolder,TFile,TAbstractFile,debounce,DropdownComponent,normalizePath,} from 'obsidian'
 import { Plugin, Menu, TFolder, TFile, TAbstractFile, normalizePath } from 'obsidian'
 import * as fsPromises from 'fs/promises'
-import { I18n, log, dbg, err, warn, getDeviceId, } from './hlp'
+import { I18n, log, dbg, err, warn, getId, getDeviceId } from './hlp'
 import type { LangType, LangTypeAndAuto, TransItemType } from './hlp'
 //
 import { VeraPluginSettings, DEFAULT_SETTINGS } from './settings'
 import { VeraSettingTab } from './settingsModal'
 import { PasswordPromt } from './passwordModal'
 import { VolumeModal } from '~/volumeModal'
-import { Vera, VolumeConfig, VolumesManager, DEFAULT_VOLUME_CONFIG, ADMIN_PASSWORD } from './vera'
-
+import { Vera, VolumesManager, DEFAULT_VOLUME_CONFIG, ADMIN_PASSWORD, VolumeConfig } from './vera'
 
 const ROOT_PATH = '/'
 
@@ -24,7 +23,9 @@ export default class VeraPlugin extends Plugin {
 
   /*             Lang          */
   i18n!: I18n
-  t = (x: TransItemType, vars?: any) => { return this.i18n.t(x, vars) }
+  t = (x: TransItemType, vars?: any) => {
+    return this.i18n.t(x, vars)
+  }
 
   //
   ribbonIconButton!: HTMLElement
@@ -56,9 +57,11 @@ export default class VeraPlugin extends Plugin {
   /*                       Filesystem               */
   getAbsolutePath(path: String) {
     let root = (this.app.vault.adapter as any).basePath
-    let result = '/'+normalizePath(`${root}/${path}`)
+    let result = '/' + normalizePath(`${root}/${path}`)
     //let result = normalizePath(`${root}/${path}`)
-    if(result.endsWith('/')){result = result.slice(0, -1)}
+    if (result.endsWith('/')) {
+      result = result.slice(0, -1)
+    }
     return result
   }
 
@@ -90,6 +93,7 @@ export default class VeraPlugin extends Plugin {
   /*
    *                reloadFolder  &  reloadFileExplorer
    */
+
   //private async reloadFileExplorer(): Promise<void> {
   async reloadFileExplorer(): Promise<void> {
     await this.reloadFolder(ROOT_PATH, true)
@@ -139,50 +143,38 @@ export default class VeraPlugin extends Plugin {
     return isRoot ? fileName : `${directoryPath}/${fileName}`
   }
 
-  /*
-                    handleFileMenu
-   */
+  /*                    handleFileMenu              */
   private handleFileMenu(menu: Menu, file: TAbstractFile) {
-
-    if ((file instanceof TFile) && (file.extension === this.settings.defaultVolumefileExtention)) {
-      dbg(`handleFileMenu mounted: ${this.mng.mounted}`)
-      dbg(`handleFileMenu TFile.name: ${file.name}`)
-      this.mng.is_mounted(file.name).then((mounted) => {
-        if (mounted) {
-          menu.addItem((item) => {
-            item
-              .setTitle(this.t('vera-mount'))
-              .setIcon('vera-mount')
-              .onClick(() => this.mng.mount(file.name))
-          })
-        } else {
-          menu.addItem((item) => {
-            item
-              .setTitle(this.t('vera-umount'))
-              .setIcon('vera-umount')
-              .onClick(() => this.mng.umount(file.name))
-          })
-        }
-      })
+    if (file instanceof TFile && file.extension === this.settings.defaultVolumefileExtention) {
+      //dbg(`handleFileMenu TFile.name: ${file.name}`)
+      if (this.mng.is_mounted(file.name)) {
+        menu.addItem((item) => {
+          item
+            .setTitle(this.t('vera-mount'))
+            .setIcon('vera-mount')
+            .onClick(() => this.mng.mount(file.name))
+        })
+      } else {
+        menu.addItem((item) => {
+          item
+            .setTitle(this.t('vera-umount'))
+            .setIcon('vera-umount')
+            .onClick(() => this.mng.umount(file.name))
+        })
+      }
     }
 
     if (file instanceof TFolder) {
-      // name = this.getAbsolutePath(file.path)
-      dbg(`handleFileMenu TFolder: ${file.path}`)
-
-      this.mng.get(file.path).then((volume) => {
-        dbg(`handleFileMenu TFolder.volume: ${volume}`)
-      })
-
-      this.mng.is_mounted(file.path).then((mounted) => {
-        dbg(`handleFileMenu TFolder mounted: ${mounted} name: ${file.path}`)
+      //dbg(`handleFileMenu TFolder: ${file.path}`)
+      if (this.mng.is_mounted(file.path)) {
+        // dbg(`handleFileMenu TFolder mounted: ${mounted} name: ${file.path}`)
         menu.addItem((item) => {
           item
             .setTitle(this.t('vera-umount'))
             .setIcon('vera-umount')
             .onClick(() => this.mng.umount(file.path))
         })
-      })
+      }
     }
 
     //////
@@ -212,7 +204,7 @@ export default class VeraPlugin extends Plugin {
     this._fsPromises = this.app.vault.adapter.fsPromises
 
     await this.loadSettings()
-    log(`Vera plugin version ${this.manifest.version} loaded.`)
+    log(`Vera plugin loaded, version ${this.manifest.version} `)
 
     // lang should be load early, but after settings
     this.i18n = new I18n(this.settings.lang, async (lang: LangTypeAndAuto) => {
@@ -348,9 +340,18 @@ export default class VeraPlugin extends Plugin {
   async install_example(force: boolean = false) {
     /*   create exampe volume   */
     let vol: VolumeConfig = DEFAULT_VOLUME_CONFIG
+    vol.id = getId()
     vol.filename = 'example.vera'
     vol.mountPath = '==example=='
-    await this.mng.create(vol, 'example')
+    await this.mng.create(vol, 'example', '',true)
+
+    await sleep(3)
+
+    let vol1: VolumeConfig = DEFAULT_VOLUME_CONFIG
+    vol1.id = getId()
+    vol1.filename = 'example1.vera'
+    vol1.mountPath = '==example1=='
+    await this.mng.create(vol1, 'example', '',true)
   }
 
   async install(force: boolean = false) {
@@ -359,7 +360,7 @@ export default class VeraPlugin extends Plugin {
     this.settings.deviceID = getDeviceId()
     this.settings.pluginVersion = this.manifest.version
     this.settings.debug = '1'
-    log(`${this.manifest.name} install on device ${this.settings.deviceID}`)
+    log(`${this.manifest.name} install on deviceId ${this.settings.deviceID}`)
     let pass = await this.getPassword(ADMIN_PASSWORD)
     //if (pass !== '') await this.setPassword(ADMIN_PASSWORD, pass)
     await this.saveSettings()

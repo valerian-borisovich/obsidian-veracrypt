@@ -5,6 +5,7 @@ export default interface VolumeConfig {
   device: string
   id: string
   version: string
+  options: string
 
   enabled: boolean
   readonly: boolean
@@ -34,6 +35,7 @@ const DEFAULT_VOLUME_CONFIG: VolumeConfig = {
   device: getDeviceId(),
   id: getId(),
   version: getVersion(),
+  options: '{}',
 
   enabled: false,
   readonly: false,

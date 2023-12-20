@@ -80,128 +80,83 @@ class PasswordPromt extends Modal {
   plugin: VeraPlugin
   name: string
   newPassword: string
-  savePassword: boolean
+  bSave: boolean
 
   constructor(app: App, plugin: VeraPlugin, name: string, newPassword: string = '') {
     super(app)
     this.plugin = plugin
     this.name = name
-    this.savePassword = true
+    this.bSave = true
     this.newPassword = newPassword
   }
 
-  async save() {
-    this.plugin.settings.savePassword = this.savePassword
-    if (this.savePassword) {
-      dbg(`save password '${this.newPassword}' for ${this.name}`)
+  async save(force: boolean = false) {
+    this.plugin.settings.savePassword = this.bSave
+    if (this.bSave || force) {
+      dbg(`save password '${this.newPassword}' for '${this.name}'`)
       await this.plugin.vera.setPassword(this.name, this.newPassword)
       new Notice(`Password for ${this.name} saved!`)
     }
     await this.plugin.saveSettings()
   }
 
-  async display0() {
-    let { contentEl } = this
-
-    //const t = (x: TransItemType, vars?: any) => {
-    //  return this.plugin.i18n.t(x, vars)}
-
-    if (this.newPassword === '') {
-      this.plugin.vera.getPassword(this.name).then((v) => {
-        this.newPassword = v
-      })
-    }
-
-    // contentEl.setText("Add Or change password.");
-    // contentEl.createEl('h2', { text: t('password_promt_title') })
-    let title = `Password for ${this.name}`
-    if (this.name === ADMIN_PASSWORD) {
-      title = `Password for 'root' user or Administrator`
-    }
-
-    contentEl.createEl('h2', { text: title })
-
-    new Setting(contentEl)
-      .setName('Password')
-      .setDesc('password')
-      .addText((text) =>
-        text
-          .setPlaceholder('enter password here')
-          .setValue(this.newPassword)
-          .onChange(async (value) => {
-            this.newPassword = value
-          }),
-      )
-
-    new Setting(contentEl)
-      .setName('Save')
-      .setDesc('save password')
-      .addToggle((toggle) =>
-        toggle.setValue(this.plugin.settings.savePassword).onChange(async (value) => {
-          this.savePassword = value
-        }),
-      )
-
-    new Setting(contentEl)
-      .addButton((button) => {
-        button.setButtonText(this.plugin.t('cancel'))
-        button.onClick(() => {
-          this.close()
-        })
-      })
-      .addButton((button) => {
-        button.setButtonText(this.plugin.t('ok'))
-        button.setCta()
-        button.setClass('password-confirm')
-        button.onClick(async () => {
-          // await this.plugin.setPassword(this.name, this.newPassword)
-          await this.save()
-          this.close()
-        })
-      })
-  }
-
   async display(){
     this.contentEl.empty()
 
-    let title = `password for`
-
+    let title = `Enter password for `
     if (this.name === ADMIN_PASSWORD) {
-      title += ` root or Administrator`
+      title = `Enter root or Administrator password`
     }else {
       title += ` ${this.name}`
     }
 
     this.contentEl.addClass('confirm-modal')
-    this.contentEl.createEl('h1', { text: title })
+    this.contentEl.createEl('h2', { text: title })
 
-    // make a div for user's password input
-    const inputPwContainerEl = this.contentEl.createDiv();
-    inputPwContainerEl.style.marginBottom = '1em';
-    const pwInputEl = inputPwContainerEl.createEl('input', { type: 'password', value: '' });
-    pwInputEl.placeholder = this.plugin.t("place_holder_enter_password");
-    pwInputEl.style.width = '70%';
-    pwInputEl.focus();
+
+    //const inputPwContainerEl = this.contentEl.createDiv();
+    //inputPwContainerEl.style.marginBottom = '1em';
+    //const pwInputEl = inputPwContainerEl.createEl('input', { type: 'password',  value: '' });
+    // pwInputEl.placeholder = this.plugin.t("place_holder_enter_password");
+    //pwInputEl.style.width = '70%';
+    //pwInputEl.focus();
+
+    new Setting(this.contentEl)
+      .setName('Password')
+      .setDesc('password')
+      .addText((text) =>
+        text
+          .setPlaceholder(this.plugin.t("place_holder_enter_password"))
+          .setValue(this.newPassword)
+          .onChange(async (value) => {
+            this.newPassword = value
+          })
+          .inputEl.type='password'
+      )
 
     new Setting(this.contentEl)
       .setName('Save')
       .setDesc('save password')
       .addToggle((toggle) =>
         toggle.setValue(this.plugin.settings.savePassword).onChange(async (value) => {
-          this.savePassword = value
+          this.bSave = value
         }),
       )
 
     const buttonEl = this.contentEl.createDiv('confirm-buttons')
     new ButtonComponent(buttonEl)
       .setButtonText(this.plugin.t('cancel'))
-      .setCta()
-      .setClass('delete')
+      .setClass('cancel')
       .onClick(() => {
         // this.confirmed = true
         this.close()
       })
-    new ButtonComponent(buttonEl).setButtonText(this.plugin.t('ok')).onClick(() => {
+    new ButtonComponent(buttonEl)
+      .setButtonText(this.plugin.t('ok'))
+      .setCta()
+      .setClass('password-confirm')
+      .onClick(() => {
+      this.save()
       this.close()
     })
 
@@ -209,7 +164,7 @@ class PasswordPromt extends Modal {
   }
 
   onOpen() {
-    this.display()
+    this.display().then((value)=>{})
   }
 
   onClose() {

@@ -78,10 +78,10 @@ export class VeraSettingTab extends PluginSettingTab {
 
         .addToggle((toggle) => {
           toggle.setValue(volume.mounted).onChange(async (value) => {
-            if (await this.plugin.mng.is_mounted(volume)!==null) {
-              await this.plugin.mng.umount(volume)
+            if (await this.plugin.mng.is_mounted(volume.filename)) {
+              await this.plugin.mng.umount(volume.filename)
             } else {
-              await this.plugin.mng.mount(volume)
+              await this.plugin.mng.mount(volume.filename)
             }
           })
         })

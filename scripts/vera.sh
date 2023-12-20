@@ -218,19 +218,20 @@ setenv() {
 # ###
 #
 create() {
-  #if [[ -z "${OS_PASSWORD-}" ]]; then
-  #  _err "vera create error: OS_PASSWORD is empty!"
-  #  return 1
-  #fi
+  if [[ -z "${OS_PASSWORD-}" ]]; then
+    _err "vera create error: OS_PASSWORD is empty!"
+    return 1
+  fi
 
   if [[ -f "$VOLUME_FILE" ]]; then
     _err "vera create error: '$VOLUME_FILE' already exists!"
     return 1
   fi
 
-  log "vera create: '$VOLUME_FILE'"
-  # echo "$OS_PASSWORD" | sudo -S veracrypt -t -c "$VOLUME_FILE" --volume-type=normal --pim=0 -k "$VOLUME_KEYFILE" --quick --encryption="$VOLUME_ENC" --hash="$VOLUME_HASH" --filesystem="$VOLUME_FS" --size="$VOLUME_SIZE" --password="$VOLUME_PASSWORD" --random-source=/dev/urandom
-  veracrypt -t -c "$VOLUME_FILE" --volume-type=normal --pim=0 -k "$VOLUME_KEYFILE" --quick --encryption="$VOLUME_ENC" --hash="$VOLUME_HASH" --filesystem="$VOLUME_FS" --size="$VOLUME_SIZE" --password="$VOLUME_PASSWORD" --random-source=/dev/urandom
+  log "vera create '$VOLUME_FILE'"
+  echo "$OS_PASSWORD" | sudo -S veracrypt -t -c "$VOLUME_FILE" --volume-type=normal --pim=0 -k "$VOLUME_KEYFILE" --quick --encryption="$VOLUME_ENC" --hash="$VOLUME_HASH" --filesystem="$VOLUME_FS" --size="$VOLUME_SIZE" --password="$VOLUME_PASSWORD" --random-source=/dev/urandom --non-interactive >/dev/null 2>&1
+  # echo "$OS_PASSWORD" | sudo -S veracrypt -t -c "$VOLUME_FILE" --volume-type=normal --pim=0 -k "$VOLUME_KEYFILE" --quick --encryption="$VOLUME_ENC" --hash="$VOLUME_HASH" --filesystem="$VOLUME_FS" --size="$VOLUME_SIZE" --password="$VOLUME_PASSWORD" --random-source=/dev/urandom --non-interactive
+  # veracrypt -t -c "$VOLUME_FILE" --volume-type=normal --pim=0 -k "$VOLUME_KEYFILE" --quick --encryption="$VOLUME_ENC" --hash="$VOLUME_HASH" --filesystem="$VOLUME_FS" --size="$VOLUME_SIZE" --password="$VOLUME_PASSWORD" --random-source=/dev/urandom --non-interactive
   # result="$?"
   sleep 1
 
@@ -281,10 +282,10 @@ mount() {
   fi
 
   if [[ -d "$VOLUME_MOUNTPATH" ]]; then
-    log "vera already mounted to $VOLUME_MOUNTPATH"
+    log "vera already mounted to '$VOLUME_MOUNTPATH'"
     umount
   else
-    log "vera mkdir: $VOLUME_MOUNTPATH"
+    log "vera mkdir '$VOLUME_MOUNTPATH'"
     mkdir -p "$VOLUME_MOUNTPATH" >/dev/null 2>&1
   fi
 
