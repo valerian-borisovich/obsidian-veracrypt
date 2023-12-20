@@ -1,5 +1,6 @@
 //
 import { getVersion, getId, getDeviceId, } from '~/hlp'
+import { DEFAULT_SETTINGS } from '~/settings'
 
 export default interface VolumeConfig {
   device: string
@@ -60,5 +61,18 @@ const DEFAULT_VOLUME_CONFIG: VolumeConfig = {
   hash: 'SHA-512',
 }
 
-export { DEFAULT_VOLUME_CONFIG }
+interface Volume extends VolumeConfig {
 
+}
+
+class Volume implements Volume{
+  constructor(props: any = {}) {
+    // super(props)
+    // dbg('loaded')
+  }
+}
+
+
+//
+export { Volume }
+export { DEFAULT_VOLUME_CONFIG }

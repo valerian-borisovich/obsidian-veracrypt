@@ -21,7 +21,9 @@ interface IVera {
 }
 */
 
-
+//
+//
+//
 class VeraEvents extends EventEmitter {
   constructor() {
     super({ captureRejections: true })
@@ -41,7 +43,108 @@ class VeraEvents extends EventEmitter {
  */
 }
 
+//
+//
+//
+class VeraMounted extends Map {
+  private lastRefreshed: number
+  refreshInterval = 3000
+  refreshTimeout = 5000
+  //
+  settings!: {}
+  ev!: VeraEvents
 
+  constructor(props: any) {
+    super()
+    this.lastRefreshed = Date.now()
+    this.settings = props
+    this.ev = new VeraEvents()
+    this.ev.addListener('onRefreshed', this.onRefreshed)
+    // dbg('VeraMounted loaded')
+  }
+
+  async refresh() {
+    if (Date.now() - this.refreshInterval - this.refreshTimeout <= this.lastRefreshed) {
+      // dbg(`refresh.skip.last: ${this.lastRefreshed}`)
+      return
+    }
+    this.lastRefreshed = Date.now()
+
+    let spawn = require('child_process').spawn
+    // let proc = spawn(cmd, args, options)
+    let proc = spawn(`veracrypt`, ['-t', '-l', '--non-interactive'])
+    let result: string = ''
+
+    //// kill by timeout
+    setTimeout(() => {
+      proc.kill()
+    }, this.refreshTimeout)
+
+    // @ts-ignore
+    proc.stdout.on('data', function (data) {
+      result = data
+    })
+    // @ts-ignore
+    proc.stderr.on('data', function (data) {
+      result = data
+    })
+    // @ts-ignore
+    proc.on('exit', (code) => {
+      // dbg(`refresh.exit: ${result} `)
+      this.ev.emit('onRefreshed', result)
+    })
+  }
+
+  async onRefreshed(args: any[]) {
+    dbg(`onRefreshed.args: ${args}`)
+    let a, v
+    let l = new Map()
+    // let nomounted = 'Error: No volumes mounted.'
+    let nomounted = 'No volumes mounted'
+    // let result: string = args.at(0).toString()
+    let result: string = args.toString()
+    try {
+      if (result.contains(nomounted)) {
+        this.clear()
+      } else {
+        //dbg(`onRefreshed.result: ${result} `)
+        result.split('\n').forEach((v: string) => {
+          if (v) {
+            a = v.split(' ')
+            let vfilename=a[1]
+            let vmount=a[3]
+            if ((typeof vfilename === 'string') && (typeof vmount === 'string')){
+              // dbg(`onRefreshed.add: ${vfilename}  ${vmount}`)
+              l.set(vfilename, vmount)
+            }
+          }
+        })
+
+        this.forEach((k, v)=> {
+          if(!l.has(k)){
+            this.delete(k)
+          }
+          l.forEach((keys, values) => {
+            dbg(`onRefreshed.l: ${keys} => ${values}`)
+          })
+        })
+        l.forEach((keys, values) => {
+          this.set(keys, values)
+        })
+
+
+        this.lastRefreshed = Date.now()
+      }
+    } catch (e) {
+      err(`onRefreshed.error: ${e}`)
+    }
+  }
+
+}
+
+//
+//
+//
 class Vera {
   settings!: VeraSettings
   storage!: VeraStorage

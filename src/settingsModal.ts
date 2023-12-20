@@ -55,7 +55,8 @@ export class VeraSettingTab extends PluginSettingTab {
 
     new Setting(containerEl).addButton((button) => {
       button.setButtonText('Create New Volume').onClick(() => {
-        new VolumeModal(this.app, this.plugin, DEFAULT_VOLUME_CONFIG,true).open()
+        let vol: VolumeConfig = Object.assign({}, DEFAULT_VOLUME_CONFIG)
+        new VolumeModal(this.app, this.plugin, vol,true).open()
       })
     })
 

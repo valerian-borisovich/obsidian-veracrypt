@@ -2,7 +2,8 @@ import { App, ButtonComponent, Modal, Setting } from 'obsidian'
 import { ConfirmModal, confirmWithModal } from './confirmUI'
 import { encryptionAlgorithm, filesystemType, hashAlgorithm } from './hlp'
 import VeraPlugin from './veraPlugin'
-import VolumeConfig from './volume'
+// import VolumeConfig, { DEFAULT_VOLUME_CONFIG } from './volume'
+import { VolumeConfig } from './vera'
 
 export class VolumeModal extends Modal {
   plugin!: VeraPlugin
@@ -12,6 +13,7 @@ export class VolumeModal extends Modal {
   constructor(app: App, plugin: VeraPlugin, volume: VolumeConfig, create: boolean=false) {
     super(app)
     this.plugin = plugin
+    // let volume: VolumeConfig = Object.assign({}, DEFAULT_VOLUME_CONFIG)
     this.volume = volume
     this.create = create
   }

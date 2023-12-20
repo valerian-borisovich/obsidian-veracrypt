@@ -103,27 +103,15 @@ class PasswordPromt extends Modal {
   async display(){
     this.contentEl.empty()
 
-    let title = `Enter password for `
+    let title = `Enter password for ${this.name}`
     if (this.name === ADMIN_PASSWORD) {
-      title = `Enter root or Administrator password`
-    }else {
-      title += ` ${this.name}`
+      title = `Enter 'Administrator' or 'root' user password`
     }
 
     this.contentEl.addClass('confirm-modal')
     this.contentEl.createEl('h2', { text: title })
 
-
-    //const inputPwContainerEl = this.contentEl.createDiv();
-    //inputPwContainerEl.style.marginBottom = '1em';
-    //const pwInputEl = inputPwContainerEl.createEl('input', { type: 'password',  value: '' });
-    // pwInputEl.placeholder = this.plugin.t("place_holder_enter_password");
-    //pwInputEl.style.width = '70%';
-    //pwInputEl.focus();
-
-    new Setting(this.contentEl)
-      .setName('Password')
-      .setDesc('password')
+    let passwordEl = new Setting(this.contentEl)
       .addText((text) =>
         text
           .setPlaceholder(this.plugin.t("place_holder_enter_password"))
@@ -133,9 +121,12 @@ class PasswordPromt extends Modal {
           })
           .inputEl.type='password'
       )
+    //passwordEl.settingEl.style.marginBottom = '1em'
+    //passwordEl.settingEl.style.width='90%'
+    //passwordEl.settingEl.focus()
 
     new Setting(this.contentEl)
-      .setName('Save')
+      .setName('')
       .setDesc('save password')
       .addToggle((toggle) =>
         toggle.setValue(this.plugin.settings.savePassword).onChange(async (value) => {
@@ -159,8 +150,6 @@ class PasswordPromt extends Modal {
       this.save()
       this.close()
     })
-
-
   }
 
   onOpen() {

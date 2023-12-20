@@ -15,16 +15,15 @@ class VolumesManager {
   private lastRefreshed: number
 
   constructor(plugin: VeraPlugin) {
+    this.mounted = new Map()
     this.plugin = plugin
     this.app = this.plugin.app
-    this.mounted = new Map()
     this.ev = this.plugin.vera.ev
     this.ev.addListener('onCreated', this.onCreated)
     this.ev.addListener('onRefreshed', this.onRefreshed)
     this.ev.addListener('reloadFolder', this.plugin.reloadFolder)
-    // this.ev.addListener('reloadFileExplorer', this.plugin.reloadFileExplorer)
-    // this.ev.addListener('volumeAdd', this.add)
     this.ev.addListener('volumeMount', this.mount)
+    this.ev.addListener('volumeUmount', this.umount)
     this.lastRefreshed = Date.now()
   }
 
@@ -63,7 +62,6 @@ class VolumesManager {
   async onRefreshed(args: any[]) {
     dbg(`onRefreshed.args: ${args}`)
     let a, v
-    // let l = new Array({})
     let l = new Map()
     // let nomounted = 'Error: No volumes mounted.'
     let nomounted = 'No volumes mounted'
@@ -130,6 +128,7 @@ class VolumesManager {
    */
   async create(volume: VolumeConfig, password: string = '', keyfile: string = '', mount: boolean = false) {
     const { spawn } = require('child_process')
+    // volume = Object.assign({}, volume)
     log(`create: ${volume.filename}`)
     let OS_PASSWORD = await this.plugin.getPassword(ADMIN_PASSWORD)
     let VOLUME_FILE = volume.filename
@@ -205,10 +204,11 @@ class VolumesManager {
       let volume: VolumeConfig = args.at(1)
       let self: VolumesManager = args.at(2)
       await self.add(volume)
-      new Notice(`Created Volume: ${volume.filename}`)
+      new Notice(`Volume '${volume.filename}' created`)
       let opt=JSON.parse(volume.options)
       if(opt.mount){
-        self.ev.emit('volumeMount', [volume.filename, ])
+        self.ev.emit('volumeMount', volume.filename)
+        //self.ev.emit('volumeMount', [volume, ])
       }
     } else {
       warn(`onCreated is empty! `)
@@ -219,6 +219,7 @@ class VolumesManager {
     volume.version = this.plugin.manifest.version
     volume.createdTime = Date.now().toString()
     volume.enabled = true
+
     this.plugin.settings.volumes.push(volume)
     await this.plugin.saveSettings()
     new Notice(`Volume '${volume.filename}' added`)
@@ -320,7 +321,7 @@ class VolumesManager {
         volume.mounted = false
         await this.plugin.saveSettings()
         this.ev.emit('reloadFolder', volume.mountPath)
-        new Notice(`unmounted  ${volume.filename} => ${volume.mountPath}`)
+        new Notice(`Volume '${volume.filename}' unmounted from '${volume.mountPath}'`)
         return
       } else {
         dbg(`"${VOLUME_MOUNTPATH}" is not empty! try: ${i}`)

@@ -230,12 +230,12 @@ export default class VeraPlugin extends Plugin {
       await this.mng.umountAll()
     })
 
-    this.addRibbonIcon('dice', 'Vera refresh', async () => {
+    this.addRibbonIcon('dice', 'refresh', async () => {
       await this.mng.refresh()
     })
 
-    this.addRibbonIcon('cloud', 'Vera install example', async () => {
-      await this.install_example()
+    this.addRibbonIcon('cloud', 'install example', async () => {
+      this.install_example()
     })
 
     /*
@@ -245,7 +245,8 @@ export default class VeraPlugin extends Plugin {
       id: 'vera-create',
       name: this.t('vera-create'),
       callback: () => {
-        new VolumeModal(this.app, this, DEFAULT_VOLUME_CONFIG, true).open()
+        let vol: VolumeConfig = Object.assign({}, DEFAULT_VOLUME_CONFIG)
+        new VolumeModal(this.app, this, vol, true).open()
       },
     })
 
@@ -314,7 +315,7 @@ export default class VeraPlugin extends Plugin {
     /*
      *       Add StatusBar Items
      */
-    this.addStatusBarItem().setText('Veracrypt loaded')
+    this.addStatusBarItem().setText('Vera *')
 
     /*
      *        onLayoutReady
@@ -337,21 +338,18 @@ export default class VeraPlugin extends Plugin {
     }
   }
 
-  async install_example(force: boolean = false) {
+  install_example(force: boolean = false) {
     /*   create exampe volume   */
-    let vol: VolumeConfig = DEFAULT_VOLUME_CONFIG
+    let vol: VolumeConfig
+    vol = Object.assign({}, DEFAULT_VOLUME_CONFIG)
     vol.id = getId()
     vol.filename = 'example.vera'
     vol.mountPath = '==example=='
-    await this.mng.create(vol, 'example', '',true)
-
-    await sleep(3)
-
-    let vol1: VolumeConfig = DEFAULT_VOLUME_CONFIG
-    vol1.id = getId()
-    vol1.filename = 'example1.vera'
-    vol1.mountPath = '==example1=='
-    await this.mng.create(vol1, 'example', '',true)
+    //vol = Object.assign({id: getId(), filename: 'example.vera', mountPath: '==example=='}, DEFAULT_VOLUME_CONFIG)
+    this.mng.create(vol, 'example', '',true).then((value) => {})
+    sleep(3)
+    let vol2: VolumeConfig = Object.assign({}, DEFAULT_VOLUME_CONFIG, {id: getId(), filename: 'example2.vera', mountPath: '==example2=='})
+    this.mng.create(vol2, 'example', '',true).then((value) => {})
   }
 
   async install(force: boolean = false) {
