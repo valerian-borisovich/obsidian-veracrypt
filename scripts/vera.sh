@@ -233,9 +233,9 @@ create() {
   # echo "$OS_PASSWORD" | sudo -S veracrypt -t -c "$VOLUME_FILE" --volume-type=normal --pim=0 -k "$VOLUME_KEYFILE" --quick --encryption="$VOLUME_ENC" --hash="$VOLUME_HASH" --filesystem="$VOLUME_FS" --size="$VOLUME_SIZE" --password="$VOLUME_PASSWORD" --random-source=/dev/urandom --non-interactive
   # veracrypt -t -c "$VOLUME_FILE" --volume-type=normal --pim=0 -k "$VOLUME_KEYFILE" --quick --encryption="$VOLUME_ENC" --hash="$VOLUME_HASH" --filesystem="$VOLUME_FS" --size="$VOLUME_SIZE" --password="$VOLUME_PASSWORD" --random-source=/dev/urandom --non-interactive
   # result="$?"
-  echo "$OS_PASSWORD" | sudo -S chown "$USER:$USER" "$VOLUME_FILE" >/dev/null 2>&1
-  #sleep 1
-
+  sleep 1
+  # echo "$OS_PASSWORD" | sudo -S chown $USER:$USER "$VOLUME_FILE" >/dev/null 2>&1
+  echo "$OS_PASSWORD" | sudo -S chown $USER:$USER "$VOLUME_FILE"
 }
 
 # ###

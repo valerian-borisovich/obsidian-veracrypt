@@ -339,17 +339,17 @@ export default class VeraPlugin extends Plugin {
   }
 
   install_example(force: boolean = false) {
-    /*   create exampe volume   */
+    /*                              create example volumes            */
     let vol: VolumeConfig
-    vol = Object.assign({}, DEFAULT_VOLUME_CONFIG)
-    vol.id = getId()
-    vol.filename = 'example.vera'
-    vol.mountPath = '==example=='
-    //vol = Object.assign({id: getId(), filename: 'example.vera', mountPath: '==example=='}, DEFAULT_VOLUME_CONFIG)
+    //vol = Object.assign({}, DEFAULT_VOLUME_CONFIG)
+    //vol.id = getId()
+    //vol.filename = 'example.vera'
+    //vol.mountPath = '==example=='
+    vol = Object.assign({}, DEFAULT_VOLUME_CONFIG, {id: getId(), filename: 'example.vera', mountPath: '==example=='})
     this.mng.create(vol, 'example', '',true).then((value) => {})
     sleep(3)
-    let vol2: VolumeConfig = Object.assign({}, DEFAULT_VOLUME_CONFIG, {id: getId(), filename: 'example2.vera', mountPath: '==example2=='})
-    this.mng.create(vol2, 'example', '',true).then((value) => {})
+    vol = Object.assign({}, DEFAULT_VOLUME_CONFIG, {id: getId(), filename: 'example3.vera', mountPath: '==example3=='})
+    this.mng.create(vol, 'example', '',true).then((value) => {})
   }
 
   async install(force: boolean = false) {
